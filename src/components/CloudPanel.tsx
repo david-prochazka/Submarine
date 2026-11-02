@@ -310,9 +310,9 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
     "w-full h-10 px-3 bg-zinc-900/60 border border-white/10 rounded-lg text-[13px] text-zinc-50 placeholder:text-zinc-600 outline-none focus:border-primary/50 transition-colors";
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
+    <div className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm flex items-center justify-center p-3" onClick={onClose}>
       <div
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-[#121214] border border-white/10 rounded-xl shadow-2xl"
+        className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-panel border border-white/10 rounded-xl shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -721,7 +721,7 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
                       <button
                         onClick={handleDeleteAccount}
                         disabled={busy || !deletePw}
-                        className="h-8 px-3 rounded text-[11.5px] font-bold uppercase tracking-wider bg-rose-500 text-white hover:bg-rose-400 disabled:opacity-40 flex items-center gap-1.5"
+                        className="h-8 px-3 rounded text-[11.5px] font-bold uppercase tracking-wider bg-rose-500 text-snow hover:bg-rose-400 disabled:opacity-40 flex items-center gap-1.5"
                       >
                         <Trash2 size={11} /> {busy ? "Deleting…" : "Delete account"}
                       </button>

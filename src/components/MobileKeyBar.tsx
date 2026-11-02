@@ -85,7 +85,7 @@ export function MobileKeyBar({ modifiers, onToggleModifier, onSpecialKey }: Mobi
       // On a phone the keys don't all fit; the row scrolls sideways with no
       // scrollbar, so its right edge fades out to show there's more. The
       // extra right padding lets the last key scroll clear of the fade.
-      className="shrink-0 flex items-center gap-1.5 pl-2 pr-6 pt-1.5 bg-[#0c0c0e] border-t border-white/10 overflow-x-auto no-scrollbar [mask-image:linear-gradient(to_right,black_calc(100%_-_24px),transparent)]"
+      className="shrink-0 flex items-center gap-1.5 pl-2 pr-6 pt-1.5 bg-surface border-t border-white/10 overflow-x-auto no-scrollbar [mask-image:linear-gradient(to_right,black_calc(100%_-_24px),transparent)]"
     >
       <ModBtn m="ctrl"  label="Ctrl"  />
       <ModBtn m="alt"   label="Alt"   />

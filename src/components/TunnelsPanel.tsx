@@ -419,7 +419,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#09090b] overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-surface overflow-hidden relative">
       {disabled && (
         <div className="absolute inset-0 z-30 bg-black/55 backdrop-blur-[1px] flex items-center justify-center text-zinc-300 text-xs font-mono uppercase">
           <span className="px-3 py-1.5 bg-red-500/15 border border-red-500/30 rounded text-red-300">
@@ -429,7 +429,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
       )}
 
       {/* Header: counts + add button */}
-      <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-b border-white/5 bg-[#121214]">
+      <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-b border-white/5 bg-panel">
         <div className="flex items-center gap-2 min-w-0 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
           <Activity size={12} className="shrink-0" />
           <span className="whitespace-nowrap">{total} {total === 1 ? "forward" : "forwards"}</span>
@@ -447,7 +447,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
       {/* Add form — fields stacked top-to-bottom so the 1/3-width tool pane
           doesn't squeeze both inputs into illegible slivers. */}
       {adding && (
-        <div className="shrink-0 p-3 border-b border-white/5 bg-[#0f0f12] space-y-2">
+        <div className="shrink-0 p-3 border-b border-white/5 bg-panel space-y-2">
           <input
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
@@ -462,9 +462,9 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
               onChange={(e) => setDraft({ ...draft, type: e.target.value as "D" | "L" | "R" })}
               className="h-7 px-1.5 bg-white/[0.04] border border-white/10 rounded text-[11px] text-primary font-bold uppercase shrink-0"
             >
-              <option value="D" className="bg-[#1a1a1e]">Dynamic</option>
-              <option value="L" className="bg-[#1a1a1e]">Local</option>
-              <option value="R" className="bg-[#1a1a1e]">Remote</option>
+              <option value="D" className="bg-elevated">Dynamic</option>
+              <option value="L" className="bg-elevated">Local</option>
+              <option value="R" className="bg-elevated">Remote</option>
             </select>
             <input
               value={draft.local}
@@ -534,7 +534,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
           all tunnels in this session, or filtered to one via the row icon.
           Auto-scrolls to bottom unless the user has scrolled up to read
           older entries. */}
-      <div className="shrink-0 border-t border-white/5 bg-[#0c0c0e]">
+      <div className="shrink-0 border-t border-white/5 bg-surface">
         <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/5">
           <button
             onClick={() => setLogsOpen((o) => !o)}

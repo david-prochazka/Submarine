@@ -36,7 +36,8 @@
     <meta name="twitter:image" content="https://sinaxhpm.com/submarine/og-cover.png" />
 
     <!-- Theme color so Android Chrome / installable PWAs match the dark shell -->
-    <meta name="theme-color" content="#0a0a0c" />
+    <meta name="theme-color" content="#17191c" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
 
     <!-- NOTE: Schema.org / JSON-LD SoftwareApplication + FAQPage blocks live
          in docs/seo/ — the Tauri WebView CSP (`script-src 'self'`) blocks
@@ -51,14 +52,17 @@
          on Android cold-start). Matches --background in App.css so the
          transition is invisible. -->
     <style>
-      html, body { margin: 0; height: 100%; background: #0a0a0c; color-scheme: dark; }
+      html, body { margin: 0; height: 100%; background: #17191c; color-scheme: dark; }
       /* #root height is driven by the --vv-h custom property that main.tsx
          keeps in sync with window.visualViewport.height. On desktop the
          value equals innerHeight and never changes; on Android when the
          soft keyboard opens the visualViewport shrinks and the whole app
          tree (which uses h-full / flex-1 / min-h-0) cascades correctly
          above the keyboard. Falls back to 100vh for the pre-JS paint. */
-      #root { height: var(--vv-h, 100vh); background: #0a0a0c; }
+      #root { height: var(--vv-h, 100vh); background: #17191c; }
+      @media (prefers-color-scheme: light) {
+        html, body, #root { background: #ffffff; color-scheme: light; }
+      }
     </style>
   </head>
   <body>

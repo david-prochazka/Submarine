@@ -15,7 +15,7 @@ export function QuickChoiceRow<T extends string>({ choices, current, onPick, hin
     <div className="space-y-1">
       <div className="flex justify-between items-center gap-3">
         <span className="text-[11px] font-bold text-zinc-400 shrink-0">Quick choice</span>
-        <div role="radiogroup" aria-label="Quick choice" className="flex-1 min-w-0 grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-[#1a1a1e] border border-white/10">
+        <div role="radiogroup" aria-label="Quick choice" className="flex-1 min-w-0 grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-elevated border border-white/10">
           {choices.map((p) => (
             <button
               key={p.value}
@@ -49,12 +49,12 @@ export function ChoiceRow({ label, hint, value, onChange, choices }: {
         <label className="text-[11px] font-bold text-zinc-400 shrink-0">{label}</label>
         <select
           aria-label={label}
-          className="flex-1 min-w-0 h-9 bg-[#1a1a1e] rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 focus:bg-[#232328] transition-all shadow-inner"
+          className="flex-1 min-w-0 h-9 bg-elevated rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 focus:bg-elevated transition-all shadow-inner"
           value={value}
           onChange={(e) => onChange(e.target.value)}
         >
           {choices.map((c) => (
-            <option key={c.value} value={c.value} disabled={c.disabled} className="bg-[#1a1a1e]">{c.label}</option>
+            <option key={c.value} value={c.value} disabled={c.disabled} className="bg-elevated">{c.label}</option>
           ))}
         </select>
       </div>

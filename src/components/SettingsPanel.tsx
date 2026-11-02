@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Settings, Palette, RefreshCw, List, Cloud, Minus, Plus, ArrowRight, X, KeyRound, EyeOff } from "lucide-react";
+import { Settings, Palette, RefreshCw, List, Cloud, Minus, Plus, ArrowRight, X, KeyRound, EyeOff, Monitor, Moon, Sun } from "lucide-react";
 import {
   MAX_FONT_SIZE, MIN_FONT_SIZE, clampFontSize, fontFamilyCss,
   isFontAvailable, primaryFontName, sanitizeFontFamily,
@@ -42,7 +42,7 @@ function DefaultShellSetting({ settings, setSettings }: any) {
   if (!shell) return null;
   const name = shell.split("/").pop();
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-zinc-100">Use my default shell</div>
@@ -61,7 +61,7 @@ function DefaultShellSetting({ settings, setSettings }: any) {
           onClick={() => setSettings((s: any) => ({ ...s, useLocalShell: !s.useLocalShell }))}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings.useLocalShell ? 'bg-primary' : 'bg-zinc-700'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${settings.useLocalShell ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings.useLocalShell ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
       </div>
     </div>
@@ -72,7 +72,7 @@ function DefaultShellSetting({ settings, setSettings }: any) {
 function SshAgentSetting({ settings, setSettings }: any) {
   const on = settings.useSshAgent !== false;
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-zinc-100">Use keys from an ssh-agent</div>
@@ -92,7 +92,7 @@ function SshAgentSetting({ settings, setSettings }: any) {
           onClick={() => setSettings((s: any) => ({ ...s, useSshAgent: !(s.useSshAgent !== false) }))}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${on ? 'bg-primary' : 'bg-zinc-700'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
       </div>
     </div>
@@ -103,7 +103,7 @@ function SshAgentSetting({ settings, setSettings }: any) {
 function SshConfigSetting({ settings, setSettings }: any) {
   const on = settings.useSshConfig !== false;
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-zinc-100">Use settings from ~/.ssh/config</div>
@@ -127,7 +127,7 @@ function SshConfigSetting({ settings, setSettings }: any) {
           onClick={() => setSettings((s: any) => ({ ...s, useSshConfig: !(s.useSshConfig !== false) }))}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${on ? 'bg-primary' : 'bg-zinc-700'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
       </div>
     </div>
@@ -149,7 +149,7 @@ function SecureScreenSetting() {
     invoke<boolean>("set_secure_screen", { enabled: !on }).then(setOn, (e) => setError(String(e)));
   };
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold text-zinc-100">Block screenshots</div>
@@ -169,7 +169,7 @@ function SecureScreenSetting() {
           onClick={toggle}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-primary' : 'bg-zinc-700'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
         </button>
       </div>
     </div>
@@ -227,7 +227,7 @@ function TerminalFontSettings({ settings, setSettings }: any) {
   const previewFamily = fontFamilyCss(familyDraft);
 
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
       {/* Font face */}
       <div className="space-y-2">
         <div className="flex justify-between items-center gap-2">
@@ -311,9 +311,9 @@ function TerminalFontSettings({ settings, setSettings }: any) {
       </div>
 
       {/* Live preview */}
-      <div className="rounded-xl bg-[#09090b] border border-white/5 px-3 py-2.5 overflow-x-auto custom-scrollbar">
+      <div className="rounded-xl bg-surface border border-white/5 px-3 py-2.5 overflow-x-auto custom-scrollbar">
         <pre
-          className="m-0 whitespace-pre text-[#e4e4e7] leading-snug"
+          className="m-0 whitespace-pre text-zinc-100 leading-snug"
           style={{ fontFamily: previewFamily, fontSize: Math.min(size, 28) }}
         >
           <span className="text-primary">user@server</span>:~$ ls -la{"\n"}0O 1lI | {"{}"} [] =&gt; ✓
@@ -417,12 +417,12 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
         onClick={() => setSettings((s: any) => ({ ...s, [key]: !s[key] }))}
         className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings[key] ? "bg-primary" : "bg-zinc-700"}`}
       >
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${settings[key] ? "left-[22px]" : "left-0.5"}`} />
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings[key] ? "left-[22px]" : "left-0.5"}`} />
       </button>
     </div>
   );
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
       <div className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Colours</div>
       <div role="radiogroup" aria-label="Colour scheme" className="grid grid-cols-2 gap-2">
         {schemes.map(swatch)}
@@ -502,7 +502,7 @@ function TerminalScrollbackSetting({ settings, setSettings }: any) {
     if (next !== lines) set(next);
   };
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-3 shadow-xl">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-3 shadow-xl">
       <div className="flex justify-between items-center gap-3">
         <label htmlFor="term-scrollback" className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Scrollback (lines)</label>
         <div className="flex items-center gap-1.5">
@@ -568,7 +568,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
     .sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
   return (
-    <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
+    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
       <div>
         <div className="text-sm font-semibold text-zinc-100">Shell config sync</div>
         <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
@@ -660,6 +660,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
 
 const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any) => {
   const accentColors = [
+    { name: 'Theme (teal)', value: '' },
     { name: 'Light Blue', value: '#60a5fa' },
     { name: 'Sky', value: '#38bdf8' },
     { name: 'Cyan', value: '#22d3ee' },
@@ -668,13 +669,10 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
     { name: 'Rose', value: '#f43f5e' },
   ];
 
-  const bgColors = [
-    { name: 'Onyx', value: '#050505' },
-    { name: 'Charcoal', value: '#0a0a0c' },
-    { name: 'Slate', value: '#0f172a' },
-    { name: 'Nord', value: '#2e3440' },
-    { name: 'Dark Gray', value: '#1a1a1a' },
-    { name: 'Deep Space', value: '#0d0d10' },
+  const appearances = [
+    { value: 'system', label: 'System', icon: Monitor },
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
   ];
 
   // Read-only storage summary from the backend: where data lives and whether
@@ -707,7 +705,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             <Palette size={14} /> UI Customization
           </div>
 
-          <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-8 shadow-xl">
+          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-8 shadow-xl">
             {/* Accent Color */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -715,59 +713,50 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
                 <div className="flex items-center gap-2">
                   <input 
                     type="color" 
-                    value={settings.primaryColor} 
+                    value={settings.primaryColor || '#3ecfc4'} 
                     onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
                     className="w-6 h-6 rounded-md bg-transparent cursor-pointer border-none p-0"
                   />
                   <input 
                     type="text" 
                     value={settings.primaryColor} 
+                    placeholder="Theme"
+                    aria-label="Accent colour, hex"
                     onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
                     className="w-20 h-6 bg-black border border-white/10 rounded px-1.5 text-[10px] font-mono text-zinc-400 focus:border-primary/50 outline-none"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-6 gap-3">
+              <div className="grid grid-cols-7 gap-3">
                 {accentColors.map(c => (
                   <button
                     key={c.value}
                     onClick={() => setSettings({ ...settings, primaryColor: c.value })}
                     className={`w-full aspect-square rounded-xl border-2 transition-all ${settings.primaryColor === c.value ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
-                    style={{ backgroundColor: c.value }}
+                    style={{ backgroundColor: c.value || '#3ecfc4' }}
                     title={c.name}
+                    aria-label={c.name}
                   />
                 ))}
               </div>
             </div>
 
-            {/* Background Theme */}
-            <div className="space-y-4 pt-6 border-t border-white/5">
-              <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Background Theme</label>
-                <div className="flex items-center gap-2">
-                  <input 
-                    type="color" 
-                    value={settings.backgroundColor} 
-                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
-                    className="w-6 h-6 rounded-md bg-transparent cursor-pointer border-none p-0"
-                  />
-                  <input 
-                    type="text" 
-                    value={settings.backgroundColor} 
-                    onChange={(e) => setSettings({ ...settings, backgroundColor: e.target.value })}
-                    className="w-20 h-6 bg-black border border-white/10 rounded px-1.5 text-[10px] font-mono text-zinc-400 focus:border-primary/50 outline-none"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-6 gap-3">
-                {bgColors.map(c => (
+            <div className="space-y-3 pt-6 border-t border-white/5">
+              <span id="appearance-label" className="block text-[11px] font-semibold text-zinc-500">Appearance</span>
+              <div role="radiogroup" aria-labelledby="appearance-label" className="grid grid-cols-3 gap-0.5 p-0.5 rounded-lg bg-white/[0.06]">
+                {appearances.map(({ value, label, icon: Icon }) => (
                   <button
-                    key={c.value}
-                    onClick={() => setSettings({ ...settings, backgroundColor: c.value })}
-                    className={`w-full aspect-square rounded-xl border-2 transition-all ${settings.backgroundColor === c.value ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
-                    style={{ backgroundColor: c.value }}
-                    title={c.name}
-                  />
+                    key={value}
+                    type="button"
+                    role="radio"
+                    aria-checked={settings.appearance === value}
+                    onClick={() => setSettings({ ...settings, appearance: value })}
+                    className={`h-7 flex items-center justify-center gap-1.5 rounded-md text-[12px] font-medium transition-colors ${
+                      settings.appearance === value ? 'bg-control text-white shadow-control' : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={13} aria-hidden /> {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -823,7 +812,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
               <List size={14} /> Activity Log
             </div>
 
-            <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+            <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
               <p className="text-sm text-zinc-400 leading-relaxed">
                 Diagnostic timeline of what the app has been doing this session. Useful for confirming a connection actually failed or watching a transfer's progress in retrospect.
               </p>
@@ -843,7 +832,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             <Cloud size={14} /> Cloud Sync
           </div>
 
-          <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <div className="text-sm font-semibold text-zinc-100">Auto-sync</div>
@@ -860,7 +849,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
                 onClick={() => setSettings((s: any) => ({ ...s, autoSync: !(s.autoSync !== false) }))}
                 className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings.autoSync !== false ? 'bg-primary' : 'bg-zinc-700'}`}
               >
-                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${settings.autoSync !== false ? 'left-[22px]' : 'left-0.5'}`} />
+                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings.autoSync !== false ? 'left-[22px]' : 'left-0.5'}`} />
               </button>
             </div>
 
@@ -880,7 +869,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             <RefreshCw size={14} /> Maintenance
           </div>
 
-          <div className="bg-[#121215] border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
             {storage && (
               <div className="space-y-1.5 pb-4 border-b border-white/5">
                 <div className="flex items-center gap-2">
@@ -905,7 +894,7 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             <button
               onClick={() => {
                 if(window.confirm('Reset all UI customizations?')) {
-                  setSettings((s: any) => ({ ...s, primaryColor: '#60a5fa', backgroundColor: '#0a0a0c', terminalFontSize: 14, terminalFontFamily: '' }));
+                  setSettings((s: any) => ({ ...s, primaryColor: '', appearance: 'system', terminalFontSize: 14, terminalFontFamily: '' }));
                 }
               }}
               className="px-4 h-9 bg-zinc-900 border border-white/5 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-white/5 transition-all w-full"

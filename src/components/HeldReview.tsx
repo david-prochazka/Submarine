@@ -70,14 +70,14 @@ export function HeldReview({ servers, onAllow, onClose }: {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="held-review-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[560px] max-h-[80vh] flex flex-col bg-[#121214] border border-white/10 rounded-xl shadow-2xl font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150"
+        className="w-full max-w-[560px] max-h-[80vh] flex flex-col bg-panel border border-white/10 rounded-xl shadow-2xl font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150"
       >
         <div className="flex items-start justify-between gap-3 p-4 pb-2">
           <div className="flex items-center gap-2">

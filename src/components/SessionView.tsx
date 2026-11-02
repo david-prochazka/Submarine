@@ -129,7 +129,7 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
               ? { top: guideAt.bottom + 6 }
               : { bottom: window.innerHeight - guideAt.top + 6 }),
           }}
-          className="fixed z-[9999] pointer-events-none bg-[#15151a] border border-white/10 rounded-lg shadow-2xl px-3 py-2 text-[11px] leading-snug text-zinc-300"
+          className="fixed z-[9999] pointer-events-none bg-elevated border border-white/10 rounded-lg shadow-2xl px-3 py-2 text-[11px] leading-snug text-zinc-300"
         >
           <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-100">Dedicated session</div>
           <p>{hint}</p>
@@ -1419,7 +1419,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     <div
       role="dialog"
       aria-label={`Connection prompt for ${session.serverName}`}
-      className="absolute inset-0 z-40 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+      className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
     >
       <div className="max-w-2xl w-full mt-6 sm:mt-12">
         {authPrompts}
@@ -1435,7 +1435,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     const retryWaiting = reconnectAttempt > 0 && nextReconnectAt !== null;
     const retryIn = nextReconnectAt ? Math.max(0, Math.ceil((nextReconnectAt - Date.now()) / 1000)) : 0;
     return (
-      <div className="relative flex-1 flex flex-col p-4 sm:p-8 bg-[#0a0a0c] text-white overflow-hidden">
+      <div className="relative flex-1 flex flex-col p-4 sm:p-8 bg-surface text-white overflow-hidden">
         <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col min-h-0">
           {/* Header: status chip + server name on the left, actions on the
               right — one row at every width. The name is regular-case text
@@ -1507,7 +1507,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               type="password"
               aria-label="Password"
               placeholder="Try another password — press Enter to reconnect"
-              className="h-8 w-full mb-3 sm:mb-4 bg-[#1a1a1e] rounded-lg px-3 text-xs text-white border border-white/10 outline-none focus:border-primary/50"
+              className="h-8 w-full mb-3 sm:mb-4 bg-elevated rounded-lg px-3 text-xs text-white border border-white/10 outline-none focus:border-primary/50"
               value={customPassword}
               onChange={e => setCustomPassword(e.target.value)}
               onKeyDown={e => {
@@ -1532,7 +1532,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               const el = e.currentTarget;
               logFollowRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 32;
             }}
-            className="flex-1 min-h-0 bg-[#121214] border border-white/5 rounded-2xl p-4 font-mono overflow-y-auto overscroll-contain custom-scrollbar shadow-inner relative select-text cursor-text"
+            className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono overflow-y-auto overscroll-contain custom-scrollbar shadow-inner relative select-text cursor-text"
             style={{ WebkitOverflowScrolling: 'touch', fontSize: logFontSize, fontFamily: logFontFamily, lineHeight: 1.5 }}
           >
             {logs.map((l, i) => (
@@ -1571,7 +1571,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           full chrome and 2-3 sessions side-by-side would fight for
           vertical space with duplicate toolbars. */}
       {!chromeless && (
-      <div inert={shellSyncOpen ? "" : undefined} className="h-12 border-b border-white/5 bg-[#121214]/50 flex items-center px-2 sm:px-4 shrink-0 justify-between gap-1">
+      <div inert={shellSyncOpen ? "" : undefined} className="h-11 border-b border-white/[0.075] bg-surface flex items-center px-2 sm:px-3 shrink-0 justify-between gap-1">
         <div
           className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 mr-1 sm:mr-4 mask-fade-right"
           onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
@@ -1604,12 +1604,12 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 requestTerminalFocus();
               }}
               title={t.container ? `Container: ${t.container.name}` : undefined}
-              className={`h-8 px-3 sm:px-4 ${terminals.length > 1 ? 'pr-8' : ''} rounded-lg flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider transition-all ${
+              className={`h-7 px-2.5 ${terminals.length > 1 ? 'pr-7' : ''} rounded-md flex items-center gap-1.5 text-[12.5px] font-medium whitespace-nowrap transition-colors duration-100 ${
                 isFocusedHalf
-                  ? 'bg-primary/10 text-primary border border-primary/20 shadow-inner'
+                  ? 'bg-primary/15 text-primary'
                   : isSplitPartner
-                    ? 'bg-primary/[0.04] text-primary/70 border border-primary/10'
-                    : 'text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:text-white'
+                    ? 'bg-primary/[0.06] text-white'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
               } ${t.container ? 'ring-1 ring-sky-400/30' : ''}`}
             >
               {t.container
@@ -1645,7 +1645,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                   }
                 }}
                 aria-label="Close terminal"
-                className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 hover:bg-white/5 hover:text-red-400 text-zinc-500 transition-all"
+                className="absolute right-1 top-1/2 -translate-y-1/2 w-[18px] h-[18px] flex items-center justify-center rounded opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 hover:bg-white/[0.09] hover:text-white text-zinc-500 transition-opacity"
               >
                 <X size={12} />
               </button>
@@ -1674,7 +1674,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               const rect = e.currentTarget.getBoundingClientRect();
               setPlusMenu({ x: rect.left, y: rect.bottom + 4 });
             }}
-            className="h-10 w-10 sm:h-8 sm:w-8 ml-1 shrink-0 rounded-lg flex items-center justify-center text-zinc-500 hover:bg-white/10 hover:text-white transition-all border border-dashed border-white/10 relative"
+            className="h-10 w-10 sm:h-7 sm:w-7 ml-1 shrink-0 rounded-md flex items-center justify-center text-zinc-400 hover:bg-white/[0.09] hover:text-white transition-colors relative"
             title="New terminal · right-click for more options"
           >
             <Plus size={14} />
@@ -1694,7 +1694,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             narrow viewports (below md) so the terminal tab strip keeps its
             horizontal real estate when space is tight; the full description
             stays in the tooltip either way. */}
-        <div className="flex items-center gap-1 shrink-0 sm:border-l border-white/5 sm:pl-3 pl-1">
+        <div className="flex items-center gap-0.5 shrink-0 sm:border-l border-white/[0.075] sm:pl-2 pl-1">
           {([
             { id: 'sftp',    icon: Folder,  label: 'SFTP',    hint: 'SFTP — file browser' },
             { id: 'tunnels', icon: Network, label: 'Ports',   hint: 'Ports — port forwarding' },
@@ -1709,14 +1709,14 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 title={hint}
                 aria-label={hint}
                 aria-pressed={on}
-                className={`h-10 sm:h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all ${
+                className={`h-10 sm:h-7 px-2.5 rounded-md flex items-center gap-1.5 transition-colors duration-100 ${
                   on
-                    ? 'bg-primary/10 text-primary border border-primary/20 shadow-inner'
-                    : 'text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:text-white'
+                    ? 'bg-primary/15 text-primary'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 <Icon size={14} className="shrink-0" />
-                <span className="hidden md:inline text-[11px] font-semibold tracking-tight">{label}</span>
+                <span className="hidden md:inline text-[12.5px] font-medium">{label}</span>
               </button>
             );
           })}
@@ -1730,10 +1730,10 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               disabled={status !== 'connected'}
               title="Push shell config: your files from Settings → Shell config sync, to this server"
               aria-label="Push shell config"
-              className="h-10 sm:h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:text-white disabled:opacity-40 disabled:pointer-events-none"
+              className="h-10 sm:h-7 px-2.5 rounded-md flex items-center gap-1.5 transition-colors duration-100 text-zinc-400 hover:bg-white/5 hover:text-white disabled:opacity-40 disabled:pointer-events-none"
             >
               <UploadCloud size={14} className="shrink-0" />
-              <span className="hidden md:inline text-[11px] font-semibold tracking-tight">Shell</span>
+              <span className="hidden md:inline text-[12.5px] font-medium">Shell</span>
             </button>
           )}
           {/* Where the tool pane sits around the terminal. Compact windows
@@ -1747,7 +1747,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               title="Panel position"
               aria-label="Panel position"
               aria-haspopup="menu"
-              className="h-10 sm:h-8 px-2 rounded-lg flex items-center text-zinc-400 border border-transparent hover:bg-white/[0.08] hover:border-white/20 hover:text-white transition-all"
+              className="h-10 sm:h-7 px-2 rounded-md flex items-center text-zinc-400 hover:bg-white/[0.09] hover:text-white transition-colors"
             >
               <DockIcon size={14} />
             </button>
@@ -1771,7 +1771,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           />
           <div
             style={{ left: Math.min(plusMenu.x, window.innerWidth - 260), top: Math.min(plusMenu.y, window.innerHeight - 220) }}
-            className="fixed z-[9999] w-[240px] bg-[#15151a] border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
+            className="fixed z-[9999] w-[240px] bg-elevated border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
           >
             {!isCompact && (
               <>
@@ -1875,7 +1875,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           />
           <div
             style={{ left: Math.min(termMenu.x, window.innerWidth - 240), top: Math.min(termMenu.y, window.innerHeight - 80) }}
-            className="fixed z-[9999] w-[220px] bg-[#15151a] border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
+            className="fixed z-[9999] w-[220px] bg-elevated border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
           >
             {termRename === termMenu.termId ? (
               <RenameInput
@@ -1908,7 +1908,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             role="menu"
             aria-label="Panel position"
             style={{ left: Math.max(8, Math.min(dockMenu.x - 210, window.innerWidth - 218)), top: Math.min(dockMenu.y, window.innerHeight - 170) }}
-            className="fixed z-[9999] w-[210px] bg-[#15151a] border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
+            className="fixed z-[9999] w-[210px] bg-elevated border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
           >
             <div className="px-3 pt-1 pb-1.5 text-[9.5px] font-bold uppercase tracking-wider text-zinc-500">Panel position</div>
             {DOCK_OPTIONS.map(({ id, label, Icon }) => (
@@ -1999,7 +1999,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
         ref={mainAreaRef}
         // Behind the push dialog: Tab can't reach the terminal under it.
         inert={shellSyncOpen ? "" : undefined}
-        className={`flex-1 flex overflow-hidden relative bg-[#09090b] ${toolAlone ? "" : DOCK_FLEX[toolDock]}`}
+        className={`flex-1 flex overflow-hidden relative bg-surface ${toolAlone ? "" : DOCK_FLEX[toolDock]}`}
       >
         {/* Left Panel: Active Terminals.
             With a tool open in a compact window, or made full screen, hide
@@ -2072,7 +2072,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                         }
                       }}
                       title="Remove this pane from the split (keeps the terminal)"
-                      className="absolute top-1 right-1 z-30 h-5 w-5 rounded flex items-center justify-center bg-black/40 border border-white/10 text-zinc-400 hover:text-white hover:bg-black/60 opacity-0 hover:opacity-100 group-hover/pane:opacity-100 focus-visible:opacity-100 transition-opacity"
+                      className="absolute top-1 right-1 z-30 h-5 w-5 rounded flex items-center justify-center bg-black/40 border border-white/10 text-zinc-400 hover:text-white hover:bg-scrim opacity-0 hover:opacity-100 group-hover/pane:opacity-100 focus-visible:opacity-100 transition-opacity"
                     >
                       <X size={11} />
                     </button>
@@ -2211,7 +2211,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 ? { height: `${toolPanelHeight}px`, maxHeight: `calc(100% - ${MIN_TERMINAL_HEIGHT + 4}px)` }
                 : { width: `${toolPanelWidth}px`, maxWidth: `calc(100% - ${MIN_TERMINAL_WIDTH + 4}px)` })
             : undefined}
-          className={`${activeTool ? (toolAlone ? 'flex-1 min-w-0' : 'shrink-0') : 'hidden'} bg-[#121214]/95 flex flex-col ${dockTopBottom && !toolAlone ? 'w-full' : 'h-full'} overflow-hidden ${activeTool ? 'animate-in slide-in-from-right duration-300' : ''}`}
+          className={`${activeTool ? (toolAlone ? 'flex-1 min-w-0' : 'shrink-0') : 'hidden'} bg-panel/95 flex flex-col ${dockTopBottom && !toolAlone ? 'w-full' : 'h-full'} overflow-hidden ${activeTool ? 'animate-in slide-in-from-right duration-300' : ''}`}
         >
           {activeTool === 'sftp' && (
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -2336,12 +2336,12 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 closeShellSync();
               }
             }}
-            className="absolute inset-0 z-50 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+            className="absolute inset-0 z-50 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
           >
             <div
               ref={shellSyncPanelRef}
               tabIndex={-1}
-              className="max-w-xl w-full mt-6 sm:mt-12 bg-[#121215] border border-white/10 rounded-2xl shadow-2xl overflow-hidden outline-none"
+              className="max-w-xl w-full mt-6 sm:mt-12 bg-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden outline-none"
             >
               <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">

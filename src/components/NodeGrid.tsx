@@ -414,7 +414,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         key={`server-${s.id}`}
         data-sid={s.id}
         onClick={() => { if (draggedRef.current) return; onOpenServer(s); }}
-        className="group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-[#17171c] to-[#121216] border border-white/5 hover:border-primary/40 hover:bg-white/[0.015] transition-colors duration-150 cursor-pointer overflow-hidden"
+        className="group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-panel to-panel border border-white/5 hover:border-primary/40 hover:bg-white/[0.015] transition-colors duration-150 cursor-pointer overflow-hidden"
       >
         {/* Per-server colour accent: a crisp left bar. */}
         <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} />
@@ -464,7 +464,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
 
         {/* Actions: absolute + hover-revealed on desktop so the name gets the
             full width; inline + always-visible on mobile (no hover there). */}
-        <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:pl-8 sm:bg-gradient-to-l sm:from-[#121216] sm:via-[#121216] sm:to-transparent transition-all duration-200">
+        <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:pl-8 sm:bg-gradient-to-l sm:from-panel sm:via-panel sm:to-transparent transition-all duration-200">
           {onCloneServer && (
             <button
               onClick={(e) => { e.stopPropagation(); onCloneServer(s.id); }}
@@ -516,7 +516,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
       <div
         data-drop-folder={f.id}
         onClick={() => { if (!isRenaming && !draggedRef.current) setActiveFolderId(f.id); }}
-        className={`group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-[#1c1c22] to-[#141418] border transition-colors duration-150 cursor-pointer overflow-hidden ${
+        className={`group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border transition-colors duration-150 cursor-pointer overflow-hidden ${
           isTarget ? 'border-primary ring-2 ring-primary/60 bg-primary/10' : 'border-white/5 hover:border-primary/40 hover:bg-white/[0.015]'
         } ${isDragged ? 'opacity-40' : ''}`}
       >
@@ -590,8 +590,8 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
           </div>
         ) : (
           <div className="relative flex items-center shrink-0">
-            <span className="text-[10px] bg-black/60 text-zinc-400 px-1.5 py-0.5 rounded-md font-mono group-hover:opacity-0 group-has-[:focus-visible]:opacity-0 transition-opacity">{serverCount}</span>
-            <div className="absolute right-0 flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 transition-all bg-gradient-to-l from-[#16161b] via-[#16161b] to-transparent pl-6">
+            <span className="text-[10px] bg-scrim text-zinc-400 px-1.5 py-0.5 rounded-md font-mono group-hover:opacity-0 group-has-[:focus-visible]:opacity-0 transition-opacity">{serverCount}</span>
+            <div className="absolute right-0 flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 transition-all bg-gradient-to-l from-panel via-panel to-transparent pl-6">
               <button
                 onClick={(e) => { e.stopPropagation(); setRenaming({ id: f.id, draft: f.name || "" }); }}
                 title="Rename folder"
@@ -636,7 +636,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         <input
           type="text"
           placeholder="Search servers…"
-          className="w-full h-9 bg-[#1c1c21] border border-white/10 rounded-lg pl-9 pr-4 text-[13px] text-zinc-100 outline-none focus:border-primary/50 focus:bg-[#16161a] transition-all placeholder:text-zinc-600 shadow-inner"
+          className="w-full h-9 bg-elevated border border-white/10 rounded-lg pl-9 pr-4 text-[13px] text-zinc-100 outline-none focus:border-primary/50 focus:bg-elevated transition-all placeholder:text-zinc-600 shadow-inner"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -810,7 +810,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             {/* The folder being made with "Add folder": a card to name it.
                 Plain JSX, not a nested component, so typing keeps focus. */}
             {!isSearching && newFolder !== null && (
-              <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-[#1c1c22] to-[#141418] border border-primary/40 overflow-hidden">
+              <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border border-primary/40 overflow-hidden">
                 <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" />
                 <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shadow-inner shrink-0">
                   <FolderPlus size={16} className="text-primary" />
@@ -888,7 +888,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             transform: `translate(${pointerRef.current.x - grabOffsetRef.current.x}px, ${pointerRef.current.y - grabOffsetRef.current.y}px) rotate(1.5deg) scale(1.03)`,
           }}
         >
-          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-[#1b1b20] to-[#141418] border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
+          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-panel to-panel border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
             <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: draggedServer.color || 'rgb(var(--primary))' }} />
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/25 to-primary/[0.03] border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0">
               {(draggedServer.name || '').trim().charAt(0)
@@ -917,7 +917,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             transform: `translate(${pointerRef.current.x - grabOffsetRef.current.x}px, ${pointerRef.current.y - grabOffsetRef.current.y}px) rotate(1.5deg) scale(1.03)`,
           }}
         >
-          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-[#1f1f26] to-[#16161b] border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
+          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
             <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: draggedFolder.color || 'rgb(var(--primary))' }} />
             <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shadow-inner shrink-0" style={{ color: draggedFolder.color || undefined }}>
               <Folder size={16} className={draggedFolder.color ? '' : 'text-primary'} />

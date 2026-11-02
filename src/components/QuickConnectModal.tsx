@@ -65,8 +65,8 @@ const QuickConnectModal = ({ isOpen, onClose, onConnect }: Props) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-3" onClick={close}>
-      <div className="w-full max-w-md max-h-[90vh] flex flex-col bg-[#121214] border border-white/10 rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm flex items-center justify-center p-3" onClick={close}>
+      <div className="w-full max-w-md max-h-[90vh] flex flex-col bg-panel border border-white/10 rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="shrink-0 px-4 py-3 border-b border-white/5 flex items-center justify-between">
           <span className="text-[12px] font-bold uppercase tracking-widest text-white flex items-center gap-2">

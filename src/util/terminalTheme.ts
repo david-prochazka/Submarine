@@ -48,7 +48,7 @@ export const SCHEMES: TerminalScheme[] = [
     id: DEFAULT_THEME_ID,
     name: "Submarine",
     // xterm's own ANSI colours; only the rest was ever set.
-    theme: { background: "#09090b", foreground: "#e4e4e7", cursor: "#60a5fa", selectionBackground: "rgba(96, 165, 250, 0.3)" },
+    theme: { background: "#0f1113", foreground: "#d9dee3", cursor: "#3ecfc4", selectionBackground: "rgba(62, 207, 196, 0.25)" },
   },
   scheme("campbell", "Campbell", "#0c0c0c", "#cccccc", "#ffffff", "rgba(255, 255, 255, 0.25)", [
     "#0c0c0c", "#c50f1f", "#13a10e", "#c19c00", "#0037da", "#881798", "#3a96dd", "#cccccc",

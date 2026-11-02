@@ -36,7 +36,7 @@ export function RdpShareFields({ o, set, drives }: Fields & { drives: string[] }
             aria-label="Shared folder"
             value={o.sharePath}
             placeholder="No folder chosen"
-            className="flex-1 min-w-0 h-9 bg-[#1a1a1e] rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none shadow-inner"
+            className="flex-1 min-w-0 h-9 bg-elevated rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none shadow-inner"
           />
           <button
             type="button"
@@ -50,12 +50,12 @@ export function RdpShareFields({ o, set, drives }: Fields & { drives: string[] }
       {o.share === "drive" && (
         <select
           aria-label="Shared drive"
-          className="w-full h-9 bg-[#1a1a1e] rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 focus:bg-[#232328] transition-all shadow-inner"
+          className="w-full h-9 bg-elevated rounded-lg px-3 text-[12px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 focus:bg-elevated transition-all shadow-inner"
           value={o.sharePath}
           onChange={(e) => set({ sharePath: e.target.value })}
         >
-          <option value="" className="bg-[#1a1a1e]">Pick a drive</option>
-          {drives.map((d) => <option key={d} value={d} className="bg-[#1a1a1e]">{d}</option>)}
+          <option value="" className="bg-elevated">Pick a drive</option>
+          {drives.map((d) => <option key={d} value={d} className="bg-elevated">{d}</option>)}
         </select>
       )}
       {o.share !== "off" && (

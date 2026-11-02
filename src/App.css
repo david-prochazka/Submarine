@@ -2,46 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Native <select> renders its dropdown via the OS theme, which defaults
-   to a white list — our dark form text becomes unreadable against it.
-   Style the option rows directly so the dropdown matches the panels.
-   Only takes effect on Chromium (what Tauri's WebView uses), which is
-   the only renderer we ship to. */
 select option,
 select optgroup {
-  background-color: #1a1a1e;
-  color: #e4e4e7;
+  background-color: rgb(var(--elevated));
+  color: rgb(var(--ink));
 }
 
 @layer base {
   :root {
-    --background: #0a0a0c;
-    --foreground: 0 0% 100%;
-    --primary: 96 165 250;
-    --primary-hex: #60a5fa;
-    --base-font-size: 15.5px;
-    --border: 240 5.9% 15%;
+    color-scheme: dark;
+    --background: 18 20 23;
+    --sidebar: 27 30 34;
+    --surface: 23 25 28;
+    --panel: 29 32 36;
+    --elevated: 37 41 46;
+    --control: 43 47 53;
+    --field: 19 21 24;
+    --terminal: 15 17 19;
+    --ink: 232 234 237;
+    --ink-inverse: 4 33 31;
+    --muted: 163 169 177;
+    --subtle: 139 146 155;
+    --primary: 62 207 196;
+    --primary-hex: #3ecfc4;
+    --success: 61 214 140;
+    --warning: 242 180 76;
+    --danger: 255 112 112;
+    --info: 108 180 255;
+    --border: rgba(255, 255, 255, 0.075);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --scrim: rgba(6, 8, 10, 0.55);
+    --scrollbar: rgba(255, 255, 255, 0.14);
+    --scrollbar-hover: rgba(255, 255, 255, 0.26);
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 0 0.5px rgba(255, 255, 255, 0.09);
+    --shadow-sheet: 0 28px 72px rgba(0, 0, 0, 0.6), 0 0 0 0.5px rgba(255, 255, 255, 0.1);
+    --shadow-control: 0 0.5px 1px rgba(0, 0, 0, 0.4);
+    --base-font-size: 13px;
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --background: 236 238 241;
+    --sidebar: 232 234 237;
+    --surface: 255 255 255;
+    --panel: 247 248 249;
+    --elevated: 255 255 255;
+    --control: 255 255 255;
+    --field: 255 255 255;
+    --terminal: 251 251 252;
+    --ink: 26 29 33;
+    --ink-inverse: 255 255 255;
+    --muted: 85 92 101;
+    --subtle: 105 112 122;
+    --primary: 10 118 114;
+    --primary-hex: #0a7672;
+    --success: 23 128 79;
+    --warning: 154 91 0;
+    --danger: 201 52 52;
+    --info: 31 111 204;
+    --border: rgba(0, 0, 0, 0.085);
+    --border-strong: rgba(0, 0, 0, 0.15);
+    --scrim: rgba(20, 24, 28, 0.22);
+    --scrollbar: rgba(0, 0, 0, 0.16);
+    --scrollbar-hover: rgba(0, 0, 0, 0.3);
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.14), 0 0 0 0.5px rgba(0, 0, 0, 0.1);
+    --shadow-sheet: 0 28px 72px rgba(0, 0, 0, 0.2), 0 0 0 0.5px rgba(0, 0, 0, 0.12);
+    --shadow-control: 0 0.5px 1.5px rgba(0, 0, 0, 0.14);
   }
 
   body {
-    @apply text-white select-none overflow-hidden;
-    background-color: var(--background);
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply text-white select-none overflow-hidden font-sans;
+    background-color: rgb(var(--surface));
     font-size: var(--base-font-size);
-    font-feature-settings: "cv11", "ss01";
+    line-height: 18px;
+    letter-spacing: -0.003em;
     -webkit-font-smoothing: antialiased;
     cursor: default;
   }
 
-  input::placeholder {
+  :focus-visible {
+    outline: 2px solid rgb(var(--primary));
+    outline-offset: 1px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
     @apply text-zinc-500 opacity-100;
   }
 
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus {
-    -webkit-text-fill-color: var(--primary-hex);
-    -webkit-box-shadow: 0 0 0px 1000px #09090b inset;
+    -webkit-text-fill-color: rgb(var(--ink));
+    -webkit-box-shadow: 0 0 0px 1000px rgb(var(--field)) inset;
     transition: background-color 5000s ease-in-out 0s;
   }
 }
@@ -57,7 +110,7 @@ select optgroup {
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-zinc-800 rounded-full hover:bg-primary/50 transition-all;
+    @apply bg-zinc-700 rounded-full hover:bg-zinc-600 transition-all;
   }
 
   /* !important here because the global ::-webkit-scrollbar rule further
@@ -119,13 +172,12 @@ select optgroup {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: rgba(96, 165, 250, 0.18) !important;
+  background-color: var(--scrollbar) !important;
   border-radius: 9999px !important;
-  border: 1px solid rgba(96, 165, 250, 0.06) !important;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(96, 165, 250, 0.45) !important;
+  background-color: var(--scrollbar-hover) !important;
 }
 
 /* 2. Specific Overrides for Xterm Viewport & Terminal Children */
@@ -150,9 +202,8 @@ select optgroup {
 .xterm .xterm-viewport::-webkit-scrollbar-thumb,
 .xterm-viewport *::-webkit-scrollbar-thumb,
 .xterm *::-webkit-scrollbar-thumb {
-  background-color: rgba(96, 165, 250, 0.18) !important;
+  background-color: var(--scrollbar) !important;
   border-radius: 9999px !important;
-  border: 1px solid rgba(96, 165, 250, 0.06) !important;
   transition: background-color 0.2s ease-in-out !important;
 }
 
@@ -160,14 +211,13 @@ select optgroup {
 .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover,
 .xterm-viewport *::-webkit-scrollbar-thumb:hover,
 .xterm *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(96, 165, 250, 0.45) !important;
-  border: 1px solid rgba(96, 165, 250, 0.12) !important;
+  background-color: var(--scrollbar-hover) !important;
 }
 
 /* 3. Standards-based Thin Scrollbars for cross-browser engines */
 * {
   scrollbar-width: thin !important;
-  scrollbar-color: rgba(96, 165, 250, 0.18) transparent !important;
+  scrollbar-color: var(--scrollbar) transparent !important;
 }
 
 /* xterm's DOM renderer makes each row as wide as columns × the cell width it

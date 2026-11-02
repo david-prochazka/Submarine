@@ -14,21 +14,19 @@
 
 .xterm-viewport::-webkit-scrollbar-thumb,
 .xterm .xterm-viewport::-webkit-scrollbar-thumb {
-  background: rgba(96, 165, 250, 0.18) !important;
+  background: var(--scrollbar) !important;
   border-radius: 9999px !important;
-  border: 1px solid rgba(96, 165, 250, 0.06) !important;
   transition: background-color 0.2s ease-in-out !important;
 }
 
 .xterm-viewport::-webkit-scrollbar-thumb:hover,
 .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
-  background: rgba(96, 165, 250, 0.45) !important;
-  border: 1px solid rgba(96, 165, 250, 0.12) !important;
+  background: var(--scrollbar-hover) !important;
 }
 
 .xterm-viewport,
 .xterm .xterm-viewport {
   -ms-overflow-style: auto !important;
   scrollbar-width: thin !important;
-  scrollbar-color: rgba(96, 165, 250, 0.18) transparent !important;
+  scrollbar-color: var(--scrollbar) transparent !important;
 }

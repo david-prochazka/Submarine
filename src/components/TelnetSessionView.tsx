@@ -160,7 +160,7 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
 
   const logList = (
     <div
-      className="flex-1 min-h-0 bg-[#121214] border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
+      className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
       style={{ WebkitOverflowScrolling: "touch", lineHeight: 1.5 }}
     >
       {logs.map((l, i) => (
@@ -176,8 +176,8 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
   );
 
   return (
-    <div className="relative flex-1 flex flex-col min-h-0 bg-[#0a0a0c] text-white overflow-hidden" data-telnet-status={status}>
-      <div className="h-10 shrink-0 flex items-center gap-2 px-3 border-b border-white/5 bg-[#111114]">
+    <div className="relative flex-1 flex flex-col min-h-0 bg-surface text-white overflow-hidden" data-telnet-status={status}>
+      <div className="h-10 shrink-0 flex items-center gap-2 px-3 border-b border-white/5 bg-panel">
         <span className={`shrink-0 ${broken ? "text-red-400" : "text-primary"}`} aria-hidden="true">
           {working ? <Loader2 size={14} className="animate-spin" /> : broken ? <AlertTriangle size={14} /> : <TerminalSquare size={14} />}
         </span>
@@ -235,12 +235,12 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
             serverName={session.serverName}
           />
           {broken && reason && (
-            <div className="absolute left-3 right-3 top-3 z-20 px-3 py-2 rounded-lg border border-red-500/20 bg-[#1a0f10]/95 text-[12px] text-red-300/90 break-words">
+            <div className="absolute left-3 right-3 top-3 z-20 px-3 py-2 rounded-lg border border-red-500/20 bg-danger/10/95 text-[12px] text-red-300/90 break-words">
               {reason}
             </div>
           )}
           {showLog && (
-            <div className="absolute inset-0 z-30 flex flex-col p-3 sm:p-4 bg-[#0a0a0c]/95">
+            <div className="absolute inset-0 z-30 flex flex-col p-3 sm:p-4 bg-surface/95">
               {logList}
             </div>
           )}
@@ -258,7 +258,7 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
         <div
           role="dialog"
           aria-label={`Connection prompt for ${session.serverName}`}
-          className="absolute inset-0 z-40 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+          className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
         >
           <div className="max-w-2xl w-full mt-6 sm:mt-12">
             <AuthPrompts

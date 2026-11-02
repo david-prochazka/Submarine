@@ -49,6 +49,7 @@ import VncSessionView from "./components/VncSessionView";
 import MonitoringPanel from "./components/MonitoringPanel";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { parseObjectList } from "./util/serverJson";
+import { readAccent, readAppearance, useAppearance } from "./util/appearance";
 
 const appWindow = getCurrentWindow();
 
@@ -59,13 +60,6 @@ const appWindow = getCurrentWindow();
 // `serverUuid` is the saved server's sync id, which keys this device's own
 // per-server settings (the Shell button, see util/shellSync.ts).
 type Session = { id: string; serverId: number; serverName: string; serverUuid?: string | null; protocol?: "ssh" | "rdp" | "telnet" | "vnc"; mirrors?: string; runOnConnect?: string; runOnConnectHeld?: boolean; quickAuth?: QuickAuth | null };
-
-const hexToRgb = (hex: string) => {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `${r} ${g} ${b}`;
-};
 
 function DesktopApp() {
   const [loading, setLoading] = useState(true);
@@ -327,8 +321,9 @@ function DesktopApp() {
 
   const [newNode, setNewNode] = useState(defaultNode);
   const [appSettings, setAppSettings] = useState({
-    primaryColor: localStorage.getItem('submarine-primary-color') || '#60a5fa',
-    backgroundColor: localStorage.getItem('submarine-bg-color') || '#0a0a0c',
+    // '' = the theme's own accent. See util/appearance.
+    primaryColor: readAccent(),
+    appearance: readAppearance(),
     terminalFontSize: readFontSize(),
     // '' = the built-in cross-platform monospace stack (see util/terminalFont).
     terminalFontFamily: readFontFamily(),
@@ -358,13 +353,9 @@ function DesktopApp() {
     syncIntervalMin: Math.max(1, parseInt(localStorage.getItem('submarine-sync-interval-min') || '5', 10) || 5),
   });
 
+  useAppearance(appSettings.appearance, appSettings.primaryColor);
+
   useEffect(() => {
-    const rgb = hexToRgb(appSettings.primaryColor);
-    document.documentElement.style.setProperty('--primary', rgb);
-    document.documentElement.style.setProperty('--primary-hex', appSettings.primaryColor);
-    document.documentElement.style.setProperty('--background', appSettings.backgroundColor);
-    localStorage.setItem('submarine-primary-color', appSettings.primaryColor);
-    localStorage.setItem('submarine-bg-color', appSettings.backgroundColor);
     localStorage.setItem(FONT_SIZE_KEY, appSettings.terminalFontSize.toString());
     localStorage.setItem(FONT_FAMILY_KEY, appSettings.terminalFontFamily);
     localStorage.setItem(SCROLLBACK_KEY, String(appSettings.terminalScrollback));
@@ -1043,12 +1034,12 @@ function DesktopApp() {
         if (IS_ANDROID || target.closest('.no-drag')) return;
         toggleMaximize();
       }}
-      className="h-10 bg-[#0d0d10] border-b border-white/5 flex items-center justify-between px-3 select-none shrink-0 z-50 drag absolute top-0 left-0 right-0"
+      className={`bg-sidebar border-b border-white/[0.075] flex items-center justify-between pl-2 select-none shrink-0 z-50 drag ${isUnlocked && !isMobile ? 'relative h-11' : 'absolute top-0 left-0 right-0 h-10'}`}
     >
       {/* Logo + product name: hidden on phones to give the tab strip the
           whole row. Desktop keeps the original 75 px left padding for
           macOS traffic lights, plus the icon and brand. */}
-      <div className="hidden sm:flex items-center gap-2 pr-4 pl-[75px] md:pl-2" data-tauri-drag-region>
+      <div className={`${isUnlocked && !isMobile ? 'hidden' : 'hidden sm:flex'} items-center gap-2 pr-4 pl-2`} data-tauri-drag-region>
         <img src={logoUrl} alt="" draggable={false} className="h-6 w-auto max-w-[24px] object-contain select-none" />
         <span className="text-[12px] font-bold text-white tracking-tight">Submarine</span>
         {appVersion && (
@@ -1113,7 +1104,7 @@ function DesktopApp() {
                 <div className="fixed inset-0 z-[60]" onClick={() => setMobileSessionPickerOpen(false)} />
                 <div
                   role="listbox"
-                  className="absolute z-[70] top-8 left-0 right-0 bg-[#15151a] border border-white/10 rounded-xl shadow-2xl p-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar"
+                  className="absolute z-[70] top-8 left-0 right-0 bg-elevated border border-white/10 rounded-xl shadow-2xl p-1.5 max-h-[60vh] overflow-y-auto custom-scrollbar"
                 >
                   {sessions.map(s => {
                     const st = sessionStatuses[s.id] ?? 'connecting';
@@ -1236,7 +1227,7 @@ function DesktopApp() {
           strip below is hidden on mobile. */}
       <div
         data-tauri-drag-region
-        className={`${isMobile ? 'hidden' : 'flex'} flex-1 gap-1 overflow-x-auto no-scrollbar h-full items-end pb-1`}
+        className={`${isMobile ? 'hidden' : 'flex'} flex-1 gap-1 overflow-x-auto no-scrollbar h-full items-center`}
         onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
       >
         {sessions.map(s => {
@@ -1313,24 +1304,24 @@ function DesktopApp() {
               // it a tab with a 30-char hostname would wrap into a two-line
               // pill and break the row's height.
               title={isMergedTab ? `${tabLabel(s)} · split beside current view (Ctrl-click to unpair)` : tabLabel(s)}
-              className={`group no-drag flex items-center h-7 px-2.5 sm:px-4 rounded-full cursor-pointer transition-all shrink-0 mr-1 ${
+              className={`group no-drag flex items-center h-[30px] pl-3 pr-1.5 rounded-[7px] cursor-pointer transition-colors duration-100 shrink-0 ${
                 activeView === s.id
-                  ? 'bg-primary/15 text-primary border border-primary/40 shadow-inner shadow-primary/10'
+                  ? 'bg-surface text-white shadow-[0_0_0_0.5px_var(--border-strong),var(--shadow-control)]'
                   : isMergedTab
-                    ? 'bg-primary/[0.05] text-primary/80 border border-primary/25 hover:bg-primary/10'
-                    : 'bg-white/[0.06] text-zinc-300 border border-white/10 hover:bg-white/[0.1] hover:border-white/20 hover:text-white'
-              }`}
+                    ? 'bg-primary/[0.08] text-white hover:bg-primary/[0.12]'
+                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+              } ${isBroadcastTarget ? 'ring-1 ring-warning' : ''}`}
             >
               <span
                 title={dotTitle}
-                className={`w-2 h-2 rounded-full mr-2 shrink-0 ${dotTone}`}
+                className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotTone}`}
                 aria-label={dotTitle}
               />
               {isBroadcastTarget && (
                 <span
                   title="Broadcast target"
                   aria-label="Broadcast target"
-                  className="w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 bg-orange-400 shadow-[0_0_6px_rgba(251,146,60,0.7)]"
+                  className="w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 bg-warning"
                 />
               )}
               {isMergedTab && (
@@ -1348,7 +1339,7 @@ function DesktopApp() {
               <button
                 type="button"
                 aria-current={activeView === s.id ? "page" : undefined}
-                className="text-[11px] font-semibold whitespace-nowrap tracking-tight rounded outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+                className="text-[12.5px] font-medium whitespace-nowrap rounded outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
               >
                 {tabLabel(s)}
               </button>
@@ -1376,7 +1367,7 @@ function DesktopApp() {
               <button
                 type="button"
                 aria-label="Close session"
-                className="hidden sm:flex ml-1 h-5 w-5 items-center justify-center rounded hover:bg-white/5 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-zinc-400 hover:text-red-400 transition-opacity"
+                className={`hidden sm:flex ml-1.5 h-[18px] w-[18px] items-center justify-center rounded hover:bg-white/[0.09] shrink-0 group-hover:opacity-100 focus-visible:opacity-100 text-zinc-500 hover:text-white transition-opacity ${activeView === s.id ? 'opacity-100' : 'opacity-0'}`}
                 onClick={async (e) => {
                   e.stopPropagation();
                   // Only confirm when there's an actual live connection to
@@ -1432,13 +1423,13 @@ function DesktopApp() {
               ? `Wall · ${wallItems.length} pinned terminal${wallItems.length === 1 ? '' : 's'}`
               : "Wall — pinboard for terminals across servers"}
             aria-label="Wall pinboard"
-            className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+            className={`relative flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
               activeView === "wall"
-                ? "bg-primary/15 border border-primary/40 text-primary shadow-inner shadow-primary/10"
-                : "bg-white/[0.06] border border-white/10 text-zinc-400 hover:bg-white/[0.1] hover:text-white"
+                ? "bg-primary/15 text-primary"
+                : "text-zinc-400 hover:bg-white/[0.09] hover:text-white"
             }`}
           >
-            <LayoutGrid size={12} />
+            <LayoutGrid size={15} />
             {wallItems.length > 0 && (
               <span
                 className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-primary text-[9px] font-bold text-black flex items-center justify-center leading-none"
@@ -1467,13 +1458,13 @@ function DesktopApp() {
               ? `Broadcasting to ${broadcast.targetSessionIds.size} session${broadcast.targetSessionIds.size === 1 ? "" : "s"}`
               : "Broadcast input to multiple sessions"}
             aria-label="Broadcast input"
-            className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+            className={`relative flex items-center justify-center w-7 h-7 rounded-md transition-colors ${
               broadcast.enabled
-                ? "bg-orange-500/15 border border-orange-400/40 text-orange-300 shadow-inner shadow-orange-400/10"
-                : "bg-white/[0.06] border border-white/10 text-zinc-400 hover:bg-white/[0.1] hover:text-white"
+                ? "bg-warning/15 text-warning"
+                : "text-zinc-400 hover:bg-white/[0.09] hover:text-white"
             }`}
           >
-            <Radio size={12} className={broadcast.enabled ? "animate-pulse" : ""} />
+            <Radio size={15} />
             {broadcast.enabled && broadcast.targetSessionIds.size > 0 && (
               <span
                 className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-orange-500 text-[9px] font-bold text-black flex items-center justify-center leading-none"
@@ -1489,7 +1480,7 @@ function DesktopApp() {
                 className="fixed inset-0 z-[60]"
                 onClick={() => setBroadcastMenuOpen(false)}
               />
-              <div className="absolute z-[70] top-full mt-1 right-0 w-[280px] bg-[#15151a] border border-white/10 rounded-lg shadow-2xl p-2 text-[11px]">
+              <div className="absolute z-[70] top-full mt-1 right-0 w-[280px] bg-elevated border border-white/10 rounded-lg shadow-2xl p-2 text-[11px]">
                 <div className="flex items-center justify-between mb-2 px-1">
                   <label className="flex items-center gap-2 cursor-pointer select-none">
                     <input
@@ -1592,7 +1583,7 @@ function DesktopApp() {
               ? <Copy size={12} className="text-zinc-600 group-hover:text-zinc-300 scale-x-[-1]" />
               : <Square size={11} className="text-zinc-600 group-hover:text-zinc-300" />}
           </button>
-          <button title="Close" onClick={() => appWindow.close()} className="w-10 h-full flex items-center justify-center hover:bg-red-500 group transition-all"><X size={14} className="text-zinc-600 group-hover:text-white" /></button>
+          <button title="Close" onClick={() => appWindow.close()} className="w-10 h-full flex items-center justify-center hover:bg-red-500 group transition-all"><X size={14} className="text-zinc-500 group-hover:text-snow" /></button>
         </div>
       )}
       {tabMenu && (() => {
@@ -1611,7 +1602,7 @@ function DesktopApp() {
         <>
           <div className="fixed inset-0 z-[60]" onClick={() => { setTabMenu(null); setTabRename(null); }} onContextMenu={(e) => { e.preventDefault(); setTabMenu(null); setTabRename(null); }} />
           <div
-            className="fixed z-[70] bg-[#15151a] border border-white/10 rounded-md shadow-2xl py-1 min-w-[240px] text-[11px] no-drag"
+            className="fixed z-[70] bg-elevated border border-white/10 rounded-md shadow-2xl py-1 min-w-[240px] text-[11px] no-drag"
             style={{ left: Math.min(tabMenu.x, window.innerWidth - 260), top: Math.min(tabMenu.y, window.innerHeight - 380) }}
           >
             {/* The tab's name. The editor opens inside this menu: Enter
@@ -1795,8 +1786,9 @@ function DesktopApp() {
   if (loading) return <div className="h-full bg-black flex items-center justify-center font-mono text-xs text-primary animate-pulse">Loading…</div>;
 
   return (
-    <div className="h-full w-full bg-background flex flex-col overflow-hidden text-zinc-200 select-none">
-      {TitleBar()}
+    <div className="h-full w-full bg-surface flex flex-col overflow-hidden text-zinc-200 select-none">
+      {/* Unlocked on desktop, the title bar sits beside the sidebar instead. */}
+      {(!isUnlocked || isMobile) && TitleBar()}
       {!isUnlocked ? (
         <ProfileSelectPage onUnlocked={handleProfileUnlocked} />
       ) : (
@@ -1805,9 +1797,30 @@ function DesktopApp() {
         // renders at the bottom while staying first in DOM order — keyboard
         // tab-order stays intuitive and <main> grabs the full screen width
         // (terminal gains the ~50px the vertical rail used to eat).
-        <div inert={overlayOpen ? "" : undefined} className={`flex-1 flex ${isMobile ? 'flex-col-reverse' : ''} overflow-hidden pt-10`}>
-          <Sidebar activeTab={activeView.startsWith('session-') ? 'nodes' : activeView} setActiveTab={setActiveView} isMobile={isMobile} onLogout={handleLogout} profileName={activeProfile} syncing={cloudSyncing} />
+        <div inert={overlayOpen ? "" : undefined} className={`flex-1 flex ${isMobile ? 'flex-col-reverse pt-10' : ''} overflow-hidden`}>
+          <Sidebar
+            activeTab={isMobile && activeView.startsWith('session-') ? 'nodes' : activeView}
+            setActiveTab={setActiveView}
+            isMobile={isMobile}
+            onLogout={handleLogout}
+            profileName={activeProfile}
+            syncing={cloudSyncing}
+            logoUrl={logoUrl}
+            servers={servers}
+            folders={folders}
+            activeFolderId={activeFolderId}
+            onOpenFolder={(id: number | null) => { setActiveFolderId(id); setActiveView('nodes'); }}
+            onAddServer={() => {
+              setNewNode({ ...defaultNode, folderId: activeFolderId != null ? String(activeFolderId) : "" });
+              setIsPanelOpen(true);
+            }}
+            loginCount={credentials.length + sshKeys.length}
+            libraryCount={commands.length + notes.length}
+            wallCount={sessions.length >= 1 ? wallItems.length : undefined}
+          />
 
+          <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+          {!isMobile && TitleBar()}
           <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
             {activeView === "nodes" && (
               <NodeGrid
@@ -1929,7 +1942,7 @@ function DesktopApp() {
                         <div className="col-span-full py-10 text-center text-zinc-600 text-[14px] italic border border-dashed border-white/5 rounded-2xl">Nothing here yet.</div>
                       ) : (
                         credentials.map(c => (
-                          <div key={c.id} className="bg-[#16161a] border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
+                          <div key={c.id} className="bg-elevated border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
                             <div className="flex justify-between items-start mb-1">
                               <h4 className="text-[14px] font-bold text-zinc-100 truncate pr-8">{c.name}</h4>
                               <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity absolute right-3 top-3">
@@ -1974,7 +1987,7 @@ function DesktopApp() {
                         <div className="col-span-full py-10 text-center text-zinc-600 text-[14px] italic border border-dashed border-white/5 rounded-2xl">No keys saved yet.</div>
                       ) : (
                         sshKeys.map((k: any) => (
-                          <div key={k.id} className="bg-[#16161a] border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
+                          <div key={k.id} className="bg-elevated border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
                             <div className="flex justify-between items-start mb-1">
                               <h4 className="text-[14px] font-bold text-zinc-100 truncate pr-8">{k.name}</h4>
                               <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity absolute right-3 top-3">
@@ -2113,7 +2126,7 @@ function DesktopApp() {
                               merged tile drops from ~48 px (full chrome)
                               to ~28 px (slim header). */}
                           {isVisible && isTiled && !isFocused && (
-                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-[#111114] text-[10.5px]">
+                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[10.5px]">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                 (sessionStatuses[sess.id] ?? 'connecting') === 'connected' ? 'bg-emerald-400' :
                                 (sessionStatuses[sess.id] ?? 'connecting') === 'connecting' ? 'bg-amber-400' :
@@ -2207,12 +2220,12 @@ function DesktopApp() {
                 PTY ownership stay with the primary xterm in the
                 session tab. */}
             {activeView === "wall" && (
-              <div className="absolute inset-0 flex flex-col overflow-hidden bg-[#0a0a0d]">
+              <div className="absolute inset-0 flex flex-col overflow-hidden bg-surface">
                 {/* Toolbar: cols and rows selectors + Add + Clear. Rows
                     default to as many as the tiles need; a number fits
                     that many on screen. On a narrow screen the selectors
                     scroll sideways. */}
-                <div className="h-10 shrink-0 border-b border-white/5 bg-[#111114] flex items-center gap-2 px-3">
+                <div className="h-10 shrink-0 border-b border-white/5 bg-panel flex items-center gap-2 px-3">
                   <LayoutGrid size={12} className="text-primary/70 shrink-0" />
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 shrink-0">
                     Wall {wallItems.length > 0 ? `· ${wallItems.length}` : ''}
@@ -2306,13 +2319,13 @@ function DesktopApp() {
                         return (
                           <div
                             key={item.id}
-                            className="flex flex-col overflow-hidden border border-white/10 rounded-md bg-[#09090b] shadow-[0_2px_10px_rgba(0,0,0,0.4)] hover:border-primary/30 transition-colors"
+                            className="flex flex-col overflow-hidden border border-white/10 rounded-md bg-surface shadow-[0_2px_10px_rgba(0,0,0,0.4)] hover:border-primary/30 transition-colors"
                           >
                             {/* Slim tile header — server + terminal
                                 title, quick-jump into the session,
                                 unpin. Terminal body below owns focus
                                 so keystrokes go to xterm directly. */}
-                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-[#141418] text-[10.5px] select-none">
+                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[10.5px] select-none">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotTone}`} />
                               <span className="font-bold text-zinc-200 uppercase tracking-wider truncate">
                                 {tabLabel(sess)}
@@ -2373,7 +2386,7 @@ function DesktopApp() {
                 {wallPickerOpen && (
                   <>
                     <div className="fixed inset-0 z-[65]" onClick={() => setWallPickerOpen(false)} />
-                    <div className="absolute top-12 right-3 z-[66] w-80 max-h-[70vh] bg-[#15151a] border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col">
+                    <div className="absolute top-12 right-3 z-[66] w-80 max-h-[70vh] bg-elevated border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col">
                       <div className="px-2 pb-2 flex items-center justify-between shrink-0">
                         <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
                           Pin terminals
@@ -2564,7 +2577,7 @@ function DesktopApp() {
                         </div>
                       ) : (
                         filteredCommands.map(cmd => (
-                          <div key={cmd.id} className="bg-[#16161a] border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[150px]">
+                          <div key={cmd.id} className="bg-elevated border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[150px]">
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-[16px] font-bold text-primary tracking-tight truncate flex-1">{cmd.title}</h3>
                               <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity">
@@ -2597,7 +2610,7 @@ function DesktopApp() {
                         </div>
                       ) : (
                         filteredNotes.map(n => (
-                          <div key={n.id} className="bg-[#16161a] border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[170px]">
+                          <div key={n.id} className="bg-elevated border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[170px]">
                             <div className="flex justify-between items-start mb-2 gap-2">
                               <h3 className="text-[15px] font-bold text-primary tracking-tight truncate flex-1">{n.title || "Untitled"}</h3>
                               <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity shrink-0">
@@ -2707,6 +2720,7 @@ function DesktopApp() {
             )}
 
           </main>
+          </div>
         </div>
       )}
 
@@ -2882,8 +2896,8 @@ function DesktopApp() {
 
       {/* The slide-overs stay mounted while closed (to slide out): inert
           then, so Tab can't reach their fields. */}
-      <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-black/80 backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
-        <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-[#09090b] border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+      <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
+        <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
             <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
               <TerminalSquare size={18} className="text-primary" />
@@ -2949,8 +2963,8 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isNotePanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isNotePanelOpen ? 'bg-black/80 backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsNotePanelOpen(false)}>
-        <div ref={notePanelRef} tabIndex={-1} className={`w-full max-w-[480px] bg-[#09090b] border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isNotePanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+      <div inert={isNotePanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isNotePanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsNotePanelOpen(false)}>
+        <div ref={notePanelRef} tabIndex={-1} className={`w-full max-w-[480px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isNotePanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
             <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
               <StickyNote size={18} className="text-primary" />
@@ -3000,8 +3014,8 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isCredPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCredPanelOpen ? 'bg-black/80 backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCredPanelOpen(false)}>
-        <div ref={credPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-[#09090b] border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCredPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+      <div inert={isCredPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCredPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCredPanelOpen(false)}>
+        <div ref={credPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCredPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
             <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
               <Shield size={18} className="text-primary" />
@@ -3029,8 +3043,8 @@ function DesktopApp() {
                   value={editCredData.auth_type || "password"}
                   onChange={e => setEditCredData({ ...editCredData, auth_type: e.target.value })}
                 >
-                  <option value="password" className="bg-[#121215] text-primary">Password</option>
-                  <option value="key" className="bg-[#121215] text-primary">SSH key</option>
+                  <option value="password" className="bg-panel text-primary">Password</option>
+                  <option value="key" className="bg-panel text-primary">SSH key</option>
                 </select>
               </div>
             </div>
@@ -3103,8 +3117,8 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isKeyPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isKeyPanelOpen ? 'bg-black/80 backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsKeyPanelOpen(false)}>
-        <div ref={keyPanelRef} tabIndex={-1} className={`w-full max-w-[450px] bg-[#09090b] border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isKeyPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+      <div inert={isKeyPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isKeyPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsKeyPanelOpen(false)}>
+        <div ref={keyPanelRef} tabIndex={-1} className={`w-full max-w-[450px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isKeyPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
             <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
               <Key size={18} className="text-primary" />

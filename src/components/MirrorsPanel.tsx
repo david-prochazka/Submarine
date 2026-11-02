@@ -299,7 +299,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#09090b] overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-surface overflow-hidden relative">
       {disabled && (
         <div className="absolute inset-0 z-30 bg-black/55 backdrop-blur-[1px] flex items-center justify-center text-zinc-300 text-xs font-mono uppercase">
           <span className="px-3 py-1.5 bg-red-500/15 border border-red-500/30 rounded text-red-300">
@@ -309,7 +309,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
       )}
 
       {/* Header */}
-      <div className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-white/5 bg-[#121214]">
+      <div className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-white/5 bg-panel">
         <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
           <FolderUp size={12} />
           <span>{Object.keys(statuses).length} running · {allSavedMirrors.length} saved</span>
@@ -325,7 +325,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
 
       {/* Ad-hoc new mirror form */}
       {adding && !pending && (
-        <div className="shrink-0 p-3 border-b border-white/5 bg-[#0f0f12] space-y-2">
+        <div className="shrink-0 p-3 border-b border-white/5 bg-panel space-y-2">
           <div className="flex items-center gap-2">
             {/* Native folder picker is desktop-only (rfd). On Android the
                 backend command errors, so we hide the button and lean on
@@ -418,7 +418,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
         ).length;
         const conflictMode = pending.spec.conflict_resolution || "local";
         return (
-        <div className="shrink-0 p-3 border-b border-white/5 bg-[#0f0f12] space-y-2">
+        <div className="shrink-0 p-3 border-b border-white/5 bg-panel space-y-2">
           <div className="flex items-start gap-2 text-[11px] text-zinc-300">
             <FolderUp size={13} className="text-primary mt-0.5 shrink-0" />
             <div className="min-w-0 flex-1">
@@ -581,7 +581,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
       </div>
 
       {/* Log feed */}
-      <div className="shrink-0 border-t border-white/5 bg-[#0c0c0e]">
+      <div className="shrink-0 border-t border-white/5 bg-surface">
         <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/5">
           <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
             <FileText size={11} /> Log <span className="text-zinc-600 font-normal">({logs.length})</span>

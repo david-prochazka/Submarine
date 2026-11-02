@@ -611,7 +611,7 @@ const TerminalView = ({
   // matches the per-component notify() used in SftpWorkspace / FilePanel —
   // keeps the component self-contained without a global toast provider.
   // The colour scheme's background also fills the padding around xterm.
-  const [termBg, setTermBg] = useState(() => readScheme().theme.background ?? '#09090b');
+  const [termBg, setTermBg] = useState(() => readScheme().theme.background ?? '#0f1113');
   const [toast, setToast] = useState<{ msg: string; tone: "ok" | "err" } | null>(null);
   const toastTimerRef = useRef<number | null>(null);
   const notify = (msg: string, tone: "ok" | "err" = "ok") => {
@@ -1224,7 +1224,7 @@ const TerminalView = ({
       const theme = readScheme().theme;
       if (JSON.stringify(term.options.theme) !== JSON.stringify(theme)) {
         term.options.theme = theme;
-        setTermBg(theme.background ?? '#09090b');
+        setTermBg(theme.background ?? '#0f1113');
       }
       const boldBright = readBoldBright();
       if (term.options.drawBoldTextInBrightColors !== boldBright) term.options.drawBoldTextInBrightColors = boldBright;

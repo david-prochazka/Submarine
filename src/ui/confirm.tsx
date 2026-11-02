@@ -305,14 +305,14 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
           control takes focus) and not the old one with the text swapped. */}
       {owState && createPortal(
         <div key={owState.id}
-             className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
              onClick={() => closeOverwrite("cancel")}>
           <div ref={owPanelRef}
                role="dialog"
                aria-modal="true"
                aria-labelledby="overwrite-modal-title"
                onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[420px] bg-[#121214] border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
+               className="w-full max-w-[420px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={14} className="text-amber-400" />
@@ -366,14 +366,14 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
       )}
       {state && createPortal(
         <div key={state.id}
-             className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
              onClick={() => close(false)}>
           <div ref={confirmPanelRef}
                role="dialog"
                aria-modal="true"
                aria-labelledby="confirm-modal-title"
                onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[380px] bg-[#121214] border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
+               className="w-full max-w-[380px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={14} className={state.opts.destructive ? "text-rose-400" : "text-amber-400"} />
@@ -410,14 +410,14 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
       )}
       {tpState && createPortal(
         <div key={tpState.id}
-             className="fixed inset-0 z-[9999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
              onClick={() => closeTextPrompt(null)}>
           <div ref={tpPanelRef}
                role="dialog"
                aria-modal="true"
                aria-labelledby="text-prompt-modal-title"
                onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[400px] bg-[#121214] border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
+               className="w-full max-w-[400px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
             <div className="flex items-start justify-between gap-3 mb-3">
               <span id="text-prompt-modal-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
                 {tpState.opts.title || "Enter value"}

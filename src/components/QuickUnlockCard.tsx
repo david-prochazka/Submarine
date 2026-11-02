@@ -95,7 +95,7 @@ export default function QuickUnlockCard({ profile, card, label }: { profile: str
           onClick={() => void (on ? turnOff() : turnOn())}
           className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-40 ${on ? "bg-primary" : "bg-zinc-700"}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
         </button>
       </div>
       {msg && <p role="status" className={`text-[11.5px] ${msg.tone === "err" ? "text-rose-300" : "text-emerald-300"}`}>{msg.text}</p>}

@@ -284,10 +284,10 @@ export default function VncSessionView({ session, displayName, onClose, onStatus
     : null;
 
   return (
-    <div data-vnc-status={status} className="relative flex-1 flex flex-col bg-[#0a0a0c] text-white overflow-hidden">
+    <div data-vnc-status={status} className="relative flex-1 flex flex-col bg-surface text-white overflow-hidden">
       {/* The labels show by the bar's own width, not the window's: in a split
           view the tab is a part of the window. */}
-      <div className="shrink-0 h-9 px-2 sm:px-3 flex items-center gap-2 border-b border-white/5 bg-[#0e0e10] [container-type:inline-size]">
+      <div className="shrink-0 h-9 px-2 sm:px-3 flex items-center gap-2 border-b border-white/5 bg-surface [container-type:inline-size]">
         <span className={`shrink-0 ${broken ? "text-red-400" : "text-primary"}`} aria-hidden="true">
           {working ? <Loader2 size={14} className="animate-spin" /> : broken ? <AlertTriangle size={14} /> : <MonitorSmartphone size={14} />}
         </span>
@@ -389,11 +389,11 @@ export default function VncSessionView({ session, displayName, onClose, onStatus
           scale={opts.resolution}
         />
         {(!connected || showLog) && (
-          <div className="absolute inset-0 z-10 flex flex-col p-4 sm:p-8 bg-[#0a0a0c]/90">
+          <div className="absolute inset-0 z-10 flex flex-col p-4 sm:p-8 bg-surface/90">
             <div className="max-w-2xl w-full mx-auto flex-1 flex flex-col min-h-0">
               {broken && reason && <p className="mb-3 sm:mb-4 text-[12.5px] text-red-300/90 break-words">{reason}</p>}
               <div
-                className="flex-1 min-h-0 bg-[#121214] border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
+                className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
                 style={{ WebkitOverflowScrolling: "touch", lineHeight: 1.5 }}
               >
                 {logs.map((l, i) => (
@@ -427,7 +427,7 @@ export default function VncSessionView({ session, displayName, onClose, onStatus
         <div
           role="dialog"
           aria-label={`Connection prompt for ${session.serverName}`}
-          className="absolute inset-0 z-40 flex items-start justify-center bg-black/70 backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+          className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
         >
           <div className="max-w-2xl w-full mt-6 sm:mt-12">
             <AuthPrompts

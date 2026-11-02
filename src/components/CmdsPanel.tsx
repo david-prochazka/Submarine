@@ -251,7 +251,7 @@ export const CmdsPanel = ({ activeTab, onClose, headerActions, serverId, serverN
   const TabIcon = tab === "commands" ? Terminal : tab === "notes" ? StickyNote : Server;
 
   return (
-    <div className="flex-1 flex flex-col h-full overflow-hidden bg-[#09090b]">
+    <div className="flex-1 flex flex-col h-full overflow-hidden bg-surface">
       {/* Title Bar */}
       <div className="h-12 px-4 shrink-0 flex items-center justify-between border-b border-white/5 bg-white/5">
         <div className="flex items-center gap-2 min-w-0">
