@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Server, KeyRound, Library, Activity, Settings, Lock, UserCircle, Folder, FolderOpen,
-  ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw,
+  ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw, Search,
 } from "lucide-react";
 import { folderTree } from "../util/folderTree";
 
@@ -34,7 +34,7 @@ const SectionTitle = ({ children, action }: { children: string; action?: React.R
 export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
-  loginCount = 0, libraryCount = 0, wallCount, logoUrl,
+  loginCount = 0, libraryCount = 0, wallCount, logoUrl, onSearch, searchShortcut,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -123,6 +123,11 @@ export const Sidebar = ({
         <button type="button" onClick={toggleCollapsed} aria-label="Show sidebar" title="Show sidebar" className={railBtn(false)}>
           <PanelLeftOpen size={17} aria-hidden />
         </button>
+        {onSearch && (
+          <button type="button" onClick={onSearch} aria-label="Search or run a command" title={`Search or run… (${searchShortcut})`} aria-keyshortcuts={searchShortcut} className={railBtn(false)}>
+            <Search size={17} aria-hidden />
+          </button>
+        )}
         <div className="w-6 border-t border-white/[0.075] my-1" />
         {[{ id: "nodes", icon: Server, label: "Servers" }, ...tools].map((item) => (
           <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} aria-label={item.label} title={item.label} aria-current={activeTab === item.id ? "page" : undefined} className={railBtn(activeTab === item.id)}>
@@ -198,6 +203,20 @@ export const Sidebar = ({
         </button>
       </div>
 
+      {onSearch && (
+        <div className="shrink-0 px-2.5 pb-1.5">
+          <button
+            type="button"
+            onClick={onSearch}
+            aria-keyshortcuts={searchShortcut}
+            className="w-full h-[30px] flex items-center gap-2 px-2.5 rounded-[7px] bg-white/[0.06] text-[13px] text-zinc-500 text-left transition-colors hover:bg-white/[0.09] hover:text-zinc-400"
+          >
+            <Search size={14} aria-hidden className="shrink-0" />
+            <span className="flex-1 min-w-0 truncate">Search or run…</span>
+            {searchShortcut && <kbd className="font-sans text-[11px] font-medium">{searchShortcut}</kbd>}
+          </button>
+        </div>
+      )}
       <nav aria-label="Servers and tools" className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-2.5 pb-2.5">
         <SectionTitle
           action={onAddServer && (

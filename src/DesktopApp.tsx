@@ -7,7 +7,9 @@ import {
   Plus, X, RefreshCw, Terminal, Key, Trash2,
   ArrowLeftRight, Shield, User, Cpu, TerminalSquare, List, Edit2,
   StickyNote, Search, Square, Copy, ChevronLeft, MoreVertical, Radio,
-  ChevronDown, Columns, LayoutGrid, Pin, PinOff, Server
+  ChevronDown, Columns, LayoutGrid, Pin, PinOff, Server,
+  Monitor, Folder, Zap, Download, PanelRight, Activity, KeyRound, Library,
+  Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare,
 } from "lucide-react";
 import { useBroadcast } from "./ui/broadcast";
 
@@ -37,14 +39,15 @@ import { NodeGrid, type ServerStatus } from "./components/NodeGrid";
 import type { ImportRequest } from "./components/ServersEmpty";
 import { readLastConnected, recordConnected } from "./util/lastConnected";
 import { folderTree } from "./util/folderTree";
-import { CommandScope, describeScope, parseCommandScope, scopeToJson } from "./util/commandScope";
+import { CommandScope, describeScope, parseCommandScope, scopeMatches, scopeToJson, serverScopeIds } from "./util/commandScope";
 import CommandScopePicker from "./components/CommandScopePicker";
 import type { HeldDeletion } from "./components/HeldDeletions";
 import ServerEditor from "./components/ServerEditor";
 import TerminalView from "./components/TerminalView";
 import SettingsPanel from "./components/SettingsPanel";
 import ProfilePanel from "./components/ProfilePanel";
-import { SessionView } from "./components/SessionView";
+import { SessionView, SESSION_VIEWS, MOD_LABEL, isSessionShortcut, type SessionRequest } from "./components/SessionView";
+import { CommandPalette, type PaletteItem } from "./components/CommandPalette";
 import RdpSessionView from "./components/RdpSessionView";
 import TelnetSessionView from "./components/TelnetSessionView";
 import VncSessionView from "./components/VncSessionView";
@@ -279,6 +282,9 @@ function DesktopApp() {
   const [activeFolderId, setActiveFolderId] = useState<number | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isQuickConnectOpen, setIsQuickConnectOpen] = useState(false);
+  // The ⌘K palette, and what it last asked of a session (SessionView).
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [sessionRequest, setSessionRequest] = useState<(SessionRequest & { sid: string }) | null>(null);
   const [servers, setServers] = useState<any[]>([]);
   const [credentials, setCredentials] = useState<any[]>([]);
   const [sshKeys, setSshKeys] = useState<any[]>([]);
@@ -310,7 +316,7 @@ function DesktopApp() {
   const keyPanelRef = useSlideOverFocus(isKeyPanelOpen);
   // A panel or modal over the app: everything behind it goes inert, so Tab
   // can't walk into a server list or a terminal under the backdrop.
-  const overlayOpen = isPanelOpen || isQuickConnectOpen || isCommandPanelOpen || isNotePanelOpen || isCredPanelOpen || isKeyPanelOpen;
+  const overlayOpen = paletteOpen || isPanelOpen || isQuickConnectOpen || isCommandPanelOpen || isNotePanelOpen || isCredPanelOpen || isKeyPanelOpen;
 
   const defaultNode = {
     id: null as number | null,
@@ -1049,6 +1055,174 @@ function DesktopApp() {
       password_dirty: false,
     });
     setIsPanelOpen(true);
+  };
+
+  // ⌘K (Ctrl+Shift+K off the Mac, where Ctrl+K is the shell's) opens the
+  // palette, or closes it. Not over another dialog.
+  const paletteKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  paletteKeyRef.current = (e: KeyboardEvent) => {
+    if (!isUnlocked || e.code !== "KeyK" || e.repeat || !isSessionShortcut(e)) return;
+    if (!paletteOpen && overlayOpen) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setPaletteOpen((o) => !o);
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => paletteKeyRef.current(e);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+  useEffect(() => { if (!isUnlocked) setPaletteOpen(false); }, [isUnlocked]);
+
+  const askSession = (sid: string, req: Omit<SessionRequest, "n">) =>
+    setSessionRequest((prev) => ({ ...req, sid, n: (prev?.n ?? 0) + 1 }));
+
+  // Everything the palette offers, built each time it renders (it is only
+  // mounted while open). Actions about "this server" follow the session in
+  // front.
+  const paletteItems = (): PaletteItem[] => {
+    const tree = folderTree(folders);
+    const folderPath = (id: number | null) => (id == null ? "" : tree.pathOf(id).map((f: any) => f.name).join(" › "));
+    const current = activeView.startsWith("session-") ? sessions.find((s) => s.id === activeView) ?? null : null;
+    const currentServer = current?.serverId ? servers.find((v: any) => v.id === current.serverId) ?? null : null;
+    const currentName = current ? tabLabel(current) : "";
+    const items: PaletteItem[] = [];
+
+    for (const s of servers) {
+      const protocol = ["rdp", "telnet", "vnc"].includes(s.protocol) ? s.protocol : "ssh";
+      const address = `${s.username ? `${s.username}@` : ""}${s.host}${(s.port ?? 22) !== 22 || protocol !== "ssh" ? `:${s.port}` : ""}`;
+      const open = sessions.some((x) => x.id === `session-${s.id}`);
+      const beside = current && current.id !== `session-${s.id}` && !isMobile;
+      items.push({
+        id: `server-${s.id}`,
+        group: "Servers",
+        icon: protocol === "rdp" || protocol === "vnc" ? Monitor : protocol === "telnet" ? TerminalSquare : Server,
+        title: s.name || s.host,
+        sub: [folderPath(tree.serverFolder(s)), protocol !== "ssh" ? protocol.toUpperCase() : "", address].filter(Boolean).join(", "),
+        keywords: `${s.host} ${s.username ?? ""}`,
+        color: s.color,
+        status: serverStatus[s.id] ?? null,
+        verb: open ? "switch to it" : "connect",
+        variants: { meta: "to edit", ...(beside ? { alt: `to open beside ${currentName}` } : {}) },
+        // Open sessions first, the one in front last of those.
+        rank: (open ? (current?.id === `session-${s.id}` ? 5e14 : 1e15) : 0) + (lastConnected[s.id] ?? 0),
+        run: (v) => {
+          if (v === "meta") { handleEditNode(s); return; }
+          const anchor = activeView;
+          openServer(s);
+          if (v === "alt" && beside) {
+            const sid = `session-${s.id}`;
+            setMergedSessionIds((prev) => (prev.length === 0 ? [anchor, sid] : prev.includes(sid) ? prev : [...prev, sid]));
+          }
+        },
+      });
+    }
+
+    const action = (a: Omit<PaletteItem, "group" | "verb"> & { verb?: string }) =>
+      items.push({ group: "Actions", verb: "run it", ...a });
+
+    if (current && (current.protocol ?? "ssh") === "ssh") {
+      SESSION_VIEWS.forEach((v, i) => {
+        if (v.id === "terminal") return;
+        action({
+          id: `view-${v.id}`,
+          icon: v.Icon,
+          title: `Open ${v.label} on ${currentName}`,
+          shortcut: `${MOD_LABEL}${i + 1}`,
+          rank: v.id === "files" ? 50 : v.id === "tunnels" ? 40 : 10 - i,
+          run: () => askSession(current.id, { view: v.id }),
+        });
+      });
+      if (!isMobile) {
+        action({ id: "split", icon: Columns, title: "Split terminal", sub: "A new terminal of this server beside this one, or leave the split", shortcut: `${MOD_LABEL}D`, rank: 30, run: () => askSession(current.id, { split: true }) });
+        action({ id: "inspector", icon: PanelRight, title: "Toggle inspector", sub: "Show or hide the docked tool", shortcut: `${MOD_LABEL}\\`, rank: 20, run: () => askSession(current.id, { inspector: true }) });
+      }
+    }
+    if (currentServer) {
+      action({ id: "edit-current", icon: Edit2, title: `Edit ${currentServer.name}…`, sub: "Connection, keys, proxy, startup", rank: 45, run: () => handleEditNode(currentServer) });
+    }
+    if (sessions.length >= 2) {
+      action({
+        id: "broadcast",
+        icon: Radio,
+        title: broadcastLive ? "Stop broadcasting" : "Start broadcasting",
+        sub: broadcastLive ? "Keystrokes go to this session only" : "Type into every open session at once",
+        keywords: "broadcast input",
+        shortcut: `${MOD_LABEL === "⌘" ? "⌘⇧" : "Ctrl+Shift+"}B`,
+        rank: broadcastLive ? 60 : 15,
+        run: () => toggleBroadcastRef.current(),
+      });
+    }
+    action({
+      id: "new-server", icon: Plus, title: "New server…",
+      sub: activeFolderId != null && tree.has(activeFolderId) ? `In ${folderPath(activeFolderId)}` : "Add a server",
+      keywords: "add create host", rank: current ? 5 : 48,
+      run: () => { setNewNode({ ...defaultNode, folderId: activeFolderId != null ? String(activeFolderId) : "" }); setIsPanelOpen(true); },
+    });
+    action({ id: "quick-connect", icon: Zap, title: "Quick connect…", sub: "Connect to a host without saving it first", keywords: "ssh host", rank: current ? 4 : 47, run: () => setIsQuickConnectOpen(true) });
+    if (!IS_ANDROID) {
+      action({ id: "import-ssh", icon: Download, title: "Import from ~/.ssh/config…", sub: "Pick hosts to add as servers", keywords: "import ssh config", run: () => setImportRequest((prev) => ({ source: "ssh", n: (prev?.n ?? 0) + 1 })) });
+    }
+    const go = (id: string, view: string, icon: PaletteItem["icon"], title: string, sub: string, keywords = "") =>
+      action({ id, icon, title, sub, keywords, verb: "open it", rank: 3, run: () => { if (view === "nodes") setActiveFolderId(null); setActiveView(view); } });
+    go("go-servers", "nodes", Server, "Servers", "Every server and folder");
+    go("go-logins", "vault", KeyRound, "Logins", "Passwords and SSH keys", "vault keys credentials");
+    go("go-library", "library", Library, "Library", "Saved commands and notes", "snippets");
+    go("go-monitor", "monitor", Activity, "Monitor", "CPU, memory and network for your servers", "stats");
+    if (sessions.length >= 1) go("go-wall", "wall", LayoutGrid, "Wall", "Terminals pinned side by side");
+    go("go-settings", "settings", Settings, "Settings", "Appearance, terminal, sync", "preferences");
+    go("go-logs", "logs", ScrollText, "Activity log", "What the app did, errors included", "logs");
+    const appearance = appSettings.appearance;
+    ([["light", Sun, "Use light appearance"], ["dark", Moon, "Use dark appearance"], ["system", Monitor, "Match the system appearance"]] as const)
+      .filter(([v]) => v !== appearance)
+      .forEach(([v, icon, title]) => action({ id: `appearance-${v}`, icon, title, keywords: "theme mode appearance", run: () => setAppSettings((s: any) => ({ ...s, appearance: v })) }));
+    action({ id: "lock", icon: Lock, title: "Lock and switch profile", sub: sessions.length ? "Disconnects every open session" : "Back to the profile picker", keywords: "logout lock", run: handleLogout });
+
+    for (const f of folders) {
+      const sub = tree.subtreeOf(f.id);
+      const n = servers.filter((s: any) => { const id = tree.serverFolder(s); return id != null && sub.has(id); }).length;
+      const parent = tree.pathOf(f.id).slice(0, -1).map((x: any) => x.name).join(" › ");
+      items.push({
+        id: `folder-${f.id}`,
+        group: "Folders",
+        icon: Folder,
+        title: f.name,
+        sub: [parent, `${n} ${n === 1 ? "server" : "servers"}`].filter(Boolean).join(", "),
+        color: f.color,
+        verb: "open it",
+        run: () => { setActiveFolderId(f.id); setActiveView("nodes"); },
+      });
+    }
+
+    // Saved commands run in the terminal in front: this server's first,
+    // then those for every server.
+    const term = current && (current.protocol ?? "ssh") === "ssh" ? sessionActiveTerm[current.id] : undefined;
+    if (current && term) {
+      const ids = currentServer ? serverScopeIds(currentServer, folders) : null;
+      for (const c of commands) {
+        const scope = parseCommandScope(c.scope);
+        const mine = !!scope && !!ids && scopeMatches(scope, ids);
+        if (scope && !mine) continue;
+        const write = (execute: boolean) => {
+          const text = execute ? (/[\r\n]$/.test(c.content) ? c.content : `${c.content}\r`) : c.content;
+          invoke("write_terminal_data", { terminalId: term, data: Array.from(new TextEncoder().encode(text)) })
+            .catch((e) => addLog(`COMMAND_WRITE_FAILED: ${e}`, "error"));
+          askSession(current.id, { view: "terminal" });
+        };
+        items.push({
+          id: `command-${c.id}`,
+          group: "Commands",
+          icon: ChevronRightSquare,
+          title: c.title || c.content,
+          sub: c.content.split("\n")[0],
+          verb: `run in ${currentName}`,
+          variants: { alt: "to type it without running" },
+          rank: mine ? 1 : 0,
+          run: (v) => write(v !== "alt"),
+        });
+      }
+    }
+    return items;
   };
 
   // Render helper, NOT a component — it is invoked as `{TitleBar()}` below,
@@ -1855,6 +2029,8 @@ function DesktopApp() {
               setNewNode({ ...defaultNode, folderId: activeFolderId != null ? String(activeFolderId) : "" });
               setIsPanelOpen(true);
             }}
+            onSearch={() => setPaletteOpen(true)}
+            searchShortcut={`${MOD_LABEL}K`}
             loginCount={credentials.length + sshKeys.length}
             libraryCount={commands.length + notes.length}
             wallCount={sessions.length >= 1 ? wallItems.length : undefined}
@@ -2267,6 +2443,7 @@ function DesktopApp() {
                               chromeless={isVisible && isTiled && !isFocused}
                               isActiveView={isFocused}
                               onPromptChange={handlePromptChange}
+                              request={sessionRequest?.sid === sess.id ? sessionRequest : undefined}
                             />
                             )}
                           </ErrorBoundary>
@@ -2953,6 +3130,13 @@ function DesktopApp() {
         servers={servers}
         isMobile={isMobile}
       />
+
+      {paletteOpen && isUnlocked && (
+        <CommandPalette
+          items={paletteItems()}
+          onClose={() => setPaletteOpen(false)}
+        />
+      )}
 
       <QuickConnectModal
         isOpen={isQuickConnectOpen}

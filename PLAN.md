@@ -55,11 +55,14 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Import dialog split out (`ServerImportDialog.tsx`), sentence case; its Escape no longer reaches the editor
 - [x] Shared form rows (`FormRows`, RDP share fields) on the new field, segment and switch styles, which also fixes the dark switch knob in light mode in the RDP and VNC tab panels
 - [ ] Not in the app, so not in the sheet: keep-alive, compression, terminal type, agent auth, favourites, working folder, "open with" tools, mirror sync modes
-## Phase 6: Command palette (artboard 5)
+## Phase 6: Command palette (artboard 5) ✅ done
 
-- [ ] ⌘K fuzzy search across servers, actions, folders and saved commands
-- [ ] ↑ ↓ / Enter navigation; every action shows its shortcut
-- [ ] Sidebar "Search or run…" field opens it
+- [x] ⌘K (Ctrl+Shift+K off the Mac, where Ctrl+K belongs to the shell) opens `CommandPalette.tsx`; not over another dialog. Fuzzy match (`util/fuzzy.ts`): substring first, then letters in order, tightest span, word starts count; strewn matches are dropped. Typed, the groups follow their best match
+- [x] Servers (open sessions first, then by last connected; status shown): ↩ connect or switch, ⌘↩ edit, ⌥↩ open beside the session in front (cross-server split). Actions: the session's tools (⌘2–⌘8), Split, Toggle inspector, Edit this server, Broadcast, New server, Quick connect, Import from `~/.ssh/config`, the sections, Activity log, appearance, Lock. Folders open in Servers. Saved commands for the server in front (scope respected) run in its active terminal; ⌥↩ types without running
+- [x] ↑ ↓, PgUp/PgDn, ⌃N/⌃P on the Mac; the footer names what ↩, ⌘↩ and ⌥↩ do for the selected row; Esc clears, then closes and returns focus. Combobox + listbox with groups for screen readers
+- [x] Sidebar "Search or run… ⌘K" field, and a search button on the collapsed rail. SessionView takes a `request` prop (view, split, inspector) for the palette
+- [ ] No way to open it on a phone yet (no keyboard, no sidebar): a search button in the mobile title bar or dock
+- [ ] Shortcuts the design lists but the app doesn't have yet (⌘N, ⌘E, ⌘L, ⌘⇧M, ⌘⇧L, ⌘T) aren't shown: they show once Phase 10 wires them
 
 ## Phase 7: Monitor (artboard 6)
 
@@ -85,6 +88,15 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] Keyboard shortcuts from the design wired up (⌘K, ⌘N, ⌘L, ⌘,, ⌃⌘S, ⌥⌘A)
 - [ ] Accessibility pass (focus rings, labels, contrast in both themes)
 - [ ] Screenshots in `docs/screenshots/` and README refreshed
+
+## Phase 11: Rename to Supermarine
+
+The app is now called Supermarine, with a new logo: "Logo C Porthole (chosen)" on the Logo page of the design canvas (`project/brand/Porthole.dc.html`).
+
+- [ ] Logo: export the Porthole mark to the app icon set (`src-tauri/icons`, `app-logo.png`, `public/`), the sidebar header and the website
+- [ ] Name in the UI (sidebar header, window title, About, unlock screen, dialogs) and in `tauri.conf.json` (`productName`, window title). Keep the bundle identifier so installs update in place, or plan the move
+- [ ] Storage keys (`submarine-*` in localStorage), the "Submarine" terminal scheme id, and the profile and vault paths: keep reading the old names so nothing is lost
+- [ ] README, `llms.txt`, `PRIVACY.md`, `website/`, `packaging/`, store listings; the repository name and download links last
 
 ## Notes
 

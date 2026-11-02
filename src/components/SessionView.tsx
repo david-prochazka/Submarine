@@ -30,7 +30,7 @@ type ShellSyncPushResult = { pushed: number; bytes: number; failed: { remote: st
 // ⌘1–⌘8) or sit beside the terminal in the inspector (⌥-click, ⌘\). Only
 // one is on screen at a time: the inspector shows only with the terminal.
 export type ToolId = "files" | "tunnels" | "mirror" | "docker" | "info" | "commands" | "notes";
-type SessionViewId = "terminal" | ToolId;
+export type SessionViewId = "terminal" | ToolId;
 const TOOLS: { id: ToolId; label: string; Icon: typeof Folder }[] = [
   { id: "files", label: "Files", Icon: Folder },
   { id: "tunnels", label: "Tunnels", Icon: Network },
@@ -44,6 +44,10 @@ const VIEWS: { id: SessionViewId; label: string; Icon: typeof Folder }[] = [
   { id: "terminal", label: "Terminal", Icon: TerminalSquare },
   ...TOOLS,
 ];
+export const SESSION_VIEWS = VIEWS;
+// Asked of the session from outside (the command palette): show a view, or
+// do what ⌘D or ⌘\ does. A new `n` is a new request.
+export type SessionRequest = { n: number; view?: SessionViewId; split?: boolean; inspector?: boolean };
 const toolLabel = (id: ToolId) => TOOLS.find((t) => t.id === id)?.label ?? id;
 const INSPECTOR_TOOL_KEY = "submarine-inspector-tool";
 const readInspectorTool = (): ToolId => {
@@ -280,7 +284,7 @@ function writeOwnLogin(uuid: string, on: boolean) {
 // `displayName`: the session tab's name, which the user may have changed
 // from the server's (DesktopApp's tabNames). `profile`: the unlocked
 // profile's name, for what is kept per server on this device.
-const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onStatusChange, chromeless = false, onTerminalsChange, isActiveView = false, onPromptChange }: any) => {
+const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onStatusChange, chromeless = false, onTerminalsChange, isActiveView = false, onPromptChange, request }: any) => {
   const [status, setStatus] = useState<'connecting' | 'connected' | 'failed' | 'disconnected'>('connecting');
 
   // Bubble every status change up to the parent so the session-tab strip
@@ -810,6 +814,19 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
       toggleInspector();
     }
   };
+  const requestRef = useRef<{ req?: SessionRequest; run: (r: SessionRequest) => void }>({ run: () => {} });
+  requestRef.current.run = (r: SessionRequest) => {
+    if (r.view === "terminal") { setView("terminal"); requestTerminalFocus(); }
+    else if (r.view) setView(r.view);
+    if (r.split && !isCompact) toggleSplit();
+    if (r.inspector && !isCompact) toggleInspector();
+  };
+  useEffect(() => {
+    const r = request as SessionRequest | undefined;
+    if (!r || requestRef.current.req?.n === r.n) return;
+    requestRef.current.req = r;
+    requestRef.current.run(r);
+  }, [request]);
   useEffect(() => {
     if (!isActiveView || chromeless) return;
     const onKey = (e: KeyboardEvent) => shortcutRef.current(e);
