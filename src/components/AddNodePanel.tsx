@@ -41,6 +41,7 @@ type ImportedHost = {
   user: string;
   identity_file: string | null;
   proxy_jump: string | null;
+  folder: string | null;
 };
 
 // What `import_ssh_key_file` hands back after putting a key file in the vault.
@@ -255,8 +256,38 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
         });
       }
     }
+    // A JSON entry's `folder` path ("Clients/Acme"): each step is an existing
+    // folder of that name under the one before, or a new one made for it.
+    // `add_folder` hands back no id, so the list is read again after each.
+    let folderList: any[] | null = null;
+    const folderIds = new Map<string, number | null>();
+    const folderFor = async (path: string | null): Promise<number | null> => {
+      const steps = (path ?? "").split("/").map((s) => s.trim()).filter(Boolean);
+      if (steps.length === 0) return null;
+      const wanted = steps.join("/");
+      if (folderIds.has(wanted)) return folderIds.get(wanted)!;
+      folderList ??= await invoke<any[]>("get_folders");
+      let parentId: number | null = null;
+      for (const name of steps) {
+        const find = () => folderList!.filter((f) => f.name === name && (f.parent_id ?? null) === parentId);
+        if (find().length === 0) {
+          await invoke("add_folder", { name, parentId });
+          folderList = await invoke<any[]>("get_folders");
+        }
+        parentId = Math.max(...find().map((f) => f.id));
+      }
+      folderIds.set(wanted, parentId);
+      return parentId;
+    };
     for (const host of importHosts) {
       if (!importSelected.has(host.host_alias)) continue;
+      let folderId: number | null = null;
+      try {
+        folderId = await folderFor(host.folder);
+      } catch {
+        // No folder is no reason to skip the server: it lands at the top level.
+        folderId = null;
+      }
       let key: ImportedSshKey | null = null;
       if (host.identity_file && withKeys) {
         if (keysByPath.has(host.identity_file)) {
@@ -291,7 +322,7 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
           username: host.user ? host.user.trim() : "",
           password: null,
           credentialId: null,
-          folderId: null,
+          folderId,
           proxyType: "none",
           proxyHost: "",
           proxyPort: 1080,
@@ -314,6 +345,9 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
     }
     if (refreshServers) {
       try { await refreshServers(); } catch { /* refresh failure isn't fatal */ }
+    }
+    if (folderList && refreshFolders) {
+      try { await refreshFolders(); } catch { /* same */ }
     }
     if (keysAttached > 0 && refreshSshKeys) {
       try { await refreshSshKeys(); } catch { /* same — the list refreshes on next open */ }
@@ -1284,13 +1318,13 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
                     <ul className="mt-1.5 ml-4 list-disc space-y-0.5 text-zinc-500 text-[10.5px]">
                       <li><b className="text-zinc-300">PuTTY</b> — export via <code className="text-zinc-300">regedit /e ... HKCU\Software\SimonTatham\PuTTY\Sessions</code>, open the .reg file, paste its contents.</li>
                       <li><b className="text-zinc-300">MobaXterm</b> — Export sessions → open <code className="text-zinc-300">.mxtsessions</code>, paste.</li>
-                      <li><b className="text-zinc-300">JSON</b> — an array of <code className="text-zinc-300">{`{name,host,port,user}`}</code> or Termius-style <code className="text-zinc-300">{`{label,address,port,username}`}</code>.</li>
+                      <li><b className="text-zinc-300">JSON</b> — an array of <code className="text-zinc-300">{`{name,host,port,user}`}</code> or Termius-style <code className="text-zinc-300">{`{label,address,port,username}`}</code>. An optional <code className="text-zinc-300">folder</code> (<code className="text-zinc-300">"Clients/Acme"</code>) files the server there, creating missing folders.</li>
                     </ul>
                   </div>
                   <textarea
                     value={importPasteText}
                     onChange={(e) => setImportPasteText(e.target.value)}
-                    placeholder={`Paste your export here…\n\nExample JSON:\n[\n  {"name":"prod-web","host":"1.2.3.4","port":22,"user":"root"},\n  {"name":"db","host":"10.0.0.5","user":"admin"}\n]`}
+                    placeholder={`Paste your export here…\n\nExample JSON:\n[\n  {"name":"prod-web","host":"1.2.3.4","port":22,"user":"root"},\n  {"name":"db","host":"10.0.0.5","user":"admin","folder":"Clients/Acme"}\n]`}
                     rows={10}
                     className="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-[11px] font-mono text-zinc-200 placeholder:text-zinc-600 focus:border-primary/40 focus:outline-none resize-none custom-scrollbar"
                   />
@@ -1368,8 +1402,9 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
                             <div className="text-[11px] font-mono text-zinc-400 truncate">
                               {h.user ? `${h.user}@` : ""}{h.hostname}:{h.port}
                             </div>
-                            {(h.identity_file || h.proxy_jump) && (
+                            {(h.folder || h.identity_file || h.proxy_jump) && (
                               <div className="mt-0.5 text-[10.5px] text-zinc-600 truncate">
+                                {h.folder && <span className="mr-2">folder: {h.folder}</span>}
                                 {h.identity_file && <span className="mr-2">key: {h.identity_file}</span>}
                                 {h.proxy_jump && <span>jump: {h.proxy_jump}</span>}
                               </div>

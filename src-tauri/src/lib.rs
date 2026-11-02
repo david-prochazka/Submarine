@@ -19777,6 +19777,10 @@ struct ImportedHost {
     /// Resolved `ProxyJump`. Informational only; live proxy config still
     /// happens in the Server details panel.
     proxy_jump: Option<String>,
+    /// The folder the server goes in, as a `/`-separated path
+    /// ("Clients/Acme"). Only a JSON import sets it; the importer creates
+    /// whatever folders on the path don't exist yet.
+    folder: Option<String>,
 }
 
 /// Read the user's OpenSSH client config (default `~/.ssh/config`) and
@@ -19844,6 +19848,7 @@ async fn parse_ssh_config(path: Option<String>) -> Result<Vec<ImportedHost>, Str
                     user: b.user.clone().unwrap_or_default(),
                     identity_file: b.identity_file.clone(),
                     proxy_jump: b.proxy_jump.clone(),
+                    folder: None,
                 });
             }
         }
@@ -19954,7 +19959,8 @@ async fn parse_ssh_config(path: Option<String>) -> Result<Vec<ImportedHost>, Str
 ///     `[{"name":"foo","host":"1.2.3.4","port":22,"user":"root"}, …]`
 ///     or the Termius-style
 ///     `[{"label":"foo","address":"1.2.3.4","port":22,"username":"root"}, …]`.
-///     Any missing field defaults to the OpenSSH convention.
+///     Any missing field defaults to the OpenSSH convention. An optional
+///     `folder` (or `group`) puts the server in a `/`-separated folder path.
 ///
 ///   • MobaXterm `.mxtsessions` export — an INI file with one session per
 ///     line under `[Bookmarks]`, `[Bookmarks_1]`, … sections (see
@@ -20016,6 +20022,7 @@ fn parse_client_import(text: String) -> Result<Vec<ImportedHost>, String> {
             let user = get_str(&["user", "username"]).unwrap_or_default();
             let identity_file = get_str(&["identity_file", "identityFile", "key", "privateKey"]);
             let proxy_jump = get_str(&["proxy_jump", "proxyJump", "jump"]);
+            let folder = get_str(&["folder", "group"]);
             out.push(ImportedHost {
                 host_alias: alias,
                 hostname,
@@ -20023,6 +20030,7 @@ fn parse_client_import(text: String) -> Result<Vec<ImportedHost>, String> {
                 user,
                 identity_file,
                 proxy_jump,
+                folder,
             });
         }
         if out.is_empty() {
@@ -20061,6 +20069,7 @@ fn parse_putty_reg(text: &str) -> Result<Vec<ImportedHost>, String> {
                     user,
                     identity_file: None,
                     proxy_jump: None,
+                    folder: None,
                 });
             }
         }
@@ -20239,6 +20248,7 @@ fn parse_mobaxterm_sessions(text: &str) -> Result<Vec<ImportedHost>, String> {
             user: user.to_string(),
             identity_file,
             proxy_jump: mobaxterm_jump_hosts(field(8), field(9), field(10)),
+            folder: None,
         });
     }
     if out.is_empty() {
@@ -20405,6 +20415,17 @@ mod client_import_tests {
         assert_eq!((hosts[0].host_alias.as_str(), hosts[0].hostname.as_str(), hosts[0].port), ("box", "j.example", 2200));
         let err = parse_client_import("[ {\"name\": ".into()).err().expect("broken JSON must be refused");
         assert!(err.starts_with("JSON parse failed"), "{err}");
+    }
+
+    #[test]
+    fn a_json_entry_keeps_its_folder() {
+        let hosts = parse_client_import(r#"[
+            {"name": "a", "host": "a.example", "folder": "Clients/Acme"},
+            {"label": "b", "address": "b.example", "group": "Prod"},
+            {"name": "c", "host": "c.example", "folder": ""}
+        ]"#.into()).unwrap();
+        let folders: Vec<Option<&str>> = hosts.iter().map(|h| h.folder.as_deref()).collect();
+        assert_eq!(folders, vec![Some("Clients/Acme"), Some("Prod"), None]);
     }
 }
 
