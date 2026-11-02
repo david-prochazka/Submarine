@@ -20,6 +20,15 @@ const iconTone = (active: boolean) => (active ? "text-primary" : "text-zinc-400"
 const Count = ({ n }: { n: number }) =>
   n > 0 ? <span className="text-[11px] text-zinc-500 tabular-nums px-0.5">{n}</span> : null;
 
+const alertLabel = (label: string, n: number) => (n > 0 ? `${label}, ${n === 1 ? "1 alert" : `${n} alerts`}` : label);
+
+// A count on an icon, for the rail and the phone dock.
+const AlertDot = ({ n }: { n: number }) => (
+  <span aria-hidden className="absolute -top-1 -right-1.5 min-w-[15px] h-[15px] px-1 rounded-full bg-danger text-snow text-[9.5px] font-semibold leading-[15px] text-center tabular-nums">
+    {n > 9 ? "9+" : n}
+  </span>
+);
+
 const SectionTitle = ({ children, action }: { children: string; action?: React.ReactNode }) => (
   <div className="flex items-center justify-between h-8 pt-3.5 pb-1 px-2 text-[11px] font-semibold text-zinc-500">
     <span>{children}</span>
@@ -34,7 +43,7 @@ const SectionTitle = ({ children, action }: { children: string; action?: React.R
 export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
-  loginCount = 0, libraryCount = 0, wallCount, logoUrl, onSearch, searchShortcut,
+  loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, logoUrl, onSearch, searchShortcut,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -63,9 +72,9 @@ export const Sidebar = ({
   );
 
   const tools = [
-    { id: "vault", icon: KeyRound, label: "Logins", count: loginCount },
-    { id: "library", icon: Library, label: "Library", count: libraryCount },
-    { id: "monitor", icon: Activity, label: "Monitor", count: 0 },
+    { id: "vault", icon: KeyRound, label: "Logins", count: loginCount, alerts: 0 },
+    { id: "library", icon: Library, label: "Library", count: libraryCount, alerts: 0 },
+    { id: "monitor", icon: Activity, label: "Monitor", count: 0, alerts: monitorAlerts },
   ];
 
   if (isMobile) {
@@ -88,8 +97,12 @@ export const Sidebar = ({
               aria-current={activeTab === item.id ? "page" : undefined}
               className={dockBtn(activeTab === item.id)}
             >
-              <item.icon size={19} aria-hidden />
+              <span className="relative">
+                <item.icon size={19} aria-hidden />
+                {"alerts" in item && item.alerts > 0 && <AlertDot n={item.alerts} />}
+              </span>
               {item.label}
+              {"alerts" in item && item.alerts > 0 && <span className="sr-only">, {alertLabel("", item.alerts).slice(2)}</span>}
             </button>
           ))}
         </nav>
@@ -129,9 +142,10 @@ export const Sidebar = ({
           </button>
         )}
         <div className="w-6 border-t border-white/[0.075] my-1" />
-        {[{ id: "nodes", icon: Server, label: "Servers" }, ...tools].map((item) => (
-          <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} aria-label={item.label} title={item.label} aria-current={activeTab === item.id ? "page" : undefined} className={railBtn(activeTab === item.id)}>
+        {[{ id: "nodes", icon: Server, label: "Servers", alerts: 0 }, ...tools].map((item) => (
+          <button key={item.id} type="button" onClick={() => setActiveTab(item.id)} aria-label={alertLabel(item.label, item.alerts)} title={alertLabel(item.label, item.alerts)} aria-current={activeTab === item.id ? "page" : undefined} className={railBtn(activeTab === item.id)}>
             <item.icon size={18} aria-hidden />
+            {item.alerts > 0 && <AlertDot n={item.alerts} />}
           </button>
         ))}
         {wallCount !== undefined && (
@@ -253,7 +267,9 @@ export const Sidebar = ({
                 <button type="button" onClick={() => setActiveTab(item.id)} aria-current={active ? "page" : undefined} className={`${itemBase} ${itemTone(active)}`}>
                   <item.icon size={15} aria-hidden className={`shrink-0 ${iconTone(active)}`} />
                   <span className="flex-1 min-w-0 truncate">{item.label}</span>
-                  <Count n={item.count} />
+                  {item.alerts > 0
+                    ? <span className="pill h-4 px-1.5 text-[10.5px] bg-danger/[0.12] text-danger tabular-nums" aria-label={item.alerts === 1 ? "1 alert" : `${item.alerts} alerts`}>{item.alerts}</span>
+                    : <Count n={item.count} />}
                 </button>
               </li>
             );

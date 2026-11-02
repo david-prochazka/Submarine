@@ -64,11 +64,17 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] No way to open it on a phone yet (no keyboard, no sidebar): a search button in the mobile title bar or dock
 - [ ] Shortcuts the design lists but the app doesn't have yet (⌘N, ⌘E, ⌘L, ⌘⇧M, ⌘⇧L, ⌘T) aren't shown: they show once Phase 10 wires them
 
-## Phase 7: Monitor (artboard 6)
+## Phase 7: Monitor (artboard 6) ✅ done
 
-- [ ] Cards sorted by severity, sparklines for CPU, memory, network
-- [ ] Alerts with a direct Open terminal action
-- [ ] Alert count badge on Monitor in the sidebar
+- [x] Header with 15 min / 1 hour / 24 hours, Alert rules, settings, Add server; page title with a summary and alert / warning / healthy / paused counts, Pause all or Start all
+- [x] Cards sorted by severity (alert, warning, healthy, connecting, paused): colour dot, host, last check, status pill, metrics in two columns with a trend under each (CPU primary, memory info, red or amber when a rule is crossed). Trends break where nothing was measured. History (`util/monitorHistory.ts`) lives in memory from app start: every sample for an hour, minute averages for 24 hours
+- [x] Alert rules (`util/monitorRules.ts`, dialog): warning and alert levels per metric (CPU, memory, swap, disk, load) held for N minutes; offline always alerts, a failed check warns. Crossing into alert logs, pops up and plays the sound like an outage. Kept on this device (localStorage)
+- [x] Issue strips on the card with Open terminal (opens or switches to the session); card menu: Open terminal, Pause/Start checking, Metrics…, Stop monitoring
+- [x] Alert count badge on Monitor in the sidebar, on the collapsed rail and in the phone dock
+- [x] Empty state, and the Add, Settings and Metrics dialogs restyled (sentence case, switches, grouped rows)
+- [ ] Network stays in bits per second (Mbps), not the design's MB/s: that's what links and plans are sold in
+- [ ] No macOS notification (no notification plugin yet), no folder breadcrumb (Monitor › Clients), rules aren't synced: would need backend storage
+- [ ] Closing a dialog opened from the card menu leaves focus on the page, not the card's More button: Phase 10 accessibility pass
 
 ## Phase 8: Logins vault (artboard 7)
 

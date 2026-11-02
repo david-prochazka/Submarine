@@ -284,6 +284,7 @@ function DesktopApp() {
   const [isQuickConnectOpen, setIsQuickConnectOpen] = useState(false);
   // The ⌘K palette, and what it last asked of a session (SessionView).
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [monitorAlerts, setMonitorAlerts] = useState(0);
   const [sessionRequest, setSessionRequest] = useState<(SessionRequest & { sid: string }) | null>(null);
   const [servers, setServers] = useState<any[]>([]);
   const [credentials, setCredentials] = useState<any[]>([]);
@@ -2033,6 +2034,7 @@ function DesktopApp() {
             searchShortcut={`${MOD_LABEL}K`}
             loginCount={credentials.length + sshKeys.length}
             libraryCount={commands.length + notes.length}
+            monitorAlerts={monitorAlerts}
             wallCount={sessions.length >= 1 ? wallItems.length : undefined}
           />
 
@@ -2885,7 +2887,13 @@ function DesktopApp() {
                 mounted preserves the live data; the backend pollers were
                 always running, only the UI side was losing state. */}
             <div className={`flex-1 flex flex-col overflow-hidden ${activeView === "monitor" ? "" : "hidden"}`}>
-              <MonitoringPanel servers={servers} refreshServers={refreshServers} addLog={addLog} />
+              <MonitoringPanel
+                servers={servers}
+                refreshServers={refreshServers}
+                addLog={addLog}
+                onOpenServer={(id: number) => { const s = servers.find((v: any) => v.id === id); if (s) openServer(s); }}
+                onAlertCount={setMonitorAlerts}
+              />
             </div>
 
             {/* Compare workspace — pick any subset of open sessions and
