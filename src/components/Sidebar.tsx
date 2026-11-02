@@ -43,7 +43,7 @@ const SectionTitle = ({ children, action }: { children: string; action?: React.R
 export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
-  loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, logoUrl, onSearch, searchShortcut,
+  loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, logoUrl, onSearch, searchShortcut, lockShortcut,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -114,7 +114,7 @@ export const Sidebar = ({
             </span>
           </button>
           {onLogout && (
-            <button type="button" onClick={onLogout} aria-label="Lock and switch profile" className={dockBtn(false)}>
+            <button type="button" onClick={onLogout} aria-label="Lock" className={dockBtn(false)}>
               <Lock size={19} aria-hidden />
             </button>
           )}
@@ -159,7 +159,7 @@ export const Sidebar = ({
             {syncing && <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
           </button>
           {onLogout && (
-            <button type="button" onClick={onLogout} aria-label="Lock" title="Lock" className={railBtn(false)}>
+            <button type="button" onClick={onLogout} aria-label="Lock" title={lockShortcut ? `Lock (${lockShortcut})` : "Lock"} aria-keyshortcuts={lockShortcut} className={railBtn(false)}>
               <Lock size={17} aria-hidden />
             </button>
           )}
@@ -307,8 +307,8 @@ export const Sidebar = ({
           <button
             type="button"
             onClick={onLogout}
-            aria-label="Lock and switch profile"
-            title="Lock and switch profile"
+            aria-label="Lock"
+            title={lockShortcut ? `Lock (${lockShortcut})` : "Lock"} aria-keyshortcuts={lockShortcut}
             className="w-7 h-7 shrink-0 flex items-center justify-center rounded-md text-zinc-400 hover:bg-white/[0.09] hover:text-white"
           >
             <Lock size={15} aria-hidden />

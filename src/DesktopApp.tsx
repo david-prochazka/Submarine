@@ -70,6 +70,9 @@ type Session = { id: string; serverId: number; serverName: string; serverUuid?: 
 function DesktopApp() {
   const [loading, setLoading] = useState(true);
   const [isUnlocked, setIsUnlocked] = useState(false);
+  // Set by Lock: the unlock screen then waits for a click before asking for
+  // Windows Hello, instead of asking the moment it opens as it does at start.
+  const [lockedByUser, setLockedByUser] = useState(false);
   // Multi-exec broadcast state lives in a shared provider (see App.tsx) so
   // TerminalView instances across every tab can read `enabled` + `targets`
   // without prop-drilling. The pill in the tab strip is the toggle + picker.
@@ -920,15 +923,15 @@ function DesktopApp() {
     return () => { if (unlisten) unlisten(); };
   }, [confirm]);
 
-  // Lock the current profile and return to the picker. Confirms first when
-  // there are open SSH sessions because they will be torn down — accidental
-  // double-clicks on the lock icon shouldn't kill the user's terminal work.
+  // Lock the current profile and return to the unlock screen. Confirms first
+  // when there are open sessions because they will be torn down: an
+  // accidental click on the lock icon shouldn't kill the user's terminal work.
   const handleLogout = async () => {
     if (sessions.length > 0) {
       const ok = await confirm({
-        title: "Switch profile?",
-        message: `You have ${sessions.length} open session${sessions.length === 1 ? "" : "s"}. Switching will disconnect ${sessions.length === 1 ? "it" : "them all"} and take you back to the profile picker.`,
-        okLabel: "Switch",
+        title: "Lock Submarine?",
+        message: `You have ${sessions.length} open session${sessions.length === 1 ? "" : "s"}. Locking disconnects ${sessions.length === 1 ? "it" : "them all"}.`,
+        okLabel: "Lock",
         cancelLabel: "Stay",
         destructive: true,
       });
@@ -947,6 +950,7 @@ function DesktopApp() {
     // Reset all client state so the picker starts fresh — no stale
     // servers/credentials/sessions leaking across profile contexts.
     setIsUnlocked(false);
+    setLockedByUser(true);
     setActiveProfile(null);
     setSessions([]);
     setTabNames({});
@@ -1075,6 +1079,20 @@ function DesktopApp() {
   }, []);
   useEffect(() => { if (!isUnlocked) setPaletteOpen(false); }, [isUnlocked]);
 
+  // ⌘L (Ctrl+Shift+L off the Mac) locks. Not over another dialog.
+  const lockKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  lockKeyRef.current = (e: KeyboardEvent) => {
+    if (!isUnlocked || e.code !== "KeyL" || e.repeat || overlayOpen || !isSessionShortcut(e)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    void handleLogout();
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => lockKeyRef.current(e);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+
   const askSession = (sid: string, req: Omit<SessionRequest, "n">) =>
     setSessionRequest((prev) => ({ ...req, sid, n: (prev?.n ?? 0) + 1 }));
 
@@ -1177,7 +1195,7 @@ function DesktopApp() {
     ([["light", Sun, "Use light appearance"], ["dark", Moon, "Use dark appearance"], ["system", Monitor, "Match the system appearance"]] as const)
       .filter(([v]) => v !== appearance)
       .forEach(([v, icon, title]) => action({ id: `appearance-${v}`, icon, title, keywords: "theme mode appearance", run: () => setAppSettings((s: any) => ({ ...s, appearance: v })) }));
-    action({ id: "lock", icon: Lock, title: "Lock and switch profile", sub: sessions.length ? "Disconnects every open session" : "Back to the profile picker", keywords: "logout lock", run: handleLogout });
+    action({ id: "lock", icon: Lock, title: "Lock", sub: sessions.length ? "Disconnects every open session" : "Back to the unlock screen", shortcut: `${MOD_LABEL}L`, keywords: "logout lock switch profile", run: handleLogout });
 
     for (const f of folders) {
       const sub = tree.subtreeOf(f.id);
@@ -2006,7 +2024,7 @@ function DesktopApp() {
       {/* Unlocked on desktop, the title bar sits beside the sidebar instead. */}
       {(!isUnlocked || isMobile) && TitleBar()}
       {!isUnlocked ? (
-        <ProfileSelectPage onUnlocked={handleProfileUnlocked} />
+        <ProfileSelectPage onUnlocked={handleProfileUnlocked} afterLock={lockedByUser} />
       ) : (
         // Layout swap: on desktop the sidebar is a left rail (row).
         // On mobile we flip to flex-col-reverse so the sidebar component
@@ -2032,6 +2050,7 @@ function DesktopApp() {
             }}
             onSearch={() => setPaletteOpen(true)}
             searchShortcut={`${MOD_LABEL}K`}
+            lockShortcut={`${MOD_LABEL}L`}
             loginCount={credentials.length + sshKeys.length}
             libraryCount={commands.length + notes.length}
             monitorAlerts={monitorAlerts}

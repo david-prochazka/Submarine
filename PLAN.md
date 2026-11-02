@@ -88,16 +88,19 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] "Install on a server…" (append the public key to authorized_keys over a session): needs a backend command
 - [ ] Confirm and prompt dialogs are still the old uppercase style: Phase 10
 
-## Phase 9: Unlock (artboard 8)
+## Phase 9: Unlock (artboard 8) ✅ done
 
-- [ ] Single focused screen: quick unlock (Touch ID / Windows Hello where supported) or master password, profile name, Switch profile
-- [ ] Note on what auto-lock does; sonar rings
-- [ ] Sidebar Lock returns here (⌘L)
+- [x] `ProfileSelectPage.tsx` opens on a focused unlock screen for the profile used last: "Submarine is locked", the profile's name, password with a square Unlock button, Switch profile, Caps Lock state (shown once a key or click tells it), the quick unlock button (Windows Hello, or the fingerprint on Android) and an encryption note. Sonar rings behind it and two pulses round the logo (none with reduced motion)
+- [x] Switch profile opens the list (local and cloud in one, current one ticked, Back or Esc returns), with New profile, Import and the cloud bar. A cloud-only profile still opens to Get. The create form, import form, row menu, banners and footer restyled on the shared field, button and tile styles, sentence case
+- [x] Lock (sidebar, rail, phone dock, palette) returns here; ⌘L (Ctrl+Shift+L off the Mac) locks, not over a dialog. After a lock, Windows Hello waits for a click instead of prompting at once. The confirm says "Lock Submarine?"
+- [ ] Touch ID: quick unlock isn't built for macOS or Linux (`quick_unlock.rs`), so there the screen asks for the password only
+- [ ] Auto-lock (after N minutes idle or on sleep): the app has none, so the note says what's true instead: AES-256-GCM, password can't be recovered
+- [ ] The logo is still the old one: Phase 11
 
 ## Phase 10: Sweep
 
 - [ ] Remaining panels not in the design (Settings, Cloud, Docker, Tunnels, Mirrors, RDP/VNC, dialogs): spacing, type sizes, uppercase labels → sentence case, remove glow shadows
-- [ ] Keyboard shortcuts from the design wired up (⌘K, ⌘N, ⌘L, ⌘,, ⌃⌘S, ⌥⌘A)
+- [ ] Keyboard shortcuts from the design wired up (⌘N, ⌘,, ⌃⌘S, ⌥⌘A; ⌘K and ⌘L are done)
 - [ ] Accessibility pass (focus rings, labels, contrast in both themes)
 - [ ] Screenshots in `docs/screenshots/` and README refreshed
 

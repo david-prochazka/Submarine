@@ -1,8 +1,8 @@
-import { Fragment, forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, forwardRef, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import {
-  AlertTriangle, ArrowBigUp, ArrowRight, ArrowUpCircle, Check, CheckCircle2, Cloud, CloudOff, Download,
+  AlertTriangle, ArrowBigUp, ArrowUpCircle, Check, CheckCircle2, ChevronLeft, ChevronRight, Cloud, CloudOff, Download,
   Eye, EyeOff, Fingerprint, Github, HardDrive, Loader2, MoreHorizontal, Plus, RefreshCw, ShieldCheck, Trash2, Upload, X,
 } from "lucide-react";
 import CloudPanel from "./CloudPanel";
@@ -101,10 +101,10 @@ const shake = (el: HTMLElement | null | undefined) => {
   );
 };
 
-// Whether Caps Lock is on. A page only learns it from an event, so every key
-// and click reads it.
+// Whether Caps Lock is on, null until known: a page only learns it from an
+// event, so every key and click reads it.
 const useCapsLock = () => {
-  const [on, setOn] = useState(false);
+  const [on, setOn] = useState<boolean | null>(null);
   useEffect(() => {
     const read = (e: KeyboardEvent | MouseEvent) => {
       // Some IME and synthetic events come without getModifierState.
@@ -122,28 +122,17 @@ const useCapsLock = () => {
   return on;
 };
 
-// No height here: the unlock box is h-11, the form's boxes h-10.
-const INPUT_BASE =
-  "w-full rounded-xl border bg-black/30 text-[14px] text-zinc-50 placeholder:text-zinc-500 outline-none transition-[border-color,background-color,box-shadow] focus:bg-black/40 focus:ring-4 read-only:opacity-70";
-// One border and ring colour at a time: two in the same class list would be
-// settled by the stylesheet's order, not this one.
-const inputTone = (invalid: boolean) =>
-  invalid
-    ? "border-rose-500/50 focus:border-rose-400/70 focus:ring-rose-500/[0.12]"
-    : "border-white/[0.08] focus:border-primary/60 focus:ring-primary/[0.12]";
-const PRIMARY_BTN =
-  "flex items-center justify-center gap-1.5 rounded-xl bg-primary font-semibold text-black shadow-[0_8px_24px_-12px_rgb(var(--primary)/0.9)] transition hover:brightness-110 active:brightness-95 disabled:pointer-events-none disabled:opacity-40";
-const GHOST_BTN =
-  "flex h-10 items-center justify-center gap-1.5 rounded-xl border border-white/[0.07] bg-white/[0.02] text-[12.5px] font-medium text-zinc-300 transition-colors hover:border-white/[0.12] hover:bg-white/[0.06] hover:text-white disabled:pointer-events-none disabled:opacity-40";
-const LINK_BTN =
-  "flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-zinc-400 transition-colors hover:bg-white/[0.05] hover:text-white disabled:pointer-events-none disabled:opacity-40";
-const CARD = "rounded-2xl border border-white/[0.07] bg-white/[0.02] shadow-[0_16px_48px_-24px_rgba(0,0,0,0.9)]";
+// A box with a problem: the danger colour for its border and focus ring.
+const INVALID = "border-danger focus:border-danger focus:ring-danger/25";
 
 interface Props {
   onUnlocked: (profileName: string) => void;
+  /** Back here from Lock: quick unlock waits for a click instead of asking
+   *  right away, as it does when the app starts. */
+  afterLock?: boolean;
 }
 
-const ProfileSelectPage = ({ onUnlocked }: Props) => {
+const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
   const [profiles, setProfiles] = useState<string[]>([]);
   // The first load only: a later reload keeps the list on screen.
   const [loading, setLoading] = useState(true);
@@ -157,6 +146,9 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
   // The open row (by display name). A local row opens to its password box; a
   // cloud-only row to Get.
   const [selected, setSelected] = useState<string>("");
+  // The profile list, opened by Switch profile over the unlock screen.
+  const [listOpen, setListOpen] = useState(false);
+  const listRef = useRef<HTMLUListElement | null>(null);
   const [password, setPassword] = useState("");
   // Why the last unlock failed, under the password box.
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -335,7 +327,7 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
   // app starting on the profile used last asks for it right away, once;
   // closing that prompt leaves the password.
   const [quick, setQuick] = useState<{ name: string; method: string } | null>(null);
-  const autoQuickTried = useRef(false);
+  const autoQuickTried = useRef(afterLock);
   useEffect(() => {
     let live = true;
     const name = selected;
@@ -415,10 +407,14 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
     requestAnimationFrame(() => (showCreate ? nameInputRef : passwordInputRef).current?.focus());
   }, [showCreate]);
 
-  // A click on the open row puts the cursor back in its password box.
+  // A profile on this device goes to its unlock screen; one in the cloud only
+  // opens to Get.
   const pick = (row: Row) => {
-    if (row.name === selected) passwordInputRef.current?.focus();
-    else setSelected(row.name);
+    setSelected(row.name);
+    if (row.local) {
+      setListOpen(false);
+      requestAnimationFrame(() => passwordInputRef.current?.focus());
+    }
   };
 
   const openCreate = () => {
@@ -580,9 +576,10 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
       }
       setImportStaged(null);
       closeCreate();
-      setInfo(`Imported as "${name}". Open it with its original password.`);
+      setInfo(`Imported as "${name}". Unlock it with its original password.`);
       await reload();
       setSelected(name);
+      setListOpen(false);
     } catch (e) {
       setError(cleanErr(e));
     } finally {
@@ -666,9 +663,10 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
       const rep = await invoke<{ pushed: number; pulled: number }>("restore_personal_profile", {
         cloudProfile: c.profile, localName: c.name, vaultPassword: pw,
       });
-      setInfo(`"${c.name}" is now on this device — pulled ${rep.pulled} item${rep.pulled === 1 ? "" : "s"}. Open it below with the same password.`);
+      setInfo(`"${c.name}" is now on this device, with ${rep.pulled} item${rep.pulled === 1 ? "" : "s"}. Unlock it with the same password.`);
       await reload();
       setSelected(c.name);
+      setListOpen(false);
       refreshCloud();
     } catch (e) {
       setError(cleanErr(e));
@@ -707,41 +705,96 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
     error: { label: "Couldn't check", icon: <AlertTriangle size={12} />, tone: "text-amber-400/90 hover:text-amber-300" },
   }[check];
 
+  const selectedRow = rows.find((r) => r.name === selected);
+  // The focused unlock screen, unless the list is asked for or the profile
+  // picked isn't on this device.
+  const view: "loading" | "create" | "unlock" | "profiles" =
+    loading ? "loading" : showCreate ? "create" : selectedRow?.local && !listOpen ? "unlock" : "profiles";
+  const canGoBack = profiles.length > 0;
+
+  const openList = () => {
+    setListOpen(true);
+    setUnlockError(null);
+    setError(null); setInfo(null);
+    requestAnimationFrame(() => {
+      const list = listRef.current;
+      (list?.querySelector<HTMLElement>("[aria-current=true]") ?? list?.querySelector<HTMLElement>("button"))?.focus();
+    });
+  };
+  const closeList = () => {
+    if (!canGoBack) return;
+    // From a cloud row, back to the profile on this device it came from.
+    setSelected((prev) => (profiles.includes(prev) ? prev : pickFrom(profiles, "")));
+    setListOpen(false);
+    requestAnimationFrame(() => passwordInputRef.current?.focus());
+  };
+
+  const quickName = quick?.method === "android-biometric" ? "your fingerprint" : "Windows Hello";
+
   return (
     // Scrolls when the content is taller than the screen (phones with the
-    // keyboard open); `m-auto` still centres it when there's room — plain
+    // keyboard open); `m-auto` still centres it when there's room: plain
     // items-center would clip the top out of reach instead.
-    <div className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-4 sm:px-6 py-6 sm:py-10 bg-background">
-      {/* A soft glow of the theme colour behind the brand. */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-[440px]"
-        style={{ background: "radial-gradient(60% 70% at 50% 0%, rgb(var(--primary) / 0.11), transparent 72%)" }}
-      />
+    <div className="relative flex-1 min-h-0 overflow-y-auto overflow-x-hidden flex flex-col px-4 sm:px-6 pt-14 pb-4 bg-background">
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        {[1100, 760, 420].map((d, i) => (
+          <span
+            key={d}
+            className="absolute left-1/2 top-1/2 rounded-full"
+            style={{
+              width: d, height: d, marginLeft: -d / 2, marginTop: -d / 2,
+              boxShadow: `inset 0 0 0 0.5px var(${i === 2 ? "--border" : "--border-strong"})`,
+            }}
+          />
+        ))}
+      </div>
       <input
         ref={importFileRef}
         type="file"
         className="hidden"
         onChange={onImportFilePicked}
       />
-      <div className="relative w-full max-w-[380px] m-auto flex flex-col">
-        <header className="mb-5 flex flex-col items-center text-center select-none">
-          <img
-            src={logoUrl}
-            alt=""
-            draggable={false}
-            className="h-16 w-auto max-w-full object-contain drop-shadow-[0_6px_24px_rgb(var(--primary)/0.3)]"
-          />
-          <h1 className="mt-3 text-[22px] font-semibold leading-none tracking-tight text-white">Submarine</h1>
-          <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.26em] text-primary/80">
-            Run Silent, Run Deep
-          </p>
+      <div className="relative w-full max-w-[360px] m-auto flex flex-col">
+        <header className="flex flex-col items-center text-center select-none">
+          <div className="relative grid h-28 w-28 place-items-center">
+            {view === "unlock" && (
+              <>
+                <span aria-hidden className="absolute inset-0 rounded-full border border-primary animate-sonar motion-reduce:hidden" />
+                <span aria-hidden className="absolute inset-0 rounded-full border border-primary animate-sonar [animation-delay:1.6s] motion-reduce:hidden" />
+              </>
+            )}
+            <img src={logoUrl} alt="" draggable={false} className="relative h-[84px] w-auto max-w-full object-contain" />
+          </div>
+          {view === "unlock" ? (
+            <>
+              <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">Submarine is locked</h1>
+              <p className="mt-1.5 text-muted [text-wrap:balance]">
+                {quick?.name === selected ? `Use ${quickName} or enter` : "Enter"} the password for the{" "}
+                <strong className="font-semibold text-white break-all">{selected}</strong> profile.
+              </p>
+            </>
+          ) : view === "create" ? (
+            <>
+              <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">
+                {firstRun ? "Welcome to Submarine" : "New profile"}
+              </h1>
+              <p className="mt-1.5 text-muted">
+                {firstRun ? "Create a profile to keep your servers, logins and keys in." : "A separate vault with its own password."}
+              </p>
+            </>
+          ) : (
+            <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">
+              {view === "loading" ? "Submarine" : "Choose a profile"}
+            </h1>
+          )}
         </header>
 
-        {error && <Banner tone="error" onClose={() => setError(null)}>{error}</Banner>}
-        {/* Wraps instead of truncating: an Android export path is long and
-            the user needs all of it to find the file. */}
-        {info && !error && <Banner tone="info" onClose={() => setInfo(null)}>{info}</Banner>}
+        <div className="mt-5">
+          {error && <Banner tone="error" onClose={() => setError(null)}>{error}</Banner>}
+          {/* Wraps instead of truncating: an Android export path is long and
+              the user needs all of it to find the file. */}
+          {info && !error && <Banner tone="info" onClose={() => setInfo(null)}>{info}</Banner>}
+        </div>
 
         {importStaged && (
           <form
@@ -750,79 +803,141 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
             onKeyDown={(e) => {
               if (e.key === "Escape" && pending !== "import") { e.preventDefault(); e.stopPropagation(); cancelImport(); }
             }}
-            className="mb-3 rounded-2xl border border-primary/25 bg-primary/[0.05] p-4 animate-in"
+            className="tile mb-3 p-4 text-left animate-in"
           >
-            <div className="flex items-center gap-2 text-[13.5px] font-semibold text-zinc-100">
-              <Upload size={15} className="shrink-0 text-primary" /> Import a profile
-            </div>
-            <p className="mt-1 break-words text-[12px] leading-snug text-zinc-400">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+              <Upload size={14} aria-hidden className="shrink-0 text-primary" /> Import a profile
+            </h2>
+            <p className="mt-1 break-words text-[12px] leading-snug text-muted">
               From {importStaged.file}. Pick a name for it; its password stays the same.
             </p>
+            <label htmlFor="import-name" className="sr-only">Name for the imported profile</label>
             <input
+              id="import-name"
               ref={importNameRef}
               value={importStaged.name}
               onChange={(e) => { const name = e.target.value; setImportStaged((s) => s && { ...s, name }); }}
               placeholder="Profile name"
-              aria-label="Name for the imported profile"
               aria-invalid={importIssue ? true : undefined}
+              aria-describedby={importIssue ? "import-name-hint" : undefined}
               autoComplete="off"
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
               maxLength={32}
-              className={`${INPUT_BASE} mt-3 h-10 px-3.5 ${inputTone(!!importIssue)}`}
+              className={`field mt-3 h-9 ${importIssue ? INVALID : ""}`}
             />
-            {importIssue && <Hint tone="error">{importIssue}</Hint>}
+            {importIssue && <Hint id="import-name-hint" tone="error">{importIssue}</Hint>}
             <div className="mt-3 flex gap-2">
               <button
                 type="submit"
                 disabled={busy || !importStaged.name.trim() || !!importIssue}
-                className={`${PRIMARY_BTN} h-10 flex-1 text-[13px]`}
+                className="btn btn-primary h-9 flex-1"
               >
-                {pending === "import" ? <><Loader2 size={14} className="animate-spin" /> Importing…</> : "Import"}
+                {pending === "import" ? <><Loader2 size={14} aria-hidden className="animate-spin" /> Importing…</> : "Import"}
               </button>
-              <button type="button" onClick={cancelImport} disabled={pending === "import"} className={`${GHOST_BTN} px-4`}>
+              <button type="button" onClick={cancelImport} disabled={pending === "import"} className="btn h-9 px-4">
                 Cancel
               </button>
             </div>
           </form>
         )}
 
-        {loading ? (
-          <div aria-busy="true" aria-label="Loading profiles" className={CARD}>
-            <div className="flex items-center gap-3 px-3 py-3 animate-pulse">
-              <span className="h-9 w-9 shrink-0 rounded-xl bg-white/[0.06]" />
-              <span className="flex-1 space-y-2">
-                <span className="block h-3 w-28 rounded bg-white/[0.07]" />
-                <span className="block h-2.5 w-20 rounded bg-white/[0.04]" />
-              </span>
-            </div>
+        {view === "loading" ? (
+          <div aria-busy="true" aria-label="Loading profiles" className="flex h-[34px] gap-2 animate-pulse">
+            <span className="flex-1 rounded-md bg-white/[0.06]" />
+            <span className="w-11 rounded-md bg-white/[0.06]" />
           </div>
-        ) : showCreate ? (
-          /* ---- Create a profile ---- */
+        ) : view === "unlock" ? (
+          <form
+            onSubmit={(e) => { e.preventDefault(); unlockSelected(); }}
+            aria-busy={pending === "unlock"}
+            className="flex flex-col items-center"
+          >
+            <div ref={unlockFieldRef} className="flex w-full gap-2">
+              <PasswordInput
+                ref={passwordInputRef}
+                value={password}
+                onChange={(v) => { setPassword(v); setUnlockError(null); }}
+                onKeyDown={(e) => {
+                  // Escape clears a typed password.
+                  if (e.key === "Escape" && password) {
+                    e.preventDefault(); e.stopPropagation();
+                    setPassword(""); setUnlockError(null);
+                  }
+                }}
+                label="Password"
+                autoComplete="current-password"
+                enterKeyHint="go"
+                invalid={!!unlockError}
+                readOnly={pending === "unlock"}
+                describedBy="unlock-hint"
+              />
+              <button
+                type="submit"
+                disabled={busy || !password}
+                aria-label="Unlock"
+                title="Unlock"
+                className="btn btn-primary h-11 w-11 shrink-0 px-0 sm:h-[34px] sm:w-10 disabled:opacity-60"
+              >
+                {pending === "unlock" ? <Loader2 size={15} aria-hidden className="animate-spin" /> : <ChevronRight size={16} aria-hidden />}
+              </button>
+            </div>
+            <div id="unlock-hint" aria-live="polite" className="w-full">
+              {unlockError && <Hint tone="error">{unlockError}</Hint>}
+            </div>
+            <div className="mt-3 flex w-full items-center justify-between gap-3 text-[12px]">
+              <button
+                type="button"
+                onClick={openList}
+                disabled={busy}
+                className="-mx-1.5 h-7 rounded-md px-1.5 text-primary transition-colors hover:text-white disabled:opacity-40"
+              >
+                Switch profile
+              </button>
+              {capsLock !== null && (
+                <span className={capsLock ? "text-warning" : "text-subtle"}>
+                  Caps Lock is {capsLock ? "on" : "off"}
+                </span>
+              )}
+            </div>
+            {quick?.name === selected && (
+              <button
+                type="button"
+                onClick={() => void quickUnlock(selected)}
+                disabled={busy}
+                className="btn mt-5 h-9 gap-2 px-4"
+              >
+                {pending === "quick"
+                  ? <Loader2 size={16} aria-hidden className="animate-spin" />
+                  : <Fingerprint size={16} aria-hidden className="text-primary" />}
+                {quickLabel}
+              </button>
+            )}
+            <p className="mt-10 text-center text-[12px] leading-4 text-subtle [text-wrap:balance]">
+              <ShieldCheck size={13} aria-hidden className="mr-1.5 inline-block align-[-2px]" />
+              Vault encrypted with <span className="whitespace-nowrap">AES-256-GCM</span>. Its password can't be recovered.
+            </p>
+          </form>
+        ) : view === "create" ? (
           <form
             noValidate
             onSubmit={(e) => { e.preventDefault(); createNew(); }}
             onKeyDown={(e) => {
               if (e.key === "Escape" && !firstRun && !busy) { e.preventDefault(); e.stopPropagation(); closeCreate(); }
             }}
-            className={`${CARD} p-4 animate-in`}
+            className="tile p-4 text-left animate-in"
           >
-            <h2 className="text-[16px] font-semibold tracking-tight text-zinc-50">
-              {firstRun ? "Create your first profile" : "New profile"}
-            </h2>
-            <p className="mt-1 text-[12px] leading-snug text-zinc-400">
-              Encrypted with a password that can't be recovered.
-            </p>
-            <div className="mt-4 space-y-2.5">
+            <div className="space-y-2.5">
               <div>
+                <label htmlFor="new-name" className="mb-1 block text-[12px] text-muted">Profile name</label>
                 <input
+                  id="new-name"
                   ref={nameInputRef}
                   value={newName}
                   onChange={(e) => { setNewName(e.target.value); setCreateError(null); }}
                   onKeyDown={(e) => advance(e, newPasswordRef)}
-                  placeholder="Profile name"
-                  aria-label="Profile name"
+                  placeholder="Work"
                   aria-invalid={nameHint ? true : undefined}
                   aria-describedby={nameHint ? "new-name-hint" : undefined}
                   autoComplete="off"
@@ -831,7 +946,7 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                   spellCheck={false}
                   enterKeyHint="next"
                   maxLength={32}
-                  className={`${INPUT_BASE} h-10 px-3.5 ${inputTone(!!nameHint)}`}
+                  className={`field h-9 ${nameHint ? INVALID : ""}`}
                 />
                 {nameHint && <Hint id="new-name-hint" tone="error">{nameHint}</Hint>}
               </div>
@@ -840,20 +955,20 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                 value={newPassword}
                 onChange={(v) => { setNewPassword(v); setCreateError(null); }}
                 onKeyDown={(e) => advance(e, confirmRef)}
-                placeholder="Password"
+                label="Password"
+                showLabel
                 autoComplete="new-password"
                 enterKeyHint="next"
-                compact
                 invalid={triedCreate && !longEnough}
               />
               <PasswordInput
                 ref={confirmRef}
                 value={newConfirmPassword}
                 onChange={(v) => { setNewConfirmPassword(v); setCreateError(null); }}
-                placeholder="Confirm password"
+                label="Confirm password"
+                showLabel
                 autoComplete="new-password"
                 enterKeyHint="go"
-                compact
                 invalid={triedCreate && longEnough && !matches}
               />
             </div>
@@ -864,14 +979,15 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
             <div aria-live="polite">
               {createError ? <Hint tone="error">{createError}</Hint> : capsLock ? <Hint tone="warn">Caps Lock is on</Hint> : null}
             </div>
-            <button type="submit" disabled={busy} className={`${PRIMARY_BTN} mt-4 h-11 w-full text-[14px]`}>
-              {pending === "create" ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : "Create profile"}
+            <p className="mt-3 text-[12px] leading-4 text-subtle">The password can't be recovered. Keep it somewhere safe.</p>
+            <button type="submit" disabled={busy} className="btn btn-primary mt-4 h-9 w-full">
+              {pending === "create" ? <><Loader2 size={14} aria-hidden className="animate-spin" /> Creating…</> : "Create profile"}
             </button>
-            <div className="mt-2 flex items-center justify-center gap-1 text-[12.5px]">
+            <div className="mt-2 flex items-center justify-center gap-1 text-[12px]">
               {!firstRun && (
                 <>
-                  <button type="button" onClick={closeCreate} disabled={busy} className={LINK_BTN}>Cancel</button>
-                  <span aria-hidden className="text-zinc-700">·</span>
+                  <button type="button" onClick={closeCreate} disabled={busy} className="btn btn-ghost btn-sm">Cancel</button>
+                  <span aria-hidden className="text-subtle">·</span>
                 </>
               )}
               <button
@@ -879,17 +995,27 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                 onClick={startImport}
                 disabled={busy}
                 title="Import an exported .submarine file"
-                className={LINK_BTN}
+                className="btn btn-ghost btn-sm"
               >
-                <Upload size={13} /> Import a file
+                <Upload size={13} aria-hidden /> Import a file
               </button>
             </div>
           </form>
         ) : (
-          /* ---- Your profiles (local + cloud, one list) ---- */
-          <section aria-label="Your profiles">
-            <div className="mb-2 flex h-7 items-center justify-between pl-1">
-              <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-zinc-500">Your profiles</h2>
+          /* ---- Every profile, here and in the cloud ---- */
+          <section
+            aria-label="Profiles"
+            className="text-left"
+            onKeyDown={(e) => {
+              if (e.key === "Escape" && canGoBack && !menu) { e.preventDefault(); e.stopPropagation(); closeList(); }
+            }}
+          >
+            <div className="mb-2 flex h-7 items-center justify-between">
+              {canGoBack ? (
+                <button type="button" onClick={closeList} disabled={busy} className="btn btn-ghost btn-sm -ml-2.5">
+                  <ChevronLeft size={14} aria-hidden /> Back
+                </button>
+              ) : <span />}
               {cloudStatus.signed_in && (
                 <button
                   type="button"
@@ -897,27 +1023,21 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                   disabled={busy || refreshing}
                   title="Refresh from cloud"
                   aria-label="Refresh from cloud"
-                  className="grid h-7 w-7 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.05] hover:text-primary disabled:opacity-40"
+                  className="icon-btn"
                 >
-                  <RefreshCw size={13} className={refreshing ? "animate-spin" : ""} />
+                  <RefreshCw size={13} aria-hidden className={refreshing ? "animate-spin" : ""} />
                 </button>
               )}
             </div>
 
-            <ul className="space-y-2">
+            <ul ref={listRef} className="tile divide-y divide-white/[0.075] overflow-hidden">
               {rows.map((row) => {
-                const open = selected === row.name;
+                const current = row.name === selected;
+                const open = current && !row.local;
                 return (
-                  <li
-                    key={row.name}
-                    className={`rounded-2xl border transition-colors ${
-                      open
-                        ? "border-white/[0.1] bg-white/[0.04] shadow-[0_16px_48px_-24px_rgba(0,0,0,0.9)]"
-                        : "border-white/[0.06] bg-white/[0.015] hover:border-white/[0.1] hover:bg-white/[0.03]"
-                    }`}
-                  >
+                  <li key={row.name}>
                     <div
-                      className="flex items-center"
+                      className={`flex items-center transition-colors ${current ? "bg-primary/[0.08]" : "hover:bg-white/[0.04]"}`}
                       // Right-click: the same actions as ⋯, at the pointer.
                       onContextMenu={(e) => {
                         e.preventDefault();
@@ -932,15 +1052,17 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                       <button
                         type="button"
                         onClick={() => pick(row)}
-                        disabled={pending === "unlock"}
-                        aria-expanded={open}
-                        className="flex min-w-0 flex-1 items-center gap-3 rounded-2xl py-3 pl-3 pr-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+                        disabled={busy}
+                        aria-current={current && row.local ? true : undefined}
+                        aria-expanded={row.local ? undefined : open}
+                        className="flex min-w-0 flex-1 items-center gap-3 py-2.5 pl-3 pr-1 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50"
                       >
                         <Avatar name={row.name} local={row.local} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[14px] font-medium leading-5 text-zinc-100">{row.name}</span>
+                          <span className="block truncate font-medium leading-5 text-white">{row.name}</span>
                           <RowStatus row={row} />
                         </span>
+                        {current && row.local && <Check size={15} aria-hidden className="shrink-0 text-primary" />}
                       </button>
                       <button
                         type="button"
@@ -953,156 +1075,103 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
                         aria-expanded={menu?.name === row.name}
                         aria-label={`Actions for ${row.name}`}
                         title="More actions"
-                        className="mr-2 grid h-9 w-9 shrink-0 place-items-center rounded-lg text-zinc-500 outline-none transition-colors hover:bg-white/[0.07] hover:text-zinc-100 focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-40"
+                        className="icon-btn mr-2 h-8 w-8"
                       >
-                        <MoreHorizontal size={17} />
+                        <MoreHorizontal size={16} aria-hidden />
                       </button>
                     </div>
 
-                    {open && (row.local ? (
-                      <form
-                        onSubmit={(e) => { e.preventDefault(); unlockSelected(); }}
-                        aria-busy={pending === "unlock"}
-                        className="px-3 pb-3"
-                      >
-                        <div ref={unlockFieldRef} className="flex gap-2">
-                          <PasswordInput
-                            ref={passwordInputRef}
-                            value={password}
-                            onChange={(v) => { setPassword(v); setUnlockError(null); }}
-                            onKeyDown={(e) => {
-                              // Escape clears a typed password.
-                              if (e.key === "Escape" && password) {
-                                e.preventDefault(); e.stopPropagation();
-                                setPassword(""); setUnlockError(null);
-                              }
-                            }}
-                            placeholder="Password"
-                            autoComplete="current-password"
-                            enterKeyHint="go"
-                            invalid={!!unlockError}
-                            readOnly={pending === "unlock"}
-                            describedBy="unlock-hint"
-                          />
-                          <button
-                            type="submit"
-                            disabled={busy || !password}
-                            className={`${PRIMARY_BTN} h-11 shrink-0 px-4 text-[13.5px]`}
-                          >
-                            Unlock
-                            {pending === "unlock" ? <Loader2 size={15} className="animate-spin" /> : <ArrowRight size={15} />}
-                          </button>
-                        </div>
-                        <div id="unlock-hint" aria-live="polite">
-                          {unlockError ? <Hint tone="error">{unlockError}</Hint> : capsLock ? <Hint tone="warn">Caps Lock is on</Hint> : null}
-                        </div>
-                        {quick?.name === row.name && (
-                          <button
-                            type="button"
-                            onClick={() => void quickUnlock(row.name)}
-                            disabled={busy}
-                            className="mt-2 flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-white/10 text-[13px] text-zinc-200 outline-none transition-colors hover:border-primary/40 hover:text-white focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-50"
-                          >
-                            {pending === "quick" ? <Loader2 size={15} className="animate-spin" /> : <Fingerprint size={15} className="text-primary" />}
-                            {quickLabel}
-                          </button>
-                        )}
-                      </form>
-                    ) : (
+                    {open && (
                       <div className="space-y-2.5 px-3 pb-3">
-                        <p className="text-[12px] leading-snug text-zinc-400">
+                        <p className="text-[12px] leading-snug text-muted">
                           Not on this device yet. Get it with this profile's password.
                         </p>
                         <button
                           type="button"
                           onClick={() => row.cloud && bringDown(row.cloud)}
                           disabled={busy}
-                          className="flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 text-[13px] font-semibold text-primary transition-colors hover:bg-primary hover:text-black disabled:pointer-events-none disabled:opacity-40"
+                          className="btn btn-primary h-9 w-full"
                         >
-                          {pending === "get" ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />} Get on this device
+                          {pending === "get" ? <Loader2 size={14} aria-hidden className="animate-spin" /> : <Download size={14} aria-hidden />} Get on this device
                         </button>
                       </div>
-                    ))}
+                    )}
                   </li>
                 );
               })}
             </ul>
 
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={openCreate} disabled={busy} className={GHOST_BTN}>
-                <Plus size={14} /> New profile
+              <button type="button" onClick={openCreate} disabled={busy} className="btn h-9">
+                <Plus size={14} aria-hidden /> New profile
               </button>
               <button
                 type="button"
                 onClick={startImport}
                 disabled={busy}
                 title="Import an exported .submarine file"
-                className={GHOST_BTN}
+                className="btn h-9"
               >
-                <Upload size={14} /> Import
+                <Upload size={14} aria-hidden /> Import
               </button>
             </div>
           </section>
         )}
 
-        {/* Cloud status — always visible. Signed-out shows a Connect link;
-            signed-in shows the account and a way into Manage. */}
-        <CloudBar status={cloudStatus} host={cloudHost} busy={busy} firstRun={firstRun} onManage={() => setCloudOpen(true)} />
-
-        {/* GitHub, the update check and the running version side by side,
-            with a live "new version" notice underneath when one is available
-            (the check steps aside then — the notice says it all). */}
-        <footer className="mt-4 flex flex-col items-center gap-2.5">
-          <div aria-live="polite" className="flex flex-wrap items-center justify-center gap-1 text-[11.5px]">
-            <FooterButton onClick={openRepo} title="Open Submarine on GitHub" icon={<Github size={12} />} label="GitHub" />
-            <FooterDot />
-            <FooterButton onClick={() => openLink(PRIVACY_URL)} title="What Submarine stores and sends: the privacy policy" icon={<ShieldCheck size={12} />} label="Privacy" />
-            {!update && (
-              <>
-                <FooterDot />
-                <FooterButton
-                  onClick={checkForUpdates}
-                  disabled={check === "checking"}
-                  title={check === "error" ? `Couldn't reach GitHub: ${checkError}` : "Look for a newer release on GitHub"}
-                  icon={checkItem.icon}
-                  label={checkItem.label}
-                  tone={checkItem.tone}
-                />
-              </>
-            )}
-            {appInfo && (
-              <>
-                <FooterDot />
-                <span className="px-1.5 font-mono text-[11px] text-zinc-600 select-text">v{appInfo.version}</span>
-              </>
-            )}
-          </div>
-          {/* Why a check or a link failed — as text, since a phone can't
-              hover the tooltip. */}
-          {(linkError || (check === "error" && checkError)) && (
-            <p role="status" className="max-w-[320px] text-center text-[10.5px] leading-snug text-amber-400/80 break-words">
-              {linkError || `Couldn't reach GitHub: ${checkError}`}
-            </p>
-          )}
-          {update?.has_update && update.latest && (
-            <button
-              type="button"
-              onClick={openReleaseNotes}
-              title="Open the release notes on GitHub"
-              className="group flex items-center gap-1.5 text-[10.5px] text-primary/90 hover:text-primary animate-in fade-in slide-in-from-bottom-1 duration-700"
-            >
-              {/* pulsing dot — the "something new" signal */}
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/70 opacity-75" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
-              </span>
-              <ArrowUpCircle size={11} className="shrink-0" />
-              <span>New version <span className="font-mono font-semibold">v{update.latest}</span> available</span>
-              <span className="opacity-60 transition-transform group-hover:translate-x-0.5">→</span>
-            </button>
-          )}
-        </footer>
+        {/* Cloud status: with the profiles, where a returning user on a new
+            device finds theirs. The unlock screen stays on the password. */}
+        {(view === "profiles" || (view === "create" && firstRun)) && (
+          <CloudBar status={cloudStatus} host={cloudHost} busy={busy} firstRun={firstRun} onManage={() => setCloudOpen(true)} />
+        )}
       </div>
+
+      {/* GitHub, the update check and the running version side by side,
+          with a live "new version" notice underneath when one is available
+          (the check steps aside then: the notice says it all). */}
+      <footer className="relative mt-8 flex flex-col items-center gap-2">
+        <div aria-live="polite" className="flex flex-wrap items-center justify-center gap-1 text-[12px]">
+          <FooterButton onClick={openRepo} title="Open Submarine on GitHub" icon={<Github size={12} aria-hidden />} label="GitHub" />
+          <FooterDot />
+          <FooterButton onClick={() => openLink(PRIVACY_URL)} title="What Submarine stores and sends: the privacy policy" icon={<ShieldCheck size={12} aria-hidden />} label="Privacy" />
+          {!update && (
+            <>
+              <FooterDot />
+              <FooterButton
+                onClick={checkForUpdates}
+                disabled={check === "checking"}
+                title={check === "error" ? `Couldn't reach GitHub: ${checkError}` : "Look for a newer release on GitHub"}
+                icon={checkItem.icon}
+                label={checkItem.label}
+                tone={checkItem.tone}
+              />
+            </>
+          )}
+          {appInfo && (
+            <>
+              <FooterDot />
+              <span className="px-1.5 font-mono text-[11px] text-subtle select-text">v{appInfo.version}</span>
+            </>
+          )}
+        </div>
+        {/* Why a check or a link failed, as text, since a phone can't
+            hover the tooltip. */}
+        {(linkError || (check === "error" && checkError)) && (
+          <p role="status" className="max-w-[320px] text-center text-[11px] leading-snug text-warning break-words">
+            {linkError || `Couldn't reach GitHub: ${checkError}`}
+          </p>
+        )}
+        {update?.has_update && update.latest && (
+          <button
+            type="button"
+            onClick={openReleaseNotes}
+            title="Open the release notes on GitHub"
+            className="pill bg-primary/[0.12] text-primary transition-colors hover:bg-primary/20"
+          >
+            <ArrowUpCircle size={12} aria-hidden className="shrink-0" />
+            <span>Version <span className="font-mono font-semibold">{update.latest}</span> is out</span>
+          </button>
+        )}
+      </footer>
 
       {menu && menuRow && (
         <RowMenu
@@ -1117,7 +1186,7 @@ const ProfileSelectPage = ({ onUnlocked }: Props) => {
         isOpen={cloudOpen}
         onClose={() => {
           setCloudOpen(false);
-          // The modal may have logged in/out or changed cloud state —
+          // The modal may have logged in/out or changed cloud state:
           // re-pull so the bar (and profile list) reflects reality.
           refreshCloud();
         }}
@@ -1150,8 +1219,8 @@ const avatarTone = (name: string) => {
 const Avatar = ({ name, local }: { name: string; local: boolean }) => (
   <span
     aria-hidden
-    className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-[15px] font-semibold ${
-      local ? `${avatarTone(name)} ring-1 ring-inset ring-white/[0.06]` : "border border-dashed border-zinc-600 text-zinc-400"
+    className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[14px] font-semibold ${
+      local ? avatarTone(name) : "border border-dashed border-zinc-600 text-muted"
     }`}
   >
     {(Array.from(name)[0] ?? "?").toUpperCase()}
@@ -1163,21 +1232,21 @@ const RowStatus = ({ row }: { row: Row }) => {
   if (!row.local) {
     const n = row.cloud?.live_records ?? 0;
     return (
-      <span className="flex items-center gap-1 text-[11.5px] leading-4 text-primary/80">
-        <Cloud size={11} className="shrink-0" />
-        <span className="truncate">In your cloud · {n} item{n === 1 ? "" : "s"}</span>
+      <span className="flex items-center gap-1 text-[12px] leading-4 text-primary">
+        <Cloud size={11} aria-hidden className="shrink-0" />
+        <span className="truncate">In your cloud, {n} item{n === 1 ? "" : "s"}</span>
       </span>
     );
   }
   return (
-    <span className="flex items-center gap-1 text-[11.5px] leading-4 text-zinc-500">
-      <HardDrive size={11} className="shrink-0" />
+    <span className="flex items-center gap-1 text-[12px] leading-4 text-subtle">
+      <HardDrive size={11} aria-hidden className="shrink-0" />
       <span className="truncate">On this device</span>
       {row.cloud && (
         <>
-          <span aria-hidden className="text-zinc-700">·</span>
-          <Cloud size={11} className="shrink-0 text-emerald-400/80" />
-          <span className="text-emerald-400/80">Synced</span>
+          <span aria-hidden>·</span>
+          <Cloud size={11} aria-hidden className="shrink-0 text-success" />
+          <span className="text-success">Synced</span>
         </>
       )}
     </span>
@@ -1187,11 +1256,12 @@ const RowStatus = ({ row }: { row: Row }) => {
 interface PasswordInputProps {
   value: string;
   onChange: (value: string) => void;
-  placeholder: string;
+  label: string;
+  /** A visible label above the box; otherwise it's for screen readers and the
+   *  placeholder says it. */
+  showLabel?: boolean;
   autoComplete: "current-password" | "new-password";
   enterKeyHint: "go" | "next";
-  /** h-10 instead of h-11, for the form's stack of boxes. */
-  compact?: boolean;
   invalid?: boolean;
   readOnly?: boolean;
   describedBy?: string;
@@ -1202,42 +1272,46 @@ interface PasswordInputProps {
 // stays out of spell check, autocorrect and the keyboard's word learning, so a
 // visible password isn't kept as a word.
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ value, onChange, placeholder, autoComplete, enterKeyHint, compact, invalid = false, readOnly, describedBy, onKeyDown }, ref) => {
+  ({ value, onChange, label, showLabel, autoComplete, enterKeyHint, invalid = false, readOnly, describedBy, onKeyDown }, ref) => {
     const [shown, setShown] = useState(false);
+    const id = useId();
     return (
       // min-w-0: an <input> won't shrink below its intrinsic ~20ch width by
-      // default, which pushed the button beside it out of the card on phones.
-      <div className="relative min-w-0 flex-1">
-        <input
-          ref={ref}
-          type={shown ? "text" : "password"}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          aria-label={placeholder}
-          aria-invalid={invalid || undefined}
-          aria-describedby={describedBy}
-          autoComplete={autoComplete}
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint={enterKeyHint}
-          readOnly={readOnly}
-          className={`${INPUT_BASE} ${compact ? "h-10" : "h-11"} pl-3.5 pr-11 ${inputTone(invalid)}`}
-        />
-        <button
-          type="button"
-          onClick={() => setShown((s) => !s)}
-          // Keeps the focus, and the caret, in the box.
-          onMouseDown={(e) => e.preventDefault()}
-          aria-label="Show password"
-          aria-pressed={shown}
-          title={shown ? "Hide password" : "Show password"}
-          className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-zinc-200"
-        >
-          {shown ? <EyeOff size={15} /> : <Eye size={15} />}
-        </button>
+      // default, which pushed the button beside it out on phones.
+      <div className="min-w-0 flex-1">
+        <label htmlFor={id} className={showLabel ? "mb-1 block text-[12px] text-muted" : "sr-only"}>{label}</label>
+        <div className="relative">
+          <input
+            id={id}
+            ref={ref}
+            type={shown ? "text" : "password"}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={onKeyDown}
+            placeholder={showLabel ? undefined : label}
+            aria-invalid={invalid || undefined}
+            aria-describedby={describedBy}
+            autoComplete={autoComplete}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint={enterKeyHint}
+            readOnly={readOnly}
+            className={`field pr-9 read-only:opacity-70 ${showLabel ? "h-9" : "h-11 text-[14px] sm:h-[34px]"} ${invalid ? INVALID : ""}`}
+          />
+          <button
+            type="button"
+            onClick={() => setShown((s) => !s)}
+            // Keeps the focus, and the caret, in the box.
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Show password"
+            aria-pressed={shown}
+            title={shown ? "Hide password" : "Show password"}
+            className="icon-btn absolute right-1 top-1/2 -translate-y-1/2"
+          >
+            {shown ? <EyeOff size={14} aria-hidden /> : <Eye size={14} aria-hidden />}
+          </button>
+        </div>
       </div>
     );
   },
@@ -1248,11 +1322,11 @@ PasswordInput.displayName = "PasswordInput";
 const Hint = ({ id, tone, children }: { id?: string; tone: "error" | "warn"; children: React.ReactNode }) => (
   <p
     id={id}
-    className={`mt-2 flex items-start gap-1.5 text-[12px] leading-snug ${tone === "error" ? "text-rose-300" : "text-amber-300/90"}`}
+    className={`mt-2 flex items-start gap-1.5 text-left text-[12px] leading-4 ${tone === "error" ? "text-danger" : "text-warning"}`}
   >
     {tone === "error"
-      ? <AlertTriangle size={13} className="mt-px shrink-0" />
-      : <ArrowBigUp size={13} className="mt-px shrink-0" />}
+      ? <AlertTriangle size={13} aria-hidden className="mt-px shrink-0" />
+      : <ArrowBigUp size={13} aria-hidden className="mt-px shrink-0" />}
     <span className="min-w-0 break-words">{children}</span>
   </p>
 );
@@ -1260,11 +1334,11 @@ const Hint = ({ id, tone, children }: { id?: string; tone: "error" | "warn"; chi
 // A password rule, ticked once it's met. Grey until a Create click, then red
 // if still missing.
 const Rule = ({ ok, strict, children }: { ok: boolean; strict: boolean; children: React.ReactNode }) => (
-  <li className={`flex items-center gap-2 transition-colors ${ok ? "text-emerald-400" : strict ? "text-rose-300" : "text-zinc-500"}`}>
+  <li className={`flex items-center gap-2 transition-colors ${ok ? "text-success" : strict ? "text-danger" : "text-subtle"}`}>
     <span
       aria-hidden
       className={`grid h-4 w-4 shrink-0 place-items-center rounded-full border transition-colors ${
-        ok ? "border-emerald-400/60 bg-emerald-400/15" : strict ? "border-rose-400/50" : "border-zinc-600"
+        ok ? "border-success/60 bg-success/15" : strict ? "border-danger/60" : "border-zinc-600"
       }`}
     >
       {ok && <Check size={10} strokeWidth={3} />}
@@ -1279,21 +1353,21 @@ const Rule = ({ ok, strict, children }: { ok: boolean; strict: boolean; children
 const Banner = ({ tone, children, onClose }: { tone: "error" | "info"; children: React.ReactNode; onClose: () => void }) => (
   <div
     role={tone === "error" ? "alert" : "status"}
-    className={`mb-3 flex items-start gap-2.5 rounded-xl border px-3 py-2.5 text-[12.5px] leading-snug animate-in ${
-      tone === "error" ? "border-rose-500/25 bg-rose-500/[0.08] text-rose-100" : "border-emerald-500/25 bg-emerald-500/[0.08] text-emerald-50"
+    className={`mb-3 flex items-start gap-2 rounded-lg px-3 py-2 text-left text-[12px] leading-4 animate-in ${
+      tone === "error" ? "bg-danger/[0.12] text-danger" : "bg-success/[0.12] text-success"
     }`}
   >
     {tone === "error"
-      ? <AlertTriangle size={14} className="mt-px shrink-0 text-rose-300" />
-      : <CheckCircle2 size={14} className="mt-px shrink-0 text-emerald-300" />}
-    <span className="min-w-0 flex-1 break-words select-text">{children}</span>
+      ? <AlertTriangle size={13} aria-hidden className="mt-px shrink-0" />
+      : <CheckCircle2 size={13} aria-hidden className="mt-px shrink-0" />}
+    <span className="min-w-0 flex-1 break-words text-white select-text">{children}</span>
     <button
       type="button"
       onClick={onClose}
       aria-label="Dismiss"
-      className="-mr-1 -mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-md opacity-60 transition-opacity hover:bg-white/10 hover:opacity-100"
+      className="-mr-1.5 -mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded text-muted transition-colors hover:bg-white/10 hover:text-white"
     >
-      <X size={13} />
+      <X size={12} aria-hidden />
     </button>
   </div>
 );
@@ -1363,11 +1437,11 @@ const RowMenu = ({ label, items, place, onClose }: {
         aria-label={label}
         onKeyDown={onKeyDown}
         style={pos ?? { left: -9999, top: -9999 }}
-        className="fixed z-[9999] min-w-[220px] rounded-xl border border-white/10 bg-panel p-1 shadow-2xl shadow-black/60"
+        className="fixed z-[9999] min-w-[200px] rounded-lg bg-elevated p-1 shadow-pop"
       >
         {items.map((it, i) => (
           <Fragment key={it.label}>
-            {it.danger && i > 0 && !items[i - 1].danger && <div role="separator" className="mx-1 my-1 h-px bg-white/[0.07]" />}
+            {it.danger && i > 0 && !items[i - 1].danger && <div role="separator" className="mx-1 my-1 h-px bg-white/[0.075]" />}
             <button
               type="button"
               role="menuitem"
@@ -1375,13 +1449,11 @@ const RowMenu = ({ label, items, place, onClose }: {
               // Focus goes back to ⋯ first, so a confirm that opens next
               // returns it there.
               onClick={() => { onClose(true); it.onSelect(); }}
-              className={`flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5 text-left text-[13px] outline-none transition-colors ${
-                it.danger
-                  ? "text-rose-300 hover:bg-rose-500/10 focus:bg-rose-500/10"
-                  : "text-zinc-200 hover:bg-white/[0.06] focus:bg-white/[0.06]"
+              className={`flex h-8 w-full items-center gap-2 rounded-md px-2 text-left outline-none transition-colors ${
+                it.danger ? "text-danger hover:bg-danger/10 focus:bg-danger/10" : "text-white hover:bg-white/[0.06] focus:bg-white/[0.06]"
               }`}
             >
-              <span className="shrink-0 opacity-80">{it.icon}</span>
+              <span className="shrink-0 text-muted">{it.icon}</span>
               {it.label}
             </button>
           </Fragment>
@@ -1392,7 +1464,7 @@ const RowMenu = ({ label, items, place, onClose }: {
   );
 };
 
-// A low-key text button for the footer row under the cloud bar.
+// A low-key text button for the footer row.
 const FooterButton = ({
   onClick, disabled, title, icon, label, tone,
 }: {
@@ -1404,14 +1476,14 @@ const FooterButton = ({
     disabled={disabled}
     title={title}
     className={`h-7 px-2 rounded-md flex items-center gap-1.5 transition-colors hover:bg-white/[0.05] disabled:cursor-default disabled:hover:bg-transparent ${
-      tone || "text-zinc-500 hover:text-zinc-200"
+      tone || "text-subtle hover:text-white"
     }`}
   >
     {icon} {label}
   </button>
 );
 
-const FooterDot = () => <span aria-hidden className="text-zinc-700 select-none">·</span>;
+const FooterDot = () => <span aria-hidden className="text-subtle select-none">·</span>;
 
 const CloudBar = ({
   status, host, busy, firstRun, onManage,
@@ -1422,40 +1494,30 @@ const CloudBar = ({
   firstRun: boolean;
   onManage: () => void;
 }) => {
-  // Signed-out: a light link rather than another full-width button — the
+  // Signed out: a light link rather than another full-width button. The
   // user hasn't asked for cloud yet, so it shouldn't compete with the
   // profiles. On a first run it's how a returning user finds theirs.
   if (!status.signed_in) {
     return (
       <div className="mt-4 flex flex-col items-center gap-0.5">
-        {firstRun && <span className="text-[12px] text-zinc-500">Already have profiles in the cloud?</span>}
-        <button
-          type="button"
-          onClick={onManage}
-          className="flex h-9 items-center gap-2 rounded-full px-4 text-[12.5px] text-zinc-400 transition-colors hover:bg-primary/[0.07] hover:text-primary"
-        >
-          <Cloud size={14} /> Connect cloud sync
+        {firstRun && <span className="text-[12px] text-subtle">Already have profiles in the cloud?</span>}
+        <button type="button" onClick={onManage} className="btn btn-ghost h-8 text-[12px] hover:text-primary">
+          <Cloud size={14} aria-hidden /> Connect cloud sync
         </button>
       </div>
     );
   }
   return (
-    <div className={`${CARD} mt-4 flex items-center gap-3 py-2 pl-2.5 pr-1.5`}>
-      <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-        <Cloud size={15} />
-        <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-background" />
+    <div className="tile mt-3 flex items-center gap-3 py-2 pl-2.5 pr-1.5 text-left">
+      <span className="relative grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/[0.12] text-primary">
+        <Cloud size={15} aria-hidden />
+        <span aria-hidden className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-success ring-2 ring-panel" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[12.5px] text-zinc-200">{status.email}</span>
-        <span className="block truncate text-[11px] text-zinc-500">{host ? `Signed in · ${host}` : "Signed in"}</span>
+        <span className="block truncate text-[12px] text-white">{status.email}</span>
+        <span className="block truncate text-[11px] text-subtle">{host ? `Signed in to ${host}` : "Signed in"}</span>
       </span>
-      <button
-        type="button"
-        onClick={onManage}
-        disabled={busy}
-        title="Manage cloud account"
-        className="h-8 shrink-0 rounded-lg px-3 text-[12px] font-medium text-zinc-300 transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-40"
-      >
+      <button type="button" onClick={onManage} disabled={busy} title="Manage cloud account" className="btn btn-sm">
         Manage
       </button>
     </div>
