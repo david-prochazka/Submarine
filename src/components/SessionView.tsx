@@ -2,10 +2,11 @@ import { useState, useEffect, useLayoutEffect, useRef, useCallback, memo } from 
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { TerminalSquare, Folder, FolderUp, Network, AlertTriangle, Check, X, Play, Library, Info, Container, Plus, SplitSquareHorizontal, Columns, Rows, RotateCw, Loader2, CircleSlash, PanelRight, PanelLeft, PanelBottom, PanelTop, Maximize2, Minimize2, UploadCloud, LogIn } from "lucide-react";
+import { TerminalSquare, Folder, FolderSync, Network, AlertTriangle, Check, X, Play, Info, Container, Plus, SplitSquareHorizontal, Columns, Rows, RotateCw, Loader2, CircleSlash, PanelRight, PanelLeft, PanelBottom, PanelTop, UploadCloud, LogIn, ChevronRightSquare, StickyNote } from "lucide-react";
 import TerminalView from "./TerminalView";
 import { AuthPrompts } from "./AuthPrompts";
-import SftpWorkspace, { type SftpView } from "./SftpWorkspace";
+import SftpWorkspace from "./SftpWorkspace";
+import DockerTab from "./DockerTab";
 import TunnelsPanel from "./TunnelsPanel";
 import InfoPanel from "./InfoPanel";
 import { CmdsPanel } from "./CmdsPanel";
@@ -25,9 +26,36 @@ type ShellSyncEntry = { local: string; remote: string; size: number; action: str
 type ShellSyncReport = { home: string; entries: ShellSyncEntry[]; total_bytes: number };
 type ShellSyncPushResult = { pushed: number; bytes: number; failed: { remote: string; error: string }[]; backup: string | null };
 
-// Where the tool panel (SFTP, Ports, Library, Info) sits around the terminal.
-// Remembered per device like the panel's size; compact windows ignore it and
-// show the tool full screen.
+// The session's tools. Each one can take the terminal's place (the tool bar,
+// ⌘1–⌘8) or sit beside the terminal in the inspector (⌥-click, ⌘\). Only
+// one is on screen at a time: the inspector shows only with the terminal.
+export type ToolId = "files" | "tunnels" | "mirror" | "docker" | "info" | "commands" | "notes";
+type SessionViewId = "terminal" | ToolId;
+const TOOLS: { id: ToolId; label: string; Icon: typeof Folder }[] = [
+  { id: "files", label: "Files", Icon: Folder },
+  { id: "tunnels", label: "Tunnels", Icon: Network },
+  { id: "mirror", label: "Mirror", Icon: FolderSync },
+  { id: "docker", label: "Docker", Icon: Container },
+  { id: "info", label: "Info", Icon: Info },
+  { id: "commands", label: "Commands", Icon: ChevronRightSquare },
+  { id: "notes", label: "Notes", Icon: StickyNote },
+];
+const VIEWS: { id: SessionViewId; label: string; Icon: typeof Folder }[] = [
+  { id: "terminal", label: "Terminal", Icon: TerminalSquare },
+  ...TOOLS,
+];
+const toolLabel = (id: ToolId) => TOOLS.find((t) => t.id === id)?.label ?? id;
+const INSPECTOR_TOOL_KEY = "submarine-inspector-tool";
+const readInspectorTool = (): ToolId => {
+  try {
+    const v = localStorage.getItem(INSPECTOR_TOOL_KEY);
+    if (TOOLS.some((t) => t.id === v)) return v as ToolId;
+  } catch { /* ignore */ }
+  return "files";
+};
+
+// Where the inspector sits around the terminal. Remembered per device like
+// its size; compact windows ignore it and show the tool full screen.
 type ToolDock = "right" | "left" | "bottom" | "top";
 const TOOL_DOCK_KEY = "submarine-tool-dock";
 const DOCK_OPTIONS: { id: ToolDock; label: string; Icon: typeof PanelRight }[] = [
@@ -51,23 +79,13 @@ const DOCK_FLEX: Record<ToolDock, string> = {
 const MIN_TOOL_HEIGHT = 160;
 const MIN_TERMINAL_HEIGHT = 120;
 const MIN_TERMINAL_WIDTH = 200;
-// The panel can also take the terminal's place ("full screen"); remembered
-// with the dock.
-const TOOL_FULL_KEY = "submarine-tool-full";
 
-// Title-bar button of a tool panel: give the panel the terminal's room, or
-// bring the terminal back. The terminal keeps running either way.
-const FullToggle = ({ full, onToggle }: { full: boolean; onToggle: () => void }) => (
-  <button
-    onClick={onToggle}
-    aria-pressed={full}
-    aria-label="Full screen"
-    title={full ? "Show the terminal again" : "Full screen: hide the terminal and give this panel all the room"}
-    className={`shrink-0 transition-colors ${full ? "text-primary hover:text-white" : "text-zinc-500 hover:text-white"}`}
-  >
-    {full ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
-  </button>
-);
+// The session shortcuts: ⌘ on a Mac. Elsewhere Ctrl+Shift, since Ctrl alone
+// belongs to the shell (Ctrl+D is end of input).
+const IS_MAC_UI = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent) && !/Android/i.test(navigator.userAgent);
+export const MOD_LABEL = IS_MAC_UI ? "⌘" : "Ctrl+Shift+";
+export const isSessionShortcut = (e: KeyboardEvent) =>
+  IS_MAC_UI ? e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey : e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey;
 
 // Compact "run this tab on its own dedicated SSH connection" toggle, shown in
 // the SFTP and Port-Forwarding tab headers. The status dot reflects the live
@@ -97,7 +115,7 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
   return (
     <span className="flex items-center gap-1.5">
       <label
-        className="flex items-center gap-1.5 text-[10px] text-zinc-400 hover:text-zinc-200 cursor-pointer select-none"
+        className="flex items-center gap-1.5 text-[12px] text-zinc-400 hover:text-white cursor-pointer select-none"
         // Touch screens fake a hover on tap, which would leave the guide up
         // after every toggle, so only a real pointer opens it.
         onMouseEnter={(e) => { if (window.matchMedia('(hover: hover)').matches) showGuide(e.currentTarget); }}
@@ -108,7 +126,7 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
         onBlur={() => setGuideAt(null)}
       >
         <input type="checkbox" className="w-3 h-3 accent-primary" checked={on} aria-label="Dedicated session" onChange={(e) => onToggle(e.target.checked)} />
-        <span className="uppercase tracking-wider font-bold">Dedicated</span>
+        <span>Dedicated</span>
         {on && (
           <span
             className={`w-1.5 h-1.5 rounded-full shrink-0 ${
@@ -131,7 +149,7 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
           }}
           className="fixed z-[9999] pointer-events-none bg-elevated border border-white/10 rounded-lg shadow-2xl px-3 py-2 text-[11px] leading-snug text-zinc-300"
         >
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-zinc-100">Dedicated session</div>
+          <div className="mb-1 text-[12px] font-semibold text-zinc-100">Dedicated session</div>
           <p>{hint}</p>
           <p className="mt-1 text-zinc-400">When it is off, or that connection can't be opened, the terminal's connection is used.</p>
           <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[10px] text-zinc-400">
@@ -159,112 +177,65 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
   );
 };
 
-// The title bar of a tool panel with a Dedicated toggle (SFTP, Port
-// Forwarding): the title, the toggle, then the panel's buttons (SFTP's Mirror),
-// full screen and close. In a narrow panel not all of it fits. What gives way,
-// in this order: the title shortens ("SFTP", "Ports"), the title goes, and
-// only then does Mirror lose its word. So the word is there whenever there is
-// room for it. The bar measures itself instead of using fixed widths, because
-// the toggle is wider while its status dot shows and the text's width depends
-// on the font.
-const TITLE_BAR_GAP = 12; // gap-3 between the title, the toggle and the buttons
-const MIRROR_WORD_GAP = 6; // gap-1.5 between Mirror's icon and its word
-const TITLE_BAR_TEXT = "text-[10px] font-bold uppercase tracking-wider";
-interface TitleBarFit { title: "full" | "short" | "none"; mirrorWord: boolean }
-const TITLE_BAR_FITS: TitleBarFit[] = [
-  { title: "full", mirrorWord: true },
-  { title: "short", mirrorWord: true },
-  { title: "none", mirrorWord: true },
-  { title: "short", mirrorWord: false },
-  { title: "none", mirrorWord: false },
-];
-const ToolTitleBar = ({ title, shortTitle, toggle, mirror, extra, onClose }: {
-  title: string;
-  shortTitle: string;
-  toggle: React.ReactNode;
-  /** SFTP's Mirror button; the other panels have none. */
-  mirror?: { on: boolean; disabled: boolean; onToggle: () => void };
-  /** Buttons between Mirror and Close (full screen). */
-  extra: React.ReactNode;
+// The header of a tool. Taking the terminal's place it names the tool and
+// offers to move it beside the terminal; in the inspector it switches the
+// docked tool and holds the inspector's own controls. `toggle` is the
+// Dedicated switch of Files, Mirror and Tunnels.
+const ToolHeader = ({ tool, docked, toggle, actions, onSwitch, onDock, onPosition, onClose }: {
+  tool: ToolId;
+  docked: boolean;
+  toggle?: React.ReactNode;
+  actions?: React.ReactNode;
+  onSwitch: (t: ToolId) => void;
+  onDock?: () => void;
+  onPosition?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onClose: () => void;
-}) => {
-  const barRef = useRef<HTMLDivElement | null>(null);
-  const toggleRef = useRef<HTMLSpanElement | null>(null);
-  const buttonsRef = useRef<HTMLDivElement | null>(null);
-  // Never shown: they only give the three texts' widths.
-  const fullTitleRef = useRef<HTMLSpanElement | null>(null);
-  const shortTitleRef = useRef<HTMLSpanElement | null>(null);
-  const mirrorWordRef = useRef<HTMLSpanElement | null>(null);
-  const [fitIndex, setFitIndex] = useState(0);
-  const fit = TITLE_BAR_FITS[fitIndex];
-  const fitRef = useRef(fit);
-  fitRef.current = fit;
-  useLayoutEffect(() => {
-    const bar = barRef.current, toggleBox = toggleRef.current, buttons = buttonsRef.current;
-    if (!bar || !toggleBox || !buttons || typeof ResizeObserver === "undefined") return;
-    const width = (el: HTMLElement | null) => (el ? el.getBoundingClientRect().width : 0);
-    const measure = () => {
-      const style = getComputedStyle(bar);
-      const room = bar.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-      if (!(room > 0)) return; // not laid out
-      const word = mirrorWordRef.current ? width(mirrorWordRef.current) + MIRROR_WORD_GAP : 0;
-      const iconButtons = width(buttons) - (fitRef.current.mirrorWord ? word : 0);
-      const titles = { full: width(fullTitleRef.current), short: width(shortTitleRef.current), none: 0 };
-      const needed = (f: TitleBarFit) =>
-        (f.title === "none" ? 0 : titles[f.title] + TITLE_BAR_GAP)
-        + width(toggleBox) + TITLE_BAR_GAP + iconButtons + (f.mirrorWord ? word : 0);
-      // A pixel to spare, so rounding never leaves the last one a hair too wide.
-      const first = TITLE_BAR_FITS.findIndex((f) => needed(f) + 1 <= room);
-      setFitIndex(first === -1 ? TITLE_BAR_FITS.length - 1 : first);
-    };
-    const observer = new ResizeObserver(measure);
-    observer.observe(bar);
-    observer.observe(toggleBox);
-    observer.observe(buttons);
-    measure();
-    return () => observer.disconnect();
-  }, []);
-  return (
-    <div ref={barRef} className="relative h-10 px-4 flex items-center gap-3 border-b border-white/5 bg-white/5 overflow-hidden">
-      {fit.title !== "none" && (
-        <span className={`${TITLE_BAR_TEXT} text-zinc-400 truncate min-w-0`}>
-          {fit.title === "full" ? title : shortTitle}
-        </span>
-      )}
-      <span ref={toggleRef} className="shrink-0 whitespace-nowrap">{toggle}</span>
-      <div ref={buttonsRef} className="ml-auto flex items-center gap-2 shrink-0">
-        {mirror && (
+}) => (
+  <div className="h-10 shrink-0 px-2 flex items-center gap-2 border-b border-white/[0.075] bg-surface overflow-hidden">
+    {docked ? (
+      <div className="seg shrink-0" role="group" aria-label="Docked tool">
+        {TOOLS.map(({ id, label, Icon }) => (
           <button
-            onClick={mirror.onToggle}
-            disabled={mirror.disabled}
-            aria-pressed={mirror.on}
-            aria-label="Mirror"
-            title={mirror.disabled
-              ? "Mirror needs a saved server"
-              : mirror.on ? "Back to the files" : "Mirror: keep a local folder copied to this server"}
-            className={`h-6 px-2 rounded border flex items-center gap-1.5 ${TITLE_BAR_TEXT} transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
-              mirror.on
-                ? 'text-primary bg-primary/10 border-primary/30'
-                : 'text-zinc-400 border-white/10 hover:text-white hover:bg-white/5'
-            }`}
+            key={id}
+            type="button"
+            className="seg-item min-w-0 px-1.5"
+            aria-pressed={id === tool}
+            aria-label={`Dock ${label}`}
+            title={label}
+            onClick={() => onSwitch(id)}
           >
-            <FolderUp size={12} className="shrink-0" />
-            {fit.mirrorWord && <span>Mirror</span>}
+            <Icon size={13} />
           </button>
-        )}
-        {extra}
-        <button onClick={onClose} aria-label="Close" className="text-zinc-500 hover:text-white transition-colors shrink-0">
-          <X size={14} />
+        ))}
+      </div>
+    ) : (
+      <span className="pl-1 text-[13px] font-semibold text-white truncate min-w-0">{toolLabel(tool)}</span>
+    )}
+    {toggle && <span className="shrink-0 whitespace-nowrap">{toggle}</span>}
+    <div className="ml-auto flex items-center gap-0.5 shrink-0">
+      {actions}
+      {onDock && (
+        <button type="button" className="icon-btn" onClick={onDock} aria-label="Show beside the terminal" title="Show beside the terminal (⌥-click a tool)">
+          <PanelRight size={14} />
         </button>
-      </div>
-      <div aria-hidden className="absolute left-0 top-0 invisible pointer-events-none whitespace-nowrap flex gap-4">
-        <span ref={fullTitleRef} className={TITLE_BAR_TEXT}>{title}</span>
-        <span ref={shortTitleRef} className={TITLE_BAR_TEXT}>{shortTitle}</span>
-        {mirror && <span ref={mirrorWordRef} className={TITLE_BAR_TEXT}>Mirror</span>}
-      </div>
+      )}
+      {onPosition && (
+        <button type="button" className="icon-btn" onClick={onPosition} aria-label="Inspector position" aria-haspopup="menu" title="Inspector position">
+          <PanelBottom size={14} />
+        </button>
+      )}
+      <button
+        type="button"
+        className="icon-btn"
+        onClick={onClose}
+        aria-label={docked ? "Close inspector" : "Back to the terminal"}
+        title={docked ? `Close inspector (${MOD_LABEL}\\)` : `Back to the terminal (${MOD_LABEL}1)`}
+      >
+        <X size={14} />
+      </button>
     </div>
-  );
-};
+  </div>
+);
 
 // The name of a new terminal tab: the lowest number no open terminal has
 // (issue #231). Closing "2" of 1, 2, 3 and opening another gives a new "2",
@@ -621,7 +592,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
       container: { name: containerName, useSudo },
     }]);
     setActiveTab(newId);
-    setActiveTool(null);
+    setView("terminal");
   };
 
   const [activeTab, setActiveTab] = useState<string>(`${session.id}-term-0`);
@@ -662,7 +633,16 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActiveView]);
 
-  const [activeTool, setActiveTool] = useState<'sftp' | 'tunnels' | 'mirrors' | 'cmds' | 'info' | null>(null);
+  // What fills the session: the terminal or one tool. Beside the terminal,
+  // the inspector can hold a tool of its own (remembered per device).
+  const [view, setView] = useState<SessionViewId>("terminal");
+  const [inspTool, setInspToolState] = useState<ToolId>(readInspectorTool);
+  const [inspOpen, setInspOpen] = useState(false);
+  const setInspTool = (t: ToolId) => {
+    setInspToolState(t);
+    try { localStorage.setItem(INSPECTOR_TOOL_KEY, t); } catch { /* ignore */ }
+  };
+  const dockTool = (t: ToolId) => { setInspTool(t); setInspOpen(true); setView("terminal"); };
 
   // "Push shell config": a one-shot push, not a dockable tool pane like the
   // four above, so it gets its own preview/confirm dialog. Offered on the
@@ -772,6 +752,68 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
   // panes redistributes those two panes' share and leaves the rest
   // alone. Reset (double-click a divider) flattens back to all-equal.
   const [splitRatios, setSplitRatios] = useState<number[]>([]);
+
+  const newTerminal = () => {
+    const newId = `${session.id}-term-${Date.now()}`;
+    setTerminals(prev => [...prev, { id: newId, title: nextTerminalNumber(prev), ownLogin: ownLoginDefault }]);
+    setActiveTab(newId);
+    setView("terminal");
+  };
+  // A new terminal beside the ones in the split (or beside the current one).
+  const addSplitPane = () => {
+    const newId = `${session.id}-term-${Date.now()}`;
+    setTerminals(prev => [...prev, { id: newId, title: nextTerminalNumber(prev), ownLogin: ownLoginDefault }]);
+    if (splitTerminals.length >= 2) {
+      setSplitTerminals(prev => [...prev, newId]);
+      setSplitRatios(prev => [...prev, 1]);
+    } else {
+      setSplitTerminals([activeTab, newId]);
+      setSplitRatios([1, 1]);
+    }
+    setActiveTab(newId);
+    setView("terminal");
+  };
+  // ⌘D: split with a new terminal, or leave the split (its terminals stay).
+  const toggleSplit = () => {
+    if (splitTerminals.length >= 2) {
+      setSplitTerminals([]);
+      setSplitRatios([]);
+      requestTerminalFocus();
+    } else {
+      addSplitPane();
+    }
+  };
+  // ⌘\: show or hide the inspector, bringing the terminal back with it.
+  const toggleInspector = () => {
+    if (view !== "terminal") { setView("terminal"); setInspOpen(true); return; }
+    setInspOpen(o => !o);
+  };
+
+  // The session's shortcuts, for the session in front only. Capture phase,
+  // so the terminal doesn't get them first.
+  const shortcutRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  shortcutRef.current = (e: KeyboardEvent) => {
+    if (!isSessionShortcut(e) || e.repeat) return;
+    const digit = /^Digit([1-8])$/.exec(e.code);
+    if (digit) {
+      e.preventDefault();
+      const v = VIEWS[Number(digit[1]) - 1].id;
+      if (v === "terminal") { setView("terminal"); requestTerminalFocus(); }
+      else setView(v);
+    } else if (e.code === "KeyD" && !isCompact) {
+      e.preventDefault();
+      toggleSplit();
+    } else if (e.code === "Backslash" && !isCompact) {
+      e.preventDefault();
+      toggleInspector();
+    }
+  };
+  useEffect(() => {
+    if (!isActiveView || chromeless) return;
+    const onKey = (e: KeyboardEvent) => shortcutRef.current(e);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [isActiveView, chromeless]);
   // "+" button's secondary menu — surfaced via right-click / long-press
   // so the primary click stays a fast "new tab" without stealing the
   // advanced flows (split view, compare across servers). Coordinates are
@@ -820,34 +862,19 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     try { localStorage.setItem(TOOL_DOCK_KEY, d); } catch { /* ignore */ }
   };
   const dockTopBottom = toolDock === "bottom" || toolDock === "top";
-  // "Full screen": the open tool takes the terminal's place (the button in
-  // each tool's title bar). The terminals stay mounted and connected, hidden
-  // the way a compact window hides them, and come back when the panel is
-  // restored or closed.
-  const [toolFull, setToolFull] = useState<boolean>(() => {
-    try { return localStorage.getItem(TOOL_FULL_KEY) === "1"; } catch { return false; }
-  });
-  const setToolFullPersisted = (v: boolean) => {
-    setToolFull(v);
-    try { localStorage.setItem(TOOL_FULL_KEY, v ? "1" : "0"); } catch { /* ignore */ }
-  };
-  // The tool is shown without the terminal: always in a compact window, by
-  // choice in a roomy one.
-  const toolAlone = isCompact || toolFull;
-  // Nothing to toggle in a compact window, where the tool is always alone.
-  const fullToggle = isCompact ? null : (
-    <FullToggle full={toolFull} onToggle={() => setToolFullPersisted(!toolFull)} />
-  );
+  // The tool on screen, if any, and whether it has the terminal's place. A
+  // compact window has no room for the inspector, so there the terminal
+  // shows alone and a tool only as a view.
+  const activeTool: ToolId | null = view !== "terminal" ? view : inspOpen && !isCompact ? inspTool : null;
+  const toolAlone = view !== "terminal" || isCompact;
   const [toolPanelHeight, setToolPanelHeight] = useState<number>(() => {
     let saved = NaN;
     try { saved = parseInt(localStorage.getItem('submarine-tool-panel-height') || '', 10); } catch { /* ignore */ }
     if (Number.isFinite(saved) && saved >= MIN_TOOL_HEIGHT) return saved;
     return Math.max(MIN_TOOL_HEIGHT, Math.round((window.innerHeight || 800) * 0.45));
   });
-  // Anchor of the open "Panel position" menu, if any.
+  // Anchor of the open "Inspector position" menu, if any.
   const [dockMenu, setDockMenu] = useState<{ x: number; y: number } | null>(null);
-  // SFTP pane: the file browser or Mirror (the button in its title bar).
-  const [sftpView, setSftpView] = useState<SftpView>("files");
   const mainAreaRef = useRef<HTMLDivElement | null>(null);
   const toolPanelRef = useRef<HTMLDivElement | null>(null);
 
@@ -1554,8 +1581,6 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     );
   }
 
-  const DockIcon = (DOCK_OPTIONS.find((o) => o.id === toolDock) ?? DOCK_OPTIONS[0]).Icon;
-
   // Connected State with Nested Tabs
   return (
     <div className="relative flex-1 flex flex-col bg-background overflow-hidden animate-in fade-in">
@@ -1571,9 +1596,117 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           full chrome and 2-3 sessions side-by-side would fight for
           vertical space with duplicate toolbars. */}
       {!chromeless && (
-      <div inert={shellSyncOpen ? "" : undefined} className="h-11 border-b border-white/[0.075] bg-surface flex items-center px-2 sm:px-3 shrink-0 justify-between gap-1">
+      <div inert={shellSyncOpen ? "" : undefined} className="shrink-0 border-b border-white/[0.075] bg-surface">
+        {/* The tool bar: the terminal and every tool, one click to take the
+            terminal's place, ⌥-click to dock beside it. Below md only the
+            icons show; on a phone the row scrolls. */}
+        <div className="h-11 flex items-center gap-1 px-2 sm:px-3">
+          <div
+            role="tablist"
+            aria-label="Session tools"
+            className="flex items-center gap-0.5 overflow-x-auto no-scrollbar min-w-0 flex-1"
+            onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+          >
+            {VIEWS.map(({ id, label, Icon }, i) => {
+              const on = view === id;
+              const docked = id !== "terminal" && view === "terminal" && inspOpen && !isCompact && inspTool === id;
+              const shortcut = `${MOD_LABEL}${i + 1}`;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={(e) => {
+                    if (id === "terminal") { setView("terminal"); requestTerminalFocus(); return; }
+                    if (e.altKey && !isCompact) { docked ? setInspOpen(false) : dockTool(id); return; }
+                    setView(on ? "terminal" : id);
+                  }}
+                  title={id === "terminal" ? `${label} (${shortcut})` : `${label} (${shortcut}) · ⌥-click to dock beside the terminal`}
+                  aria-keyshortcuts={IS_MAC_UI ? `Meta+${i + 1}` : `Control+Shift+${i + 1}`}
+                  className={`h-10 sm:h-7 px-2.5 rounded-md flex items-center gap-1.5 shrink-0 text-[12.5px] font-medium transition-colors duration-100 ${
+                    on
+                      ? 'bg-primary/15 text-primary'
+                      : docked
+                        ? 'text-primary hover:bg-white/5'
+                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                  }`}
+                >
+                  <Icon size={14} className="shrink-0" />
+                  <span className="hidden md:inline">{label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-0.5 shrink-0 pl-1">
+            {/* "Push shell config": only on the servers picked in Settings →
+                Shell config sync. A one-shot push, not a tool, so it opens a
+                preview/confirm dialog instead (see shellSyncOpen below). */}
+            {shellSyncOffered && (
+              <button
+                type="button"
+                onClick={openShellSync}
+                disabled={status !== 'connected'}
+                title="Push shell config: your files from Settings → Shell config sync, to this server"
+                aria-label="Push shell config"
+                className="icon-btn h-10 w-10 sm:h-7 sm:w-7"
+              >
+                <UploadCloud size={14} />
+              </button>
+            )}
+            {/* One "+" for every kind of new terminal. Click adds a plain
+                one; right-click (long-press on touch) has the rest: split
+                with a new pane, flip or exit the split, a terminal with its
+                own login. */}
+            <button
+              type="button"
+              onClick={newTerminal}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                const rect = e.currentTarget.getBoundingClientRect();
+                setPlusMenu({ x: rect.left, y: rect.bottom + 4 });
+              }}
+              className="icon-btn h-10 w-10 sm:h-7 sm:w-7"
+              title="New terminal · right-click for more options"
+              aria-label="New terminal"
+            >
+              <Plus size={15} />
+            </button>
+            {!isCompact && (
+              <button
+                type="button"
+                onClick={toggleSplit}
+                aria-pressed={splitTerminals.length >= 2}
+                aria-label="Split view"
+                aria-keyshortcuts={IS_MAC_UI ? "Meta+D" : "Control+Shift+D"}
+                title={`${splitTerminals.length >= 2 ? "Exit split view" : "Split view with a new terminal"} (${MOD_LABEL}D)`}
+                className={`icon-btn ${splitTerminals.length >= 2 ? 'bg-primary/15 text-primary' : ''}`}
+              >
+                <Columns size={15} />
+              </button>
+            )}
+            {!isCompact && (
+              <button
+                type="button"
+                onClick={toggleInspector}
+                aria-pressed={view === "terminal" && inspOpen}
+                aria-label="Inspector"
+                aria-keyshortcuts={IS_MAC_UI ? "Meta+\\" : "Control+Shift+\\"}
+                title={`${inspOpen && view === "terminal" ? "Hide" : "Show"} the inspector (${MOD_LABEL}\\)`}
+                className={`icon-btn ${view === "terminal" && inspOpen ? 'bg-primary/15 text-primary' : ''}`}
+              >
+                <PanelRight size={15} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* The terminals of this session, once there is more than one. */}
+        {view === "terminal" && terminals.length > 1 && (
         <div
-          className="flex items-center gap-1 overflow-x-auto no-scrollbar flex-1 mr-1 sm:mr-4 mask-fade-right"
+          className="h-9 flex items-center gap-1 px-2 sm:px-3 border-t border-white/[0.075] overflow-x-auto no-scrollbar mask-fade-right"
+          role="tablist"
+          aria-label="Terminals"
           onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
         >
         {terminals.map(t => {
@@ -1588,6 +1721,8 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             onDoubleClick={(e) => { setTermMenu({ x: e.clientX, y: e.clientY, termId: t.id }); setTermRename(t.id); }}
           >
             <button
+              role="tab"
+              aria-selected={isFocusedHalf}
               onClick={() => {
                 // Clicking a tab NOT participating in the current split
                 // exits split mode entirely — split is scoped to the
@@ -1654,105 +1789,8 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           );
         })}
 
-          {/* Single "+" affordance for all terminal-creation flavours.
-              Click adds a plain tab (the 90% case). The right-click menu
-              — also reachable via long-press on touch — surfaces the
-              advanced modes: split-with-new-pane, un-split, and a terminal
-              with its own login (once, or always for this server). That
-              keeps the tab strip visually calm (one small button, no
-              badges, no orientation glyphs stealing attention) while
-              still exposing the power features via a discoverable
-              secondary gesture. */}
-          <button
-            onClick={() => {
-              const newId = `${session.id}-term-${Date.now()}`;
-              setTerminals(prev => [...prev, { id: newId, title: nextTerminalNumber(prev), ownLogin: ownLoginDefault }]);
-              setActiveTab(newId);
-            }}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              const rect = e.currentTarget.getBoundingClientRect();
-              setPlusMenu({ x: rect.left, y: rect.bottom + 4 });
-            }}
-            className="h-10 w-10 sm:h-7 sm:w-7 ml-1 shrink-0 rounded-md flex items-center justify-center text-zinc-400 hover:bg-white/[0.09] hover:text-white transition-colors relative"
-            title="New terminal · right-click for more options"
-          >
-            <Plus size={14} />
-            {splitTerminals.length >= 2 && (
-              <span
-                className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-1 rounded-full bg-primary text-[9px] font-bold text-black flex items-center justify-center leading-none"
-                aria-hidden="true"
-                title={`Split active (${splitTerminals.length} panes)`}
-              >
-                {splitTerminals.length}
-              </span>
-            )}
-          </button>
         </div>
-
-        {/* Tool rail: icon + text label. The label collapses to icon-only on
-            narrow viewports (below md) so the terminal tab strip keeps its
-            horizontal real estate when space is tight; the full description
-            stays in the tooltip either way. */}
-        <div className="flex items-center gap-0.5 shrink-0 sm:border-l border-white/[0.075] sm:pl-2 pl-1">
-          {([
-            { id: 'sftp',    icon: Folder,  label: 'SFTP',    hint: 'SFTP — file browser' },
-            { id: 'tunnels', icon: Network, label: 'Ports',   hint: 'Ports — port forwarding' },
-            { id: 'cmds',    icon: Library, label: 'Library', hint: 'Library — commands & notes' },
-            { id: 'info',    icon: Info,    label: 'Info',    hint: 'Info — server overview' },
-          ] as const).map(({ id, icon: Icon, label, hint }) => {
-            const on = activeTool === id;
-            return (
-              <button
-                key={id}
-                onClick={() => setActiveTool(on ? null : id)}
-                title={hint}
-                aria-label={hint}
-                aria-pressed={on}
-                className={`h-10 sm:h-7 px-2.5 rounded-md flex items-center gap-1.5 transition-colors duration-100 ${
-                  on
-                    ? 'bg-primary/15 text-primary'
-                    : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <Icon size={14} className="shrink-0" />
-                <span className="hidden md:inline text-[12.5px] font-medium">{label}</span>
-              </button>
-            );
-          })}
-          {/* "Push shell config": only on the servers picked in Settings →
-              Shell config sync, not all of them. Unlike the four tabs above
-              it doesn't dock a panel: it's a one-shot push, so it opens a
-              preview/confirm dialog instead (see shellSyncOpen below). */}
-          {shellSyncOffered && (
-            <button
-              onClick={openShellSync}
-              disabled={status !== 'connected'}
-              title="Push shell config: your files from Settings → Shell config sync, to this server"
-              aria-label="Push shell config"
-              className="h-10 sm:h-7 px-2.5 rounded-md flex items-center gap-1.5 transition-colors duration-100 text-zinc-400 hover:bg-white/5 hover:text-white disabled:opacity-40 disabled:pointer-events-none"
-            >
-              <UploadCloud size={14} className="shrink-0" />
-              <span className="hidden md:inline text-[12.5px] font-medium">Shell</span>
-            </button>
-          )}
-          {/* Where the tool pane sits around the terminal. Compact windows
-              show the tool full screen, so there is nothing to place. */}
-          {!isCompact && (
-            <button
-              onClick={(e) => {
-                const r = e.currentTarget.getBoundingClientRect();
-                setDockMenu({ x: r.right, y: r.bottom + 4 });
-              }}
-              title="Panel position"
-              aria-label="Panel position"
-              aria-haspopup="menu"
-              className="h-10 sm:h-7 px-2 rounded-md flex items-center text-zinc-400 hover:bg-white/[0.09] hover:text-white transition-colors"
-            >
-              <DockIcon size={14} />
-            </button>
-          )}
-        </div>
+        )}
       </div>
       )}
 
@@ -1776,19 +1814,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             {!isCompact && (
               <>
                 <button
-                  onClick={() => {
-                    setPlusMenu(null);
-                    const newId = `${session.id}-term-${Date.now()}`;
-                    setTerminals(prev => [...prev, { id: newId, title: nextTerminalNumber(prev), ownLogin: ownLoginDefault }]);
-                    if (splitTerminals.length >= 2) {
-                      setSplitTerminals(prev => [...prev, newId]);
-                      setSplitRatios(prev => [...prev, 1]);
-                    } else {
-                      setSplitTerminals([activeTab, newId]);
-                      setSplitRatios([1, 1]);
-                    }
-                    setActiveTab(newId);
-                  }}
+                  onClick={() => { setPlusMenu(null); addSplitPane(); }}
                   className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-white/[0.06] text-zinc-200 hover:text-white text-left"
                 >
                   {splitOrientation === "h" ? <Columns size={13} className="text-primary/70" /> : <Rows size={13} className="text-primary/70" />}
@@ -1906,17 +1932,17 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           />
           <div
             role="menu"
-            aria-label="Panel position"
+            aria-label="Inspector position"
             style={{ left: Math.max(8, Math.min(dockMenu.x - 210, window.innerWidth - 218)), top: Math.min(dockMenu.y, window.innerHeight - 170) }}
             className="fixed z-[9999] w-[210px] bg-elevated border border-white/10 rounded-lg shadow-2xl py-1 text-[11.5px]"
           >
-            <div className="px-3 pt-1 pb-1.5 text-[9.5px] font-bold uppercase tracking-wider text-zinc-500">Panel position</div>
+            <div className="px-3 pt-1 pb-1.5 text-[11px] font-semibold text-zinc-500">Inspector position</div>
             {DOCK_OPTIONS.map(({ id, label, Icon }) => (
               <button
                 key={id}
                 role="menuitemradio"
                 aria-checked={toolDock === id}
-                onClick={() => { setToolDockPersisted(id); setToolFullPersisted(false); setDockMenu(null); }}
+                onClick={() => { setToolDockPersisted(id); setDockMenu(null); }}
                 className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-white/[0.06] text-zinc-200 hover:text-white text-left"
               >
                 <Icon size={13} className={toolDock === id ? "text-primary" : "text-zinc-500"} />
@@ -2198,12 +2224,9 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           />
         )}
 
-        {/* Tool side panel. MirrorsPanel stays mounted even when the user
-            pops over to SFTP / Ports / CMDS so its live status, log, and
-            event subscriptions don't reset every tool switch — a mirror in
-            initial-sync used to "look like it restarted" because the React
-            tree was torn down. Other tools still conditional-render: they
-            don't carry live state worth preserving across switches. */}
+        {/* The tool: in the terminal's place, or docked beside it as the
+            inspector. Files and Mirror share one SftpWorkspace, so going
+            from one to the other keeps the mirrors' live state. */}
         <div
           ref={toolPanelRef}
           style={activeTool && !toolAlone
@@ -2211,49 +2234,24 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 ? { height: `${toolPanelHeight}px`, maxHeight: `calc(100% - ${MIN_TERMINAL_HEIGHT + 4}px)` }
                 : { width: `${toolPanelWidth}px`, maxWidth: `calc(100% - ${MIN_TERMINAL_WIDTH + 4}px)` })
             : undefined}
-          className={`${activeTool ? (toolAlone ? 'flex-1 min-w-0' : 'shrink-0') : 'hidden'} bg-panel/95 flex flex-col ${dockTopBottom && !toolAlone ? 'w-full' : 'h-full'} overflow-hidden ${activeTool ? 'animate-in slide-in-from-right duration-300' : ''}`}
+          aria-label={activeTool ? (toolAlone ? toolLabel(activeTool) : `Inspector: ${toolLabel(activeTool)}`) : undefined}
+          role={activeTool ? "region" : undefined}
+          className={`${activeTool ? (toolAlone ? 'flex-1 min-w-0' : 'shrink-0') : 'hidden'} bg-panel flex flex-col ${dockTopBottom && !toolAlone ? 'w-full' : 'h-full'} overflow-hidden ${activeTool && !toolAlone ? 'animate-in slide-in-from-right duration-200' : ''}`}
         >
-          {activeTool === 'sftp' && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <ToolTitleBar
-                title="SFTP File Browser"
-                shortTitle="SFTP"
-                toggle={
+          {activeTool && (
+            <ToolHeader
+              tool={activeTool}
+              docked={view === "terminal"}
+              toggle={
+                activeTool === "files" || activeTool === "mirror" ? (
                   <SepToggle
                     on={separateSftp}
                     onToggle={toggleSeparateSftp}
                     status={!separateSftp ? 'off' : sftpConnStatus === 'ready' ? 'ready' : sftpConnStatus === 'failed' ? 'failed' : 'pending'}
-                    hint="SFTP runs on its own SSH connection, so large transfers don't slow the terminal down."
+                    hint="Files and Mirror run on their own SSH connection, so large transfers don't slow the terminal down."
                     onReconnect={reconnectSftpConn}
                   />
-                }
-                mirror={{
-                  on: sftpView === 'mirror',
-                  disabled: !session.serverId,
-                  onToggle: () => setSftpView(v => v === 'mirror' ? 'files' : 'mirror'),
-                }}
-                extra={fullToggle}
-                onClose={() => setActiveTool(null)}
-              />
-              <div className="flex-1 overflow-hidden relative">
-                <SftpWorkspace
-                  sessionId={session.id}
-                  disabled={status !== 'connected'}
-                  serverId={session.serverId}
-                  profile={profile}
-                  mirrorsConfig={parseObjectList(session.mirrors)}
-                  view={sftpView}
-                />
-              </div>
-            </div>
-          )}
-
-          {activeTool === 'tunnels' && (
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <ToolTitleBar
-                title="Port Forwarding"
-                shortTitle="Ports"
-                toggle={
+                ) : activeTool === "tunnels" ? (
                   <SepToggle
                     on={separateFwd}
                     onToggle={toggleSeparateFwd}
@@ -2261,45 +2259,70 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                     hint="Port forwards run on their own SSH connection, so heavy traffic doesn't slow the terminal down."
                     onReconnect={reconnectFwdConn}
                   />
-                }
-                extra={fullToggle}
-                onClose={() => setActiveTool(null)}
-              />
-              <div className="flex-1 overflow-hidden relative">
-                <TunnelsPanel sessionId={session.id} serverId={session.serverId} disabled={status !== 'connected'} />
-              </div>
+                ) : undefined
+              }
+              onSwitch={setInspTool}
+              onDock={view !== "terminal" && !isCompact ? () => dockTool(view) : undefined}
+              onPosition={view === "terminal" && !isCompact ? (e) => {
+                const r = e.currentTarget.getBoundingClientRect();
+                setDockMenu({ x: r.right, y: r.bottom + 4 });
+              } : undefined}
+              onClose={view === "terminal" ? () => setInspOpen(false) : () => setView("terminal")}
+            />
+          )}
+
+          {(activeTool === "files" || activeTool === "mirror") && (
+            <div className="flex-1 overflow-hidden relative">
+              {activeTool === "mirror" && !session.serverId ? (
+                <p className="p-6 text-[13px] text-zinc-400">Mirror needs a saved server. Save this connection as a server to keep a local folder copied to it.</p>
+              ) : (
+                <SftpWorkspace
+                  sessionId={session.id}
+                  disabled={status !== 'connected'}
+                  serverId={session.serverId}
+                  profile={profile}
+                  mirrorsConfig={parseObjectList(session.mirrors)}
+                  view={activeTool === "mirror" ? "mirror" : "files"}
+                />
+              )}
             </div>
           )}
 
-          {activeTool === 'cmds' && (
+          {activeTool === "tunnels" && (
+            <div className="flex-1 overflow-hidden relative">
+              <TunnelsPanel sessionId={session.id} serverId={session.serverId} disabled={status !== 'connected'} />
+            </div>
+          )}
+
+          {activeTool === "docker" && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <DockerTab
+                sessionId={session.id}
+                disabled={status !== 'connected'}
+                onOpenContainerTerminal={openContainerTerminal}
+              />
+            </div>
+          )}
+
+          {(activeTool === "commands" || activeTool === "notes") && (
             <CmdsPanel
+              key={activeTool}
+              tabs={activeTool === "commands" ? ["commands"] : ["node", "notes"]}
               activeTab={activeTab}
-              onClose={() => setActiveTool(null)}
-              headerActions={fullToggle}
               serverId={session.serverId}
               serverName={session.serverName}
             />
           )}
 
           {/* InfoPanel stays mounted across tool switches so its cached
-              probe result survives a SFTP-and-back trip — the user
+              probe result survives a Files-and-back trip — the user
               explicitly asked for "cache while session is alive", and a
               fresh remount would re-fire the probe every tab swap. */}
           <div className={`flex-1 flex flex-col overflow-hidden ${activeTool === 'info' ? '' : 'hidden'}`}>
-            <div className="h-10 px-4 flex items-center justify-between gap-3 border-b border-white/5 bg-white/5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 truncate">Server Info</span>
-              <div className="flex items-center gap-2 shrink-0">
-                {fullToggle}
-                <button onClick={() => setActiveTool(null)} aria-label="Close" className="text-zinc-500 hover:text-white transition-colors">
-                  <X size={14} />
-                </button>
-              </div>
-            </div>
             <InfoPanel
               sessionId={session.id}
               disabled={status !== 'connected'}
               visible={activeTool === 'info'}
-              onOpenContainerTerminal={openContainerTerminal}
             />
           </div>
         </div>

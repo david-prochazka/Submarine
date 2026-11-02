@@ -3,10 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   RefreshCw, AlertTriangle, Loader2, Server, Network as NetIcon,
   Cog, Cpu, MemoryStick, HardDrive, Clock, Activity, Wifi,
-  AlertCircle, Search, ShieldAlert, Plug, Play, Square, RotateCw, Box,
+  AlertCircle, Search, ShieldAlert, Plug, Play, Square, RotateCw,
   Shield, Globe,
 } from "lucide-react";
-import DockerTab from "./DockerTab";
 import { ScrollableTabs } from "./ScrollableTabs";
 import { useConfirm } from "../ui/confirm";
 import CopyValue from "./CopyValue";
@@ -21,11 +20,6 @@ interface InfoPanelProps {
   // SSH even while the user is looking at the terminal. We gate all fetching
   // on it: nothing probes unless the panel is actually on screen.
   visible?: boolean;
-  // Called when the user wants to open a `docker exec -it` terminal into a
-  // specific container. SessionView spawns a new terminal tab with the
-  // container exec command and switches focus to it. Optional because non-
-  // SessionView consumers (e.g. tests, storybook) don't need to wire it.
-  onOpenContainerTerminal?: (containerName: string, useSudo: boolean) => void;
 }
 
 interface SectionResult {
@@ -42,14 +36,13 @@ interface SystemctlResult {
   used_sudo: boolean;
 }
 
-type SubTab = "overview" | "network" | "ports" | "processes" | "services" | "docker";
+type SubTab = "overview" | "network" | "ports" | "processes" | "services";
 const TABS: { id: SubTab; label: string; icon: any }[] = [
   { id: "overview", label: "System",  icon: Server },
   { id: "network",  label: "Network", icon: NetIcon },
   { id: "ports",    label: "Ports",   icon: Plug },
   { id: "processes", label: "Processes", icon: Activity },
   { id: "services", label: "Services", icon: Cog },
-  { id: "docker",   label: "Docker",  icon: Box },
 ];
 
 // Visible caps. Servers with hundreds of veth/dummy interfaces (think a
@@ -821,35 +814,27 @@ const subTabBase = "shrink-0 h-8 sm:h-7 px-2.5 rounded-lg flex items-center gap-
 const subTabIdle = "text-zinc-400 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white";
 const subTabActive = "bg-primary/10 text-primary border border-primary/20 shadow-inner";
 
-const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTerminal }: InfoPanelProps) => {
+const InfoPanel = ({ sessionId, disabled, visible = true }: InfoPanelProps) => {
   const [tab, setTab] = useState<SubTab>("overview");
 
   const [overview, setOverview] = useState<TabState<OverviewData>>(freshTab);
   const [network, setNetwork] = useState<TabState<NetworkData>>(freshTab);
   const [ports, setPorts] = useState<TabState<PortsData>>(freshTab);
   const [services, setServices] = useState<TabState<{ available: boolean; rows: ServiceRow[] }>>(freshTab);
-  // Docker tab has its own internal state (lives in DockerTab.tsx) so we
-  // don't allocate a TabState here. The umbrella InfoPanel just renders
-  // the component; its lazy fetch ladder runs independently.
-
-  // Excludes docker — DockerTab owns its own per-sub-tab state and bypasses
-  // this generic ssh_info_probe_section pipeline. Looking the docker tab up
-  // here would be a type error AND a behavioural bug (running the heavy
-  // umbrella probe needlessly).
-  // Docker AND processes own their internal state + fetch cadence (processes
-  // self-refreshes on a timer), so both bypass this generic probe pipeline.
-  type ProbeSubTab = Exclude<SubTab, "docker" | "processes">;
+  // Processes owns its state and fetch cadence (it refreshes on a timer),
+  // so it bypasses this generic probe pipeline. Docker is a tool of its own
+  // (DockerTab, opened from the session's tool bar).
+  type ProbeSubTab = Exclude<SubTab, "processes">;
   const stateMap: Record<ProbeSubTab, readonly [TabState<any>, React.Dispatch<React.SetStateAction<TabState<any>>>]> = {
     overview: [overview, setOverview] as const,
     network:  [network, setNetwork] as const,
     ports:    [ports, setPorts] as const,
     services: [services, setServices] as const,
   };
-  // Synthetic "loaded" state for the docker tab so the header meta line and
-  // refresh button can render uniformly; the real status lives inside
-  // DockerTab itself.
-  const dockerSentinel: TabState<null> = { loaded: true, loading: false, error: null, data: null, meta: null };
-  const activeState: TabState<any> = (tab === "docker" || tab === "processes") ? dockerSentinel : stateMap[tab as ProbeSubTab][0];
+  // Synthetic "loaded" state for the processes tab so the header meta line
+  // and refresh button can render uniformly.
+  const selfLoaded: TabState<null> = { loaded: true, loading: false, error: null, data: null, meta: null };
+  const activeState: TabState<any> = tab === "processes" ? selfLoaded : stateMap[tab as ProbeSubTab][0];
 
   // Per-section token counter. We can't cancel an SSH exec channel from
   // the frontend (that would need a backend-side abort handle, out of
@@ -864,7 +849,7 @@ const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTermina
 
   const fetchSection = async (which: SubTab) => {
     if (disabled) return;
-    if (which === "docker") return; // handled inside DockerTab
+    if (which === "processes") return;
     const setter = stateMap[which as ProbeSubTab][1] as (s: any) => void;
     const myToken = ++tokenRef.current[which as ProbeSubTab];
     setter((prev: TabState<any>) => ({ ...prev, loading: true, error: null }));
@@ -892,9 +877,7 @@ const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTermina
 
   // Lazy first fetch: when the user activates a tab that's never been
   // loaded, fire its probe exactly once. Per the user's spec, "every tab
-  // should fetch when clicked, not all at once." The docker tab is the
-  // exception — DockerTab does its own internal lazy fetching across its
-  // sub-sub-tabs, so we skip the umbrella probe for it.
+  // should fetch when clicked, not all at once."
   useEffect(() => {
     if (disabled) return;
     // Only fetch while the panel is actually on screen — otherwise switching
@@ -902,7 +885,7 @@ const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTermina
     // over SSH the user can't see. Becoming visible re-runs this and loads
     // whatever the active tab needs.
     if (!visible) return;
-    if (tab === "docker" || tab === "processes") return;
+    if (tab === "processes") return;
     const [st] = stateMap[tab as ProbeSubTab];
     if (!st.loaded && !st.loading) {
       fetchSection(tab);
@@ -963,7 +946,7 @@ const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTermina
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="shrink-0 h-9 px-3 flex items-center justify-between border-b border-white/5 bg-white/[0.02] gap-2">
         <span className="text-[10px] text-zinc-500 truncate select-text">{fmtMeta}</span>
-        {tab !== "docker" && tab !== "processes" && (
+        {tab !== "processes" && (
           <button
             onClick={() => fetchSection(tab)}
             disabled={activeState.loading || disabled}
@@ -1014,13 +997,6 @@ const InfoPanel = ({ sessionId, disabled, visible = true, onOpenContainerTermina
             sessionId={sessionId}
             data={services.data}
             onRefresh={() => fetchSection("services")}
-          />
-        )}
-        {tab === "docker" && (
-          <DockerTab
-            sessionId={sessionId}
-            disabled={disabled}
-            onOpenContainerTerminal={(name, useSudo) => onOpenContainerTerminal?.(name, useSudo)}
           />
         )}
       </div>

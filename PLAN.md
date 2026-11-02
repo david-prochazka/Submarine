@@ -29,12 +29,14 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Empty state: New server, Quick connect, import from `~/.ssh/config` (host count shown, highlighted when it has hosts) / PuTTY / MobaXterm / JSON (file picker, parsed straight into the import dialog)
 - [ ] The window title bar still sits above the page header; merging the two waits for Phase 3 (the tabs live there)
 
-## Phase 3: Terminal session (artboard 2)
+## Phase 3: Terminal session (artboard 2) ✅ done
 
-- [ ] Tool bar with first-class Terminal, Files, Tunnels, Mirror, Docker, Info, Commands, Notes (⌘1–⌘8)
-- [ ] Inspector: dock any tool on the right (⌘\)
-- [ ] Split (⌘D) and Broadcast (⌘⇧B) with the amber banner and tab outlines
-- [ ] Terminal colour scheme that follows light mode (default scheme only; user-picked schemes stay)
+- [x] Tool bar with first-class Terminal, Files, Tunnels, Mirror, Docker, Info, Commands, Notes (⌘1–⌘8; Ctrl+Shift+1–8 off the Mac, where Ctrl belongs to the shell). A tool takes the terminal's place; Docker left Info, Mirror left Files' header, Commands and Notes split the old Library panel (Notes = this server's notes + saved notes). New terminal (+) moved to the tool bar; terminal tabs show in a second row once there are two
+- [x] Inspector: ⌥-click a tool (or its header's dock button) to dock it beside the terminal, ⌘\ toggles; switch the docked tool from its header. The old "full screen" toggle is gone (a tool view is that now); the position menu (right / left / above / below) moved into the inspector header. Hidden on phones
+- [x] Split (⌘D): split with a new terminal of this server, or leave the split. Cross-server tiling stays in the session tab's context menu
+- [x] Broadcast (⌘⇧B, Ctrl+Shift+B): starts with every open session when fewer than two are picked; amber banner with the target chips and Stop; tab outlines from Phase 1
+- [x] Terminal colour scheme that follows light mode (default "Submarine" scheme only; user-picked schemes stay)
+- [ ] Session tool header styles inside the tools themselves (Files' Local/Remote tabs, Tunnels, Docker, Info sub-tabs) still uppercase: Phase 4 for Files, Phase 10 for the rest
 
 ## Phase 4: Files (artboard 3)
 

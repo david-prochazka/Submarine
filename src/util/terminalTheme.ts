@@ -41,14 +41,25 @@ const scheme = (
   return { id, name, theme };
 };
 
+// The default scheme, one for each app theme. Dark keeps xterm's own ANSI
+// colours (only the rest was ever set). Light needs its own: xterm's yellow,
+// white and bright colours vanish on a light background. "White" is a grey
+// there, so text a program draws in white stays readable.
+const SUBMARINE_DARK: ITheme = { background: "#0f1113", foreground: "#d9dee3", cursor: "#3ecfc4", selectionBackground: "rgba(62, 207, 196, 0.25)" };
+const SUBMARINE_LIGHT: ITheme = scheme("", "", "#fbfbfc", "#22262b", "#0a7672", "rgba(10, 118, 114, 0.18)", [
+  "#22262b", "#c93434", "#17804f", "#8a5a00", "#1f6fcc", "#7448d6", "#0a7672", "#69707a",
+  "#6a717a", "#d93d3d", "#1e8e5a", "#9a5b00", "#2b7bd9", "#8458e0", "#0b8580", "#8b929b",
+]).theme;
+const appIsLight = () => typeof document !== "undefined" && document.documentElement.dataset.theme === "light";
+
 // Values as their authors publish them (Windows Terminal's built-in schemes,
 // draculatheme.com, nordtheme.com, ethanschoonover.com/solarized, gruvbox).
 export const SCHEMES: TerminalScheme[] = [
   {
     id: DEFAULT_THEME_ID,
     name: "Submarine",
-    // xterm's own ANSI colours; only the rest was ever set.
-    theme: { background: "#0f1113", foreground: "#d9dee3", cursor: "#3ecfc4", selectionBackground: "rgba(62, 207, 196, 0.25)" },
+    // Follows the app: light with the light theme, dark otherwise.
+    get theme() { return appIsLight() ? SUBMARINE_LIGHT : SUBMARINE_DARK; },
   },
   scheme("campbell", "Campbell", "#0c0c0c", "#cccccc", "#ffffff", "rgba(255, 255, 255, 0.25)", [
     "#0c0c0c", "#c50f1f", "#13a10e", "#c19c00", "#0037da", "#881798", "#3a96dd", "#cccccc",

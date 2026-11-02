@@ -33,7 +33,11 @@ export function useAppearance(appearance: Appearance, accent: string) {
     const media = window.matchMedia("(prefers-color-scheme: light)");
     const apply = () => {
       const light = appearance === "light" || (appearance === "system" && media.matches);
-      document.documentElement.dataset.theme = light ? "light" : "dark";
+      const theme = light ? "light" : "dark";
+      if (document.documentElement.dataset.theme === theme) return;
+      document.documentElement.dataset.theme = theme;
+      // Open terminals pick up the default scheme's light or dark colours.
+      window.dispatchEvent(new Event("submarine-settings-changed"));
     };
     apply();
     localStorage.setItem(APPEARANCE_KEY, appearance);

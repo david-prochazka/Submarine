@@ -35,8 +35,13 @@ type EditTarget =
 
 // `headerActions`: extra title-bar buttons from the session view (full screen),
 // shown just before Close.
-export const CmdsPanel = ({ activeTab, onClose, headerActions, serverId, serverName }: { activeTab: string; onClose: () => void; headerActions?: React.ReactNode; serverId?: number; serverName?: string }) => {
-  const [tab, setTab] = useState<Tab>("commands");
+const TAB_LABELS: Record<Tab, string> = { commands: "Commands", notes: "Saved notes", node: "This server" };
+
+// A session's Commands or Notes tool: `tabs` picks which lists it has (the
+// Node tab only with a saved server). The session draws the header.
+export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], serverId, serverName }: { activeTab: string; tabs?: Tab[]; serverId?: number; serverName?: string }) => {
+  const shownTabs = tabs.filter((t) => t !== "node" || (typeof serverId === "number" && serverId > 0));
+  const [tab, setTab] = useState<Tab>(shownTabs[0] ?? "commands");
   const [commands, setCommands] = useState<CommandItem[]>([]);
   const [notes, setNotes] = useState<NoteItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,6 +174,14 @@ export const CmdsPanel = ({ activeTab, onClose, headerActions, serverId, serverN
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
+  // Closing the tool, or switching to another, saves an open edit too.
+  const flushOnLeaveRef = useRef<() => void>(() => {});
+  flushOnLeaveRef.current = () => {
+    void flushIfDirty(editRef.current);
+    if (hasNode && nodeDraftRef.current !== nodeOriginal) void saveNodeNotes();
+  };
+  useEffect(() => () => flushOnLeaveRef.current(), []);
+
   const beginEditCommand = (c: CommandItem) => {
     setEdit({ kind: "command", id: c.id, title: c.title || "", body: c.content || "" });
   };
@@ -248,93 +261,52 @@ export const CmdsPanel = ({ activeTab, onClose, headerActions, serverId, serverN
   );
 
   const tabLabel = tab === "commands" ? "Commands" : tab === "notes" ? "Notes" : "Node";
-  const TabIcon = tab === "commands" ? Terminal : tab === "notes" ? StickyNote : Server;
+  const refreshButton = (
+    <button
+      type="button"
+      onClick={async () => { await flushIfDirty(editRef.current); fetchAll(); }}
+      disabled={loading}
+      className="icon-btn"
+      title="Refresh"
+      aria-label="Refresh"
+    >
+      <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+    </button>
+  );
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-surface">
-      {/* Title Bar */}
-      <div className="h-12 px-4 shrink-0 flex items-center justify-between border-b border-white/5 bg-white/5">
-        <div className="flex items-center gap-2 min-w-0">
-          <TabIcon size={14} className="text-primary shrink-0" />
-          <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-300 truncate">
-            Library · {tabLabel}{tab === "node" && serverName ? ` · ${serverName}` : ""}
-          </span>
+      {shownTabs.length > 1 && (
+        <div className="h-10 px-3 shrink-0 flex items-center gap-2 border-b border-white/[0.075]">
+          <div className="seg" role="group" aria-label="Show">
+            {shownTabs.map((id) => (
+              <button key={id} type="button" className="seg-item" aria-pressed={tab === id} onClick={() => setTab(id)}>
+                {TAB_LABELS[id]}
+                {id === "commands" && <span className="text-zinc-500 tabular-nums">{commands.length}</span>}
+                {id === "notes" && <span className="text-zinc-500 tabular-nums">{notes.length}</span>}
+                {id === "node" && isNodeDirty && <span className="w-1.5 h-1.5 rounded-full bg-warning" aria-label="Unsaved" />}
+              </button>
+            ))}
+          </div>
+          <span className="ml-auto">{refreshButton}</span>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={async () => { await flushIfDirty(editRef.current); fetchAll(); }}
-            disabled={loading}
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
-            title="Refresh list"
-          >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-          </button>
-          {headerActions}
-          <button
-            onClick={async () => { await flushIfDirty(editRef.current); onClose(); }}
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-            title="Close Panel"
-          >
-            <X size={14} />
-          </button>
-        </div>
-      </div>
+      )}
 
-      {/* Tabs — three when a server is in scope (Commands / Notes / Node),
-          two otherwise (the Library is reachable from any context, not just
-          a connected session, so the Node tab is gated on the prop). */}
-      <div className={`grid ${hasNode ? "grid-cols-3" : "grid-cols-2"} shrink-0 border-b border-white/5 bg-black/20`}>
-        <button
-          onClick={() => setTab("commands")}
-          className={`h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-            tab === "commands"
-              ? "text-primary bg-primary/5 border-b border-primary"
-              : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border-b border-transparent"
-          }`}
-        >
-          <Terminal size={12} /> Commands
-          <span className="text-[9px] opacity-60">{commands.length}</span>
-        </button>
-        <button
-          onClick={() => setTab("notes")}
-          className={`h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-            tab === "notes"
-              ? "text-primary bg-primary/5 border-b border-primary"
-              : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border-b border-transparent"
-          }`}
-        >
-          <StickyNote size={12} /> Notes
-          <span className="text-[9px] opacity-60">{notes.length}</span>
-        </button>
-        {hasNode && (
-          <button
-            onClick={() => setTab("node")}
-            className={`h-9 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${
-              tab === "node"
-                ? "text-primary bg-primary/5 border-b border-primary"
-                : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.03] border-b border-transparent"
-            }`}
-          >
-            <Server size={12} /> Node
-            {isNodeDirty && <span className="text-[9px] text-amber-400">●</span>}
-          </button>
-        )}
-      </div>
-
-      {/* Search Input — only on list-shaped tabs; the Node tab is a single
-          editor so search would have nothing to filter. */}
+      {/* Search: only on the lists; the Node tab is a single editor. */}
       {tab !== "node" && (
-        <div className="p-3 shrink-0 border-b border-white/5 bg-black/20">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+        <div className="p-3 shrink-0 flex items-center gap-1 border-b border-white/[0.075]">
+          <div className="relative flex-1">
+            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
             <input
-              type="text"
-              placeholder={tab === "commands" ? "Search commands (title + body)..." : "Search notes (title + body)..."}
+              type="search"
+              aria-label={tab === "commands" ? "Search commands" : "Search notes"}
+              placeholder={tab === "commands" ? "Search commands" : "Search notes"}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-8 pl-9 pr-3 bg-white/5 border border-white/5 rounded-lg text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary/50 focus:bg-white/10 transition-all"
+              className="field pl-8"
             />
           </div>
+          {shownTabs.length === 1 && refreshButton}
         </div>
       )}
 

@@ -87,6 +87,29 @@ function DesktopApp() {
   // fires on its own status change — single source of truth for the dot
   // colour on each tab. Cleared when a session is closed.
   const [sessionStatuses, setSessionStatuses] = useState<Record<string, string>>({});
+  // Broadcast is live with two or more targets: the banner shows and every
+  // keystroke goes to each of them.
+  const broadcastLive = broadcast.enabled && broadcast.targetSessionIds.size >= 2;
+  // ⌘⇧B (Ctrl+Shift+B elsewhere): start broadcasting, to every open session
+  // when fewer than two are picked, or stop.
+  const toggleBroadcastRef = useRef<() => void>(() => {});
+  toggleBroadcastRef.current = () => {
+    if (broadcastLive) { broadcast.disable(); return; }
+    if (sessions.length < 2) return;
+    if (broadcast.targetSessionIds.size < 2) broadcast.selectAll(sessions.map((s) => s.id));
+    broadcast.enable();
+  };
+  useEffect(() => {
+    const mac = /Mac/i.test(navigator.platform || navigator.userAgent);
+    const onKey = (e: KeyboardEvent) => {
+      const mods = mac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey;
+      if (!mods || !e.shiftKey || e.altKey || e.code !== "KeyB" || e.repeat) return;
+      e.preventDefault();
+      toggleBroadcastRef.current();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
   // Right-click menu pinned to a session tab. Closed by any click outside or
   // by choosing one of the menu items.
   const [tabMenu, setTabMenu] = useState<{ x: number; y: number; sessionId: string } | null>(null);
@@ -1839,6 +1862,28 @@ function DesktopApp() {
 
           <div className="flex-1 min-w-0 min-h-0 flex flex-col">
           {!isMobile && TitleBar()}
+          {broadcastLive && (
+            <div role="status" className="shrink-0 min-h-9 px-3 py-1.5 flex items-center gap-2 flex-wrap bg-warning/10 border-b border-warning/30 text-[12.5px]">
+              <Radio size={14} className="text-warning shrink-0" aria-hidden="true" />
+              <span className="font-semibold text-warning">
+                Broadcasting keystrokes to {broadcast.targetSessionIds.size} sessions
+              </span>
+              {sessions.filter((s) => broadcast.targetSessionIds.has(s.id)).map((s) => (
+                <span key={s.id} className="chip">
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0 bg-zinc-500"
+                    style={servers.find((v: any) => v.id === s.serverId)?.color ? { background: servers.find((v: any) => v.id === s.serverId)?.color } : undefined}
+                    aria-hidden="true"
+                  />
+                  {tabLabel(s)}
+                </span>
+              ))}
+              <span className="hidden lg:inline ml-auto text-zinc-400">Everything you type goes to every listed session</span>
+              <button type="button" className="btn btn-sm ml-auto lg:ml-2" onClick={broadcast.disable}>
+                Stop <kbd className="text-[11px] text-zinc-500 font-medium">{/Mac/i.test(navigator.platform || navigator.userAgent) ? "⌘⇧B" : "Ctrl+Shift+B"}</kbd>
+              </button>
+            </div>
+          )}
           <main className="flex-1 flex flex-col min-w-0 min-h-0 bg-transparent relative">
             {activeView === "nodes" && (
               <NodeGrid
