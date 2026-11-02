@@ -4,7 +4,7 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import {
   Folder, File, ArrowUp, RefreshCw, Trash2, Edit3, Shield,
-  X, ChevronUp, ChevronDown, Plus, MoreVertical, FolderSearch, FolderPlus,
+  X, ChevronUp, ChevronDown, ChevronRight, History, Plus, MoreVertical, FolderSearch, FolderPlus,
   Download, Upload, ExternalLink, Move, CheckSquare, MinusSquare, Square, Search, Link2, Copy, Bookmark,
   Archive, PackageOpen,
 } from "lucide-react";
@@ -16,7 +16,7 @@ import {
 import { localDir, localJoin, pathCrumbs } from "../fs/localPath";
 import { COMPARE_LABEL, CompareMark, compareListings } from "../fs/compare";
 import { useConfirm, useOverwritePrompt, OverwriteChoice } from "../ui/confirm";
-import { IS_ANDROID } from "../util/platform";
+import { IS_ANDROID, IS_WINDOWS } from "../util/platform";
 import { nameFilterMatcher } from "../util/nameFilter";
 import { BOOKMARKS_MAX, readBookmarks, writeBookmarks } from "../util/sftpBookmarks";
 
@@ -24,14 +24,14 @@ import { BOOKMARKS_MAX, readBookmarks, writeBookmarks } from "../util/sftpBookma
 // Once the user picks "Overwrite all" or "Skip all" the kind is sticky and we
 // stop prompting; "ask" means we prompt on each individual conflict. Mutated
 // in place inside the helper so the loop sees updates immediately.
-type OverwriteBatchKind = "ask" | "overwrite-all" | "skip-all";
-interface OverwriteBatch { kind: OverwriteBatchKind; }
+export type OverwriteBatchKind = "ask" | "overwrite-all" | "skip-all";
+export interface OverwriteBatch { kind: OverwriteBatchKind; }
 
 // Run a single transfer that may trip the backend's `EXISTS:<path>` sentinel.
 // First attempt is always with overwrite=false unless the batch state already
 // says "overwrite all". On EXISTS: consult batch state, prompt the user if
 // needed, then either retry with overwrite=true or skip.
-async function transferWithOverwriteCheck(
+export async function transferWithOverwriteCheck(
   invokeFn: (overwrite: boolean) => Promise<void>,
   name: string,
   direction: "download" | "upload",
@@ -68,10 +68,8 @@ async function transferWithOverwriteCheck(
 type SortColumn = "name" | "size" | "modified" | "permissions" | "owner";
 interface SortState { column: SortColumn; asc: boolean; }
 
-// The header's square icon buttons; a step smaller in the narrowest panes.
-const HEADER_BUTTON_BASE =
-  "shrink-0 flex items-center justify-center rounded bg-white/[0.04] border border-white/10 hover:bg-white/10";
-const headerButton = (tight: boolean) => `${HEADER_BUTTON_BASE} ${tight ? "h-5 w-5" : "h-[22px] w-[22px]"}`;
+// The header's icon buttons; a step smaller in the narrowest panes.
+const headerButton = (tight: boolean) => `icon-btn ${tight ? "h-5 w-5" : "h-6 w-6"}`;
 
 // How the header lays itself out, from the width its buttons have (`inner`,
 // in px). It goes by the pane, not the window: side by side, a pane is half
@@ -105,35 +103,34 @@ type MetaColumn = "size" | "modified" | "permissions" | "owner";
 type ColumnWidths = Record<MetaColumn, number>;
 const REMOTE_COLUMNS: MetaColumn[] = ["size", "modified", "permissions", "owner"];
 const LOCAL_COLUMNS: MetaColumn[] = ["size", "modified"]; // local entries carry no rights or owner here
-const COLUMN_LABEL: Record<MetaColumn, string> = { size: "SIZE", modified: "CHANGED", permissions: "RIGHTS", owner: "OWNER" };
-// The left-aligned columns keep a little room from the column before them
-// (COLUMN_LEAD, part of their width), so a size and a date don't run together.
+const COLUMN_LABEL: Record<MetaColumn, string> = { size: "Size", modified: "Modified", permissions: "Permissions", owner: "Owner" };
 const COLUMN_CELL: Record<MetaColumn, string> = {
-  size: "text-right text-[10.5px] text-zinc-300",
-  modified: "pl-1.5 text-[9.5px] text-zinc-400",
-  permissions: "pl-1.5 text-[10.5px] text-zinc-300 opacity-90",
-  owner: "pl-1.5 text-[10.5px] text-zinc-300",
+  size: "text-right text-[12px] text-zinc-400 tabular-nums",
+  modified: "text-[12px] text-zinc-400 tabular-nums",
+  permissions: "font-mono text-[11px] text-zinc-500",
+  owner: "text-[12px] text-zinc-400",
 };
-const COLUMN_LEAD: ColumnWidths = { size: 0, modified: 6, permissions: 6, owner: 6 };
+const MONO_STACK = '"SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace';
 // A column is as wide as the widest value it can show (at its text size) or
 // its heading with the sort arrow, whichever is wider, in the list's own
-// font: measured once (see measureColumns), these until then. An owner
-// longer than the sample is cut short and shows in full on hover.
-const COLUMN_SAMPLE: Record<MetaColumn, [string, number]> = {
-  size: ["1023.9 KB", 10.5],
-  modified: ["0000-00-00 00:00", 9.5],
-  permissions: ["drwxr-xr-x", 10.5],
-  owner: ["deployuser", 10.5],
+// font (permissions: in mono): measured once (see measureColumns), these
+// until then. An owner longer than the sample is cut short and shows in full
+// on hover.
+const COLUMN_SAMPLE: Record<MetaColumn, [string, number, boolean?]> = {
+  size: ["1023.9 KB", 12],
+  modified: ["0000-00-00 00:00", 12],
+  permissions: ["drwxr-xr-x", 11, true],
+  owner: ["deployuser", 12],
 };
-const COLUMN_FALLBACK: ColumnWidths = { size: 56, modified: 98, permissions: 70, owner: 72 };
+const COLUMN_FALLBACK: ColumnWidths = { size: 62, modified: 110, permissions: 80, owner: 76 };
 const SORT_ARROW = 15;  // the heading's arrow and its margin
 const NAME_MIN = 128;
-const NAME_MAX = 340;
+const NAME_MAX = 360;
 const NAME_CHROME = 26; // the name column's icon, gap and padding
 const CHECK_WIDTH = 14; // the selection boxes, in selection mode
-const MENU_WIDTH = 16;  // a row's options button
-const COLUMN_GAP = 6;   // gap-1.5
-const LIST_INSET = 30;  // the list's padding, and a row's border and padding
+const MENU_WIDTH = 18;  // a row's options button
+const COLUMN_GAP = 10;  // gap-x-2.5
+const LIST_INSET = 34;  // the list's padding, and a row's border and padding
 
 // How many of `columns` fit beside a NAME_MIN name in a list `width` px wide.
 // Selection mode's boxes come out of the name's room, not a column's, so
@@ -174,12 +171,12 @@ const measureColumns = (family: string): ColumnWidths => {
   const widths = { ...COLUMN_FALLBACK };
   if (!ctx) return widths;
   for (const column of Object.keys(COLUMN_SAMPLE) as MetaColumn[]) {
-    const [sample, size] = COLUMN_SAMPLE[column];
-    ctx.font = `400 ${size}px ${family}`;
+    const [sample, size, mono] = COLUMN_SAMPLE[column];
+    ctx.font = `400 ${size}px ${mono ? MONO_STACK : family}`;
     const value = ctx.measureText(sample).width;
-    ctx.font = `700 10.5px ${family}`;
+    ctx.font = `600 11.5px ${family}`;
     const heading = ctx.measureText(`${COLUMN_LABEL[column]} `).width + SORT_ARROW;
-    widths[column] = Math.ceil(Math.max(value, heading)) + 2 + COLUMN_LEAD[column];
+    widths[column] = Math.ceil(Math.max(value, heading)) + 2;
   }
   return widths;
 };
@@ -204,6 +201,8 @@ export interface ActiveDrag {
 
 export interface FilePanelProps {
   provider: FileProvider;
+  /** Beside the pane's name: which computer or server it shows. */
+  subtitle?: string;
   /** True when the underlying session is disconnected — UI is dimmed and ops are blocked. */
   disabled?: boolean;
   /** Optional session id to scope OS drag-drop events (Tauri fires them globally). */
@@ -277,6 +276,7 @@ export interface FilePanelHandle {
 
 const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
   provider,
+  subtitle,
   disabled = false,
   sessionId,
   onDragMove,
@@ -871,14 +871,12 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         for (const p of paths) {
           if (cancelled) break;
           const name = p.split(/[\\/]/).pop() || "file";
-          notify(`Uploading ${name}...`, "info");
           try {
             const remote = dir.endsWith("/") ? `${dir}${name}` : `${dir}/${name}`;
             const res = await transferWithOverwriteCheck(
               (ow) => invoke("sftp_upload_file", { sessionId, localPath: p, remotePath: remote, overwrite: ow }),
               name, "upload", paths.length, batch, overwritePrompt
             );
-            if (res === "done") notify(`Uploaded ${name}`, "success");
             if (res === "cancelled") { cancelled = true; notify("Upload batch cancelled", "info"); }
           } catch (err: any) {
             notify(`Upload failed: ${err}`, "error");
@@ -1262,14 +1260,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
       } catch (err: any) { notify(`Pick folder failed: ${err}`, "error"); return; }
       if (!dest) return;
     }
+    // Progress and the outcome of each item show in the transfer queue.
     const destDir = localDir(dest);
-    const fileCount = items.filter(e => !e.isDir).length;
-    const dirCount  = items.filter(e =>  e.isDir).length;
-    const summary =
-      items.length === 1
-        ? `Downloading ${items[0].isDir ? "folder " : ""}${items[0].name}…`
-        : `Downloading ${fileCount} files${dirCount ? ` + ${dirCount} folder${dirCount === 1 ? "" : "s"}` : ""}…`;
-    notify(summary, "info");
     const batch: OverwriteBatch = { kind: "ask" };
     let count = 0;
     let cancelled = false;
@@ -1290,12 +1282,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         notify(`Download failed for ${e.name}: ${err}`, "error");
       }
     }
-    if (count > 0) {
-      notify(items.length === 1 ? `Downloaded ${items[0].name}` : `Downloaded ${count} of ${items.length} items`, "success");
-      onTransferred?.();
-    } else if (cancelled) {
-      notify("Download batch cancelled", "info");
-    }
+    if (count > 0) onTransferred?.();
+    else if (cancelled) notify("Download batch cancelled", "info");
   };
 
   // Local → remote upload. Mirror of downloadItems — handles both files
@@ -1309,12 +1297,6 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
     const dest = into ?? getOppositeDir?.();
     if (!dest) { notify("Open a directory in the remote pane first.", "error"); return; }
     const trimmed = dest.replace(/[\\/]+$/, "");
-    const fileCount = items.filter((e) => !e.isDir).length;
-    const dirCount = items.filter((e) => e.isDir).length;
-    const summary = items.length === 1
-      ? `Uploading ${items[0].isDir ? "folder " : ""}${items[0].name}…`
-      : `Uploading ${fileCount} file${fileCount === 1 ? "" : "s"}${dirCount ? ` + ${dirCount} folder${dirCount === 1 ? "" : "s"}` : ""}…`;
-    notify(summary, "info");
     const batch: OverwriteBatch = { kind: "ask" };
     let count = 0;
     let cancelled = false;
@@ -1336,12 +1318,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         notify(`Upload failed for ${e.name}: ${err}`, "error");
       }
     }
-    if (count > 0) {
-      notify(items.length === 1 ? `Uploaded ${items[0].name}` : `Uploaded ${count} of ${items.length} items`, "success");
-      onTransferred?.();
-    } else if (cancelled) {
-      notify("Upload batch cancelled", "info");
-    }
+    if (count > 0) onTransferred?.();
+    else if (cancelled) notify("Upload batch cancelled", "info");
   };
   sendToRef.current = (items, dir) => (provider.id === "remote" ? downloadItems(items, dir) : uploadItems(items, dir));
 
@@ -1659,8 +1637,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
   const sortIcon = (col: SortColumn) => {
     if (sort.column !== col) return null;
     return sort.asc
-      ? <ChevronUp size={11} className="inline ml-1 text-indigo-400" />
-      : <ChevronDown size={11} className="inline ml-1 text-indigo-400" />;
+      ? <ChevronUp size={12} className="inline ml-1 text-primary" />
+      : <ChevronDown size={12} className="inline ml-1 text-primary" />;
   };
 
   // ---- HTML5 dragover for visual feedback during OS-level drop ----------------
@@ -1685,14 +1663,15 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
   const dirRow = (path: string, part: "recent" | "bookmark") => {
     const marked = bookmarks.includes(path);
     return (
-      <div key={`${part}:${path}`} className="flex items-center rounded hover:bg-white/10">
+      <div key={`${part}:${path}`} className="flex items-center rounded-md hover:bg-white/[0.06]">
         <button
+          type="button"
           onMouseDown={(e) => { e.preventDefault(); setRecentOpen(false); fetch(path); }}
-          className="flex-1 min-w-0 flex items-center gap-2 p-1.5 text-left hover:text-white"
+          className="flex-1 min-w-0 flex items-center gap-2 h-7 px-2 text-left"
           title={path}
         >
-          <Folder size={11} className="text-indigo-300 shrink-0" />
-          <span className="truncate">{path}</span>
+          <Folder size={13} className="text-primary shrink-0" />
+          <span className="truncate font-mono">{path}</span>
         </button>
         {bookmarksKey && (
           <button
@@ -1701,9 +1680,9 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
             title={marked ? "Remove the bookmark" : "Bookmark this folder"}
             aria-label={marked ? `Remove the bookmark for ${path}` : `Bookmark ${path}`}
             aria-pressed={marked}
-            className={`p-1.5 shrink-0 ${marked ? "text-amber-300 hover:text-amber-200" : "text-zinc-500 hover:text-zinc-200"}`}
+            className={`icon-btn w-6 h-6 ${marked ? "text-amber-400 hover:text-amber-300" : ""}`}
           >
-            <Bookmark size={11} fill={marked ? "currentColor" : "none"} />
+            <Bookmark size={12} fill={marked ? "currentColor" : "none"} />
           </button>
         )}
       </div>
@@ -1732,72 +1711,66 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
       data-fs-pane={provider.id}
       data-fs-current-path={currentPath}
       data-elev={fit.elev}
-      className="group/pane flex-1 flex flex-col h-full bg-surface p-1.5 gap-1.5 overflow-hidden relative select-none"
+      className="group/pane flex-1 flex flex-col h-full bg-surface overflow-hidden relative select-none"
     >
       {disabled && (
-        <div className="absolute inset-0 z-30 bg-black/55 backdrop-blur-[1px] flex items-center justify-center text-zinc-300 text-xs font-mono uppercase">
-          <span className="px-3 py-1.5 bg-red-500/15 border border-red-500/30 rounded text-red-300">
-            Session disconnected
-          </span>
+        <div className="absolute inset-0 z-30 bg-scrim flex items-center justify-center">
+          <span className="pill bg-danger/[0.12] text-danger">Session disconnected</span>
         </div>
       )}
 
       {(notification || jobs.length > 0) && (
-        // Bottom-right of the pane, not top-right — top-right used to sit
-        // on top of the path-bar header and obscure the first row of
-        // entries on a short pane. Bottom keeps the file list visible.
+        // Bottom-right of the pane, clear of the path bar and the first rows.
         // Running archive jobs stack above the message, each with its own
         // Cancel, so a later message can't hide that one is still going.
         <div className="absolute bottom-3 right-3 z-50 max-w-[calc(100%-1.5rem)] flex flex-col items-end gap-1.5 pointer-events-none"
           style={noticeLift > 0 ? { bottom: noticeLift + 6 } : undefined}>
           {jobs.map((job) => (
-            <div key={job.id} className="pointer-events-auto max-w-full flex items-center gap-2 pl-3 pr-1 py-1 rounded-lg border text-[11px] font-mono shadow-2xl backdrop-blur-md bg-indigo-950/90 border-indigo-500/30 text-indigo-300">
-              <RefreshCw size={11} className="shrink-0 animate-spin" />
+            <div key={job.id} className="pointer-events-auto max-w-full flex items-center gap-2 pl-3 pr-1 py-1 rounded-lg bg-elevated shadow-pop text-[12px] text-white">
+              <RefreshCw size={12} className="shrink-0 animate-spin text-primary" />
               <span className="min-w-0 truncate" title={job.label}>{job.cancelling ? `Cancelling… ${job.label}` : `${job.label}…`}</span>
               <button onClick={() => cancelJob(job.id)} disabled={job.cancelling}
                 title="Cancel" aria-label={`Cancel: ${job.label}`}
-                className="shrink-0 p-1 rounded hover:bg-white/10 hover:text-white disabled:opacity-40 disabled:hover:bg-transparent">
-                <X size={11} />
+                className="icon-btn w-6 h-6">
+                <X size={12} />
               </button>
             </div>
           ))}
           {/* The message only informs: clicks go through it to the rows. */}
           {notification && (
-            <div className={`max-w-full px-3 py-1.5 rounded-lg border text-[11px] font-mono [overflow-wrap:anywhere] whitespace-pre-line shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-4 duration-300 ${
-              notification.type === "success" ? "bg-emerald-950/90 border-emerald-500/30 text-emerald-400" :
-              notification.type === "error"   ? "bg-rose-950/90 border-rose-500/30 text-rose-400" :
-                                                "bg-indigo-950/90 border-indigo-500/30 text-indigo-400"
+            <div role="status" className={`max-w-full px-3 py-1.5 rounded-lg bg-elevated shadow-pop text-[12px] [overflow-wrap:anywhere] whitespace-pre-line animate-in fade-in slide-in-from-bottom-4 duration-300 ${
+              notification.type === "success" ? "text-success" :
+              notification.type === "error"   ? "text-danger" :
+                                                "text-white"
             }`}>{notification.msg}</div>
           )}
         </div>
       )}
 
-      {/* Header: the pane's name and buttons on top, the path on a row of
-          its own so a long path stays readable even in a narrow pane. */}
-      <div className={`w-full flex flex-col gap-1.5 p-1.5 border rounded-lg shrink-0 shadow-lg ${
-        rootMode ? "bg-rose-950/30 border-rose-500/40" : "bg-panel border-white/5"
-      }`}>
-        {/* Three groups: who (the name, plus the pane's own control: Browse
-            here, root/sudo on the remote side), where to go, what to make.
-            One row when the pane has the width; otherwise the name group
-            takes a row to itself. Both panes switch at the same widths
-            (HEADER_FITS), so side by side their lists start level. */}
-        <div ref={headerRowRef} className={`relative flex flex-wrap items-center gap-y-1.5 ${fit.tight ? "gap-x-1" : "gap-x-2"}`}>
-          <div className={`flex items-center gap-1.5 min-w-0 min-h-[22px] ${fit.rows === 2 ? "basis-full justify-between" : ""}`}>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-300 pl-1 shrink-0">
-              {provider.label}
-            </span>
+      {/* Header: the pane's name and where it is, then its buttons. One row
+          when the pane has the width; otherwise the name takes a row to
+          itself. Both panes switch at the same widths (HEADER_FITS), so side
+          by side their lists start level. */}
+      <div className={`shrink-0 border-b border-white/[0.075] ${rootMode ? "bg-danger/[0.06]" : ""}`}>
+        <div ref={headerRowRef} className={`relative min-h-10 px-3 py-1.5 flex flex-wrap items-center gap-y-1 ${fit.tight ? "gap-x-1" : "gap-x-2"}`}>
+          <div className={`flex items-baseline gap-2 min-w-0 ${fit.rows === 2 ? "basis-full" : "flex-1"}`}>
+            <h3 className="text-[13px] font-semibold text-white shrink-0">{provider.label}</h3>
+            {subtitle && <span className="text-[12px] text-zinc-500 truncate min-w-0" title={subtitle}>{subtitle}</span>}
             {viaShell && (
               <span
                 title={"This server has no SFTP, so files go over shell commands. Everything works the same, " +
                   "just slower. On OpenWrt, `opkg install openssh-sftp-server` adds SFTP."}
-                className="text-[9px] font-bold uppercase tracking-wider text-amber-300 bg-amber-500/10 border border-amber-500/30 rounded px-1 shrink-0 cursor-help"
+                className="pill self-center bg-warning/[0.13] text-warning shrink-0 cursor-help"
               >
                 Shell
               </span>
             )}
+          </div>
+          <div className={`flex items-center shrink-0 ml-auto ${fit.tight ? "gap-0" : "gap-0.5"}`}>
+            {headerExtra}
             {provider.id === "local" && (
               <button
+                type="button"
                 onClick={async () => {
                   if (IS_ANDROID) {
                     // First open pulls the quick-dir list; subsequent opens
@@ -1824,59 +1797,34 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                 }}
                 title="Browse for folder"
                 aria-label="Browse for folder"
-                className={`${headerBtn} text-emerald-300`}
+                className={headerBtn}
               >
-                <FolderSearch size={11} />
+                <FolderSearch size={14} />
               </button>
             )}
-            {headerExtra}
-          </div>
-          <div className={`flex items-center shrink-0 ${fit.tight ? "gap-0.5" : "gap-1"}`}>
-            <button onClick={goUp} title="Up" aria-label="Up" className={`${headerBtn} text-zinc-200`}>
-              <ArrowUp size={11} />
+            <button type="button" onClick={() => setModal({ type: "mkdir", v1: "" })} title="New folder" aria-label="New folder"
+              className={headerBtn}>
+              <FolderPlus size={14} />
+            </button>
+            <button type="button" onClick={() => fetch(currentPath)} title="Refresh" aria-label="Refresh"
+              className={headerBtn}>
+              <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
             </button>
             <button
-              onClick={() => setRecentOpen((p) => !p)}
-              onBlur={() => setTimeout(() => setRecentOpen(false), 200)}
-              disabled={recentShown.length === 0 && bookmarks.length === 0}
-              title="Recent and bookmarked folders"
-              aria-label="Recent directories"
-              className={`${headerBtn} text-zinc-200 disabled:opacity-30 disabled:cursor-not-allowed`}
+              type="button"
+              onClick={() => (filterOpen ? closeFilter() : openFilter())}
+              title={filterOpen ? "Close the name filter" : "Filter by name (Ctrl+F)"}
+              aria-label="Filter by name"
+              aria-pressed={filterOpen}
+              className={`${headerBtn} ${filterOpen ? "bg-primary/15 text-primary hover:text-primary" : ""}`}
             >
-              <ChevronDown size={11} />
-            </button>
-            <button onClick={() => fetch(currentPath)} title="Refresh" aria-label="Refresh"
-              className={`${headerBtn} text-zinc-200`}>
-              <RefreshCw size={11} className={loading ? "animate-spin" : ""} />
+              <Search size={13} />
             </button>
           </div>
-          <button onClick={() => setModal({ type: "mkdir", v1: "" })} title="New Folder" aria-label="New Folder"
-            className={`${headerBtn} text-indigo-300 ml-auto`}>
-            <FolderPlus size={11} />
-          </button>
-          {/* Both lists open under the buttons across the header's width, so
-              neither is cut off by a narrow pane. */}
-          {recentOpen && (recentShown.length > 0 || bookmarks.length > 0) && (
-            <div className="absolute top-full mt-1 inset-x-0 z-50 max-h-[320px] overflow-y-auto bg-surface/95 border border-white/10 rounded-lg shadow-2xl p-1 backdrop-blur-md font-mono text-[11px] text-zinc-200 no-scrollbar">
-              {recentShown.length > 0 && (
-                <>
-                  <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Recent</div>
-                  {recentShown.map((p) => dirRow(p, "recent"))}
-                </>
-              )}
-              {recentShown.length > 0 && bookmarks.length > 0 && <div className="my-1 h-px bg-white/10" />}
-              {bookmarks.length > 0 && (
-                <>
-                  <div className="px-2 py-1 text-[9px] uppercase tracking-wider text-zinc-500 font-bold">Bookmarks</div>
-                  {bookmarks.map((p) => dirRow(p, "bookmark"))}
-                </>
-              )}
-            </div>
-          )}
           {IS_ANDROID && androidPickerOpen && androidQuickDirs && (
-            <div className="absolute top-full mt-1 inset-x-0 z-50 bg-surface/95 border border-white/10 rounded-lg shadow-2xl p-1 backdrop-blur-md font-mono text-[11px]">
+            <div className="absolute top-full mt-1 inset-x-0 z-50 bg-elevated rounded-lg shadow-pop p-1 text-[12px]">
               {androidQuickDirs.length === 0 ? (
-                <div className="p-2 text-zinc-400 text-[10.5px]">
+                <div className="p-2 text-zinc-400">
                   No writable locations found. On Android 11+ shared storage
                   requires SAF — the app can only read/write its own scoped
                   storage directly.
@@ -1885,12 +1833,12 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                 <button
                   key={d.path}
                   onClick={() => { setAndroidPickerOpen(false); fetch(d.path); }}
-                  className="w-full flex items-center gap-2 p-1.5 rounded text-left text-zinc-200 hover:bg-white/10 hover:text-white"
+                  className="w-full flex items-center gap-2 p-1.5 rounded text-left text-white hover:bg-white/[0.06]"
                 >
-                  <Folder size={11} className="text-indigo-300 shrink-0" />
+                  <Folder size={13} className="text-primary shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="truncate">{d.label}</div>
-                    <div className="truncate text-[9.5px] text-zinc-500">{d.path}</div>
+                    <div className="truncate font-mono text-[11px] text-zinc-500">{d.path}</div>
                   </div>
                 </button>
               ))}
@@ -1898,8 +1846,15 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
           )}
         </div>
         {headerNote}
-        <div className="relative flex items-center gap-1">
-          <div className="relative flex-1 min-w-0 h-6">
+      </div>
+
+      {/* Path bar: Up, then each folder of the path, which opens with a
+          click; the rest of the bar edits the path as text. */}
+      <div className="relative shrink-0 h-8 flex items-center gap-0.5 px-1.5 border-b border-white/[0.075] bg-panel">
+        <button type="button" onClick={goUp} title="Up" aria-label="Up" className="icon-btn w-6 h-6">
+          <ArrowUp size={13} />
+        </button>
+        <div className="relative flex-1 min-w-0 h-6">
           <input
             ref={pathInputRef}
             type="text"
@@ -1954,82 +1909,98 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               }
             }}
             placeholder="Path…"
-            className={`w-full h-full px-2 bg-white/[0.04] border border-white/10 rounded text-[11px] font-mono focus:outline-none focus:border-indigo-400/50 focus:bg-white/10 ${inputFocused ? "text-zinc-100" : "text-transparent placeholder:text-transparent"}`}
+            aria-label={`${provider.label} path`}
+            className={`w-full h-full px-1.5 rounded-md bg-transparent text-[12px] font-mono outline-none focus:bg-field focus:shadow-[0_0_0_1px_rgb(var(--primary))] ${inputFocused ? "text-white" : "text-transparent placeholder:text-transparent"}`}
           />
           {!inputFocused && (
-            // Each folder opens with a click; the rest of the box edits the
-            // path as text.
             <div
               ref={crumbsRef}
               onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) pathInputRef.current?.focus(); }}
               // A vertical wheel doesn't scroll sideways on its own, and the
               // start of a long path would be out of reach.
               onWheel={(e) => { if (!e.deltaX) e.currentTarget.scrollLeft += e.deltaY; }}
-              className="absolute inset-0 flex items-center px-2 text-[11px] font-mono overflow-x-auto no-scrollbar cursor-text"
+              className="absolute inset-0 flex items-center text-[12px] overflow-x-auto no-scrollbar cursor-text"
             >
               {crumbs.length === 0 && (
-                <span className="shrink-0 whitespace-nowrap text-zinc-500">{currentPath || "Path…"}</span>
+                <span className="shrink-0 whitespace-nowrap px-1.5 text-zinc-500 font-mono">{currentPath || "Path…"}</span>
               )}
               {crumbs.map((c, i) => (
                 <React.Fragment key={c.path}>
-                  {i > 0 && crumbs[i - 1].label !== "/" && (
-                    <span className="shrink-0 px-px text-zinc-600">{provider.pathSep}</span>
-                  )}
+                  {i > 0 && <ChevronRight size={12} className="shrink-0 text-zinc-500" aria-hidden="true" />}
                   {i < crumbs.length - 1 ? (
                     <button
                       type="button"
                       onClick={() => fetch(c.path)}
                       title={c.path}
-                      className="shrink-0 whitespace-nowrap px-0.5 rounded text-zinc-300 hover:text-indigo-200 hover:bg-white/10 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-400/60"
+                      className="shrink-0 whitespace-nowrap h-[22px] px-1 rounded-[5px] text-zinc-400 hover:bg-white/5 hover:text-white"
                     >
                       {c.label}
                     </button>
                   ) : (
-                    <span className="shrink-0 whitespace-nowrap px-0.5 text-zinc-100">{c.label}</span>
+                    <span className="shrink-0 whitespace-nowrap px-1 font-semibold text-white">{c.label}</span>
                   )}
                 </React.Fragment>
               ))}
             </div>
           )}
-          </div>
-          {bookmarksKey && (
-            <button
-              onClick={() => toggleBookmark(currentPath)}
-              disabled={!currentPath}
-              title={currentBookmarked ? "Remove this folder's bookmark" : "Bookmark this folder"}
-              aria-label="Bookmark this folder"
-              aria-pressed={currentBookmarked}
-              className={`${HEADER_BUTTON_BASE} h-6 w-6 disabled:opacity-30 ${currentBookmarked ? "text-amber-300" : "text-zinc-200"}`}
-            >
-              <Bookmark size={11} fill={currentBookmarked ? "currentColor" : "none"} />
-            </button>
-          )}
-          <button
-            onClick={() => (filterOpen ? closeFilter() : openFilter())}
-            title={filterOpen ? "Close the name filter" : "Filter by name (Ctrl+F)"}
-            aria-label="Filter by name"
-            aria-pressed={filterOpen}
-            className={`${HEADER_BUTTON_BASE} h-6 w-6 ${filterOpen ? "text-indigo-200 bg-indigo-500/20 border-indigo-400/40" : "text-zinc-200"}`}
-          >
-            <Search size={11} />
-          </button>
-          {inputFocused && suggestions.length > 0 && (
-            <div className="absolute top-[28px] left-0 right-0 max-h-[220px] overflow-y-auto z-50 bg-surface/95 border border-white/10 rounded-lg shadow-2xl p-1 backdrop-blur-md font-mono text-[11px] text-zinc-200 no-scrollbar">
-              {suggestions.map((s, idx) => (
-                <button key={s.path} onClick={() => pickSuggestion(s)}
-                  className={`w-full flex items-center justify-between p-1.5 rounded text-left transition-colors ${
-                    idx === activeSuggestion ? "bg-indigo-500/30 text-white font-bold" : "hover:bg-white/5 hover:text-white"
-                  }`}>
-                  <div className="flex items-center gap-2 truncate">
-                    {s.isDir ? <Folder size={11} className="text-indigo-300 shrink-0" /> : <File size={11} className="text-zinc-500 shrink-0" />}
-                    <span className="truncate">{s.name}</span>
-                  </div>
-                  {s.isDir && <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-1 rounded">dir</span>}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
+        {bookmarksKey && (
+          <button
+            type="button"
+            onClick={() => toggleBookmark(currentPath)}
+            disabled={!currentPath}
+            title={currentBookmarked ? "Remove this folder's bookmark" : "Bookmark this folder"}
+            aria-label="Bookmark this folder"
+            aria-pressed={currentBookmarked}
+            className={`icon-btn w-6 h-6 ${currentBookmarked ? "text-amber-400 hover:text-amber-300" : ""}`}
+          >
+            <Bookmark size={13} fill={currentBookmarked ? "currentColor" : "none"} />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setRecentOpen((p) => !p)}
+          onBlur={() => setTimeout(() => setRecentOpen(false), 200)}
+          disabled={recentShown.length === 0 && bookmarks.length === 0}
+          title="Recent and bookmarked folders"
+          aria-label="Recent folders"
+          aria-expanded={recentOpen}
+          className="icon-btn w-6 h-6"
+        >
+          <History size={13} />
+        </button>
+        {/* Both lists open under the path bar across the pane's width, so
+            neither is cut off by a narrow pane. */}
+        {recentOpen && (recentShown.length > 0 || bookmarks.length > 0) && (
+          <div className="absolute top-full mt-1 inset-x-1.5 z-50 max-h-[320px] overflow-y-auto bg-elevated rounded-lg shadow-pop p-1 text-[12px] text-white no-scrollbar">
+            {recentShown.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500">Recent</div>
+                {recentShown.map((p) => dirRow(p, "recent"))}
+              </>
+            )}
+            {recentShown.length > 0 && bookmarks.length > 0 && <div className="my-1 h-px bg-white/[0.075]" />}
+            {bookmarks.length > 0 && (
+              <>
+                <div className="px-2 py-1 text-[11px] font-semibold text-zinc-500">Bookmarks</div>
+                {bookmarks.map((p) => dirRow(p, "bookmark"))}
+              </>
+            )}
+          </div>
+        )}
+        {inputFocused && suggestions.length > 0 && (
+          <div className="absolute top-full mt-1 inset-x-1.5 max-h-[220px] overflow-y-auto z-50 bg-elevated rounded-lg shadow-pop p-1 text-[12px] text-white no-scrollbar">
+            {suggestions.map((s, idx) => (
+              <button key={s.path} type="button" onClick={() => pickSuggestion(s)}
+                className={`w-full flex items-center gap-2 h-7 px-2 rounded-md text-left ${
+                  idx === activeSuggestion ? "bg-primary/15" : "hover:bg-white/[0.06]"
+                }`}>
+                {s.isDir ? <Folder size={13} className="text-primary shrink-0" /> : <File size={13} className="text-zinc-500 shrink-0" />}
+                <span className="truncate font-mono">{s.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Filter row, opened from the magnifier beside the path. Lets the
@@ -2038,8 +2009,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
           sibling dirs; the X clears it, and Esc closes the row. Enter or ↓
           goes on to the rows that are left. */}
       {filterOpen && (
-        <div className="shrink-0 flex items-center gap-1 px-2 py-1 bg-surface border border-white/5 rounded text-[10.5px] font-mono">
-          <Search size={11} className="text-zinc-500 shrink-0" />
+        <div className="shrink-0 h-8 flex items-center gap-2 px-3 border-b border-white/[0.075] text-[12px]">
+          <Search size={13} className="text-zinc-500 shrink-0" />
           <input
             ref={filterInputRef}
             type="text"
@@ -2059,19 +2030,22 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
             }}
             placeholder="Filter by name…"
             title="Filter by name. Wildcards match the whole name: * any characters, ? one character (e.g. *.sh)"
-            className="flex-1 min-w-0 h-5 bg-transparent text-zinc-100 placeholder:text-zinc-600 focus:outline-none"
+            aria-label="Filter by name"
+            className="flex-1 min-w-0 h-6 bg-transparent text-white placeholder:text-zinc-500 focus:outline-none"
           />
           {nameFilter && (
             <>
-              <span className="text-[9.5px] text-zinc-500 shrink-0">
-                {sortedEntries.length}/{entries.length}
+              <span className="text-[11.5px] text-zinc-500 tabular-nums shrink-0">
+                {sortedEntries.length} of {entries.length}
               </span>
               <button
+                type="button"
                 onClick={() => { setNameFilter(""); filterInputRef.current?.focus(); }}
                 title="Clear filter"
-                className="shrink-0 p-0.5 rounded text-zinc-400 hover:text-white hover:bg-white/10"
+                aria-label="Clear filter"
+                className="icon-btn w-5 h-5"
               >
-                <X size={10} />
+                <X size={12} />
               </button>
             </>
           )}
@@ -2087,61 +2061,67 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
           Centred by its margins, so it may grow to the pane's width before it
           wraps (a left: 50% would leave it half of that). */}
       {selectedEntries.length > 0 && (
-        <div ref={selBarRef} className="absolute bottom-3 inset-x-2 mx-auto w-fit z-20 flex flex-wrap items-center justify-center gap-1.5 px-2.5 py-1.5 bg-indigo-950/95 border border-indigo-500/40 rounded-lg shadow-2xl shadow-black/50 backdrop-blur-md text-[10.5px] text-indigo-100 font-mono">
-          <span className="font-bold uppercase tracking-wider text-[9.5px] text-indigo-300 shrink-0">
+        <div ref={selBarRef} role="toolbar" aria-label="Selection" className="absolute bottom-3 inset-x-2 mx-auto w-fit z-20 flex flex-wrap items-center justify-center gap-1 p-1 pl-3 bg-elevated rounded-lg shadow-pop text-[12px] text-white">
+          <span className="font-medium tabular-nums shrink-0 mr-1">
             {selectedEntries.length} selected
           </span>
           {!inMode && (
             <button
+              type="button"
               onClick={() => setSelectMode(true)}
               title="Add rows with a click (Ctrl+click, Shift+click and Space do it too)"
-              className="px-2 py-0.5 rounded bg-white/5 text-indigo-200 hover:bg-white/10 flex items-center gap-1"
+              className="btn btn-sm btn-ghost"
             >
-              <CheckSquare size={10} /> Select more
+              <CheckSquare size={12} /> Select more
             </button>
           )}
-          <div className="flex-1" />
           {isRemote && (
             <button
+              type="button"
               onClick={() => downloadItems(selectedEntries)}
               title={getOppositeDir?.()
                 ? `Download to ${getOppositeDir!()}`
                 : "Pick a destination folder…"}
-              className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 flex items-center gap-1"
+              className="btn btn-sm btn-primary"
             >
-              <Download size={10} /> Download
+              <Download size={12} /> Download
             </button>
           )}
           {!isRemote && (
             <button
+              type="button"
               onClick={() => uploadItems(selectedEntries)}
               title={getOppositeDir?.()
                 ? `Upload to ${getOppositeDir!()}`
                 : "Open a remote directory first…"}
               disabled={!getOppositeDir?.()}
-              className="px-2 py-0.5 rounded bg-sky-500/15 text-sky-300 hover:bg-sky-500/25 flex items-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn btn-sm btn-primary"
             >
-              <Upload size={10} /> Upload
+              <Upload size={12} /> Upload
             </button>
           )}
           <button
+            type="button"
             onClick={() => setModal({ type: "move-bulk", v1: currentPath })}
-            className="px-2 py-0.5 rounded bg-white/5 text-zinc-200 hover:bg-white/10 flex items-center gap-1"
+            className="btn btn-sm"
           >
-            <Move size={10} /> Move…
+            <Move size={12} /> Move…
           </button>
           <button
+            type="button"
             onClick={() => removeItems(selectedEntries)}
-            className="px-2 py-0.5 rounded bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 flex items-center gap-1"
+            className="btn btn-sm text-danger"
           >
-            <Trash2 size={10} /> Delete
+            <Trash2 size={12} /> Delete
           </button>
           <button
+            type="button"
             onClick={clearSelection}
             title="Clear the selection (Esc)"
-            className="px-2 py-0.5 rounded bg-white/5 text-zinc-400 hover:bg-white/10 flex items-center gap-1"
+            aria-label="Clear the selection"
+            className="icon-btn w-6 h-6"
           >
-            <X size={10} /> Clear
+            <X size={13} />
           </button>
         </div>
       )}
@@ -2157,14 +2137,16 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
-        className={`flex-1 border rounded-lg bg-panel flex flex-col overflow-y-auto overflow-x-hidden transition-all duration-200 border-indigo-500/30 shadow-2xl shadow-indigo-950/10 outline-none focus-visible:border-indigo-400/70 ${dragOver ? "border-indigo-400 bg-indigo-950/10" : ""}`}
+        data-fs-list
+        data-drop={dragOver ? "" : undefined}
+        className="flex-1 flex flex-col overflow-y-auto overflow-x-hidden outline-none focus-visible:shadow-[inset_0_0_0_1px_rgb(var(--primary)/0.6)] data-[drop]:bg-primary/[0.06] data-[drop]:shadow-[inset_0_0_0_1.5px_rgb(var(--primary))]"
       >
         {/* The rows' columns, lined up with them: its padding matches the
             list's and a row's own. In selection mode the box in front selects
             all, or clears the selection once everything is selected. */}
         <div
           style={{ gridTemplateColumns }}
-          className="grid gap-1.5 pl-4 pr-3.5 bg-elevated border-b border-white/5 font-mono text-[10.5px] text-zinc-300 font-bold shrink-0 sticky top-0 z-10 shadow-md"
+          className="grid gap-x-2.5 pl-[18px] pr-4 h-[26px] items-center bg-surface border-b border-white/[0.075] text-[11.5px] font-semibold text-zinc-500 shrink-0 sticky top-0 z-10"
         >
           {inMode && (
             <button
@@ -2175,18 +2157,18 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               onClick={() => (allSelected ? clearSelection() : selectAllVisible())}
               title={allSelected ? "Clear the selection (Esc)" : "Select all (Ctrl+A)"}
               aria-label={allSelected ? "Clear the selection" : "Select all"}
-              className="flex items-center justify-center py-1.5 text-indigo-300 hover:text-indigo-100"
+              className="flex items-center justify-center text-primary hover:text-white"
             >
-              {allSelected ? <CheckSquare size={12} /> : <MinusSquare size={12} />}
+              {allSelected ? <CheckSquare size={13} /> : <MinusSquare size={13} />}
             </button>
           )}
-          <div className="cursor-pointer hover:text-white py-1.5 truncate" onClick={() => toggleSort("name")}>
-            NAME {sortIcon("name")}
+          <div className="cursor-pointer hover:text-white truncate" onClick={() => toggleSort("name")}>
+            Name {sortIcon("name")}
           </div>
           {shownColumns.map((c) => (
             <div
               key={c}
-              className={`cursor-pointer hover:text-white py-1.5 truncate ${c === "size" ? "text-right" : "pl-1.5"}`}
+              className={`cursor-pointer hover:text-white truncate ${c === "size" ? "text-right" : ""}`}
               onClick={() => toggleSort(c)}
             >
               {COLUMN_LABEL[c]} {sortIcon(c)}
@@ -2199,16 +2181,16 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
             the end, so the last rows can scroll clear of it. */}
         <div
           ref={listRef}
-          className={`flex-1 p-1 font-mono text-[11px] ${selectedEntries.length > 0 ? "pb-16" : ""}`}
+          className={`flex-1 px-1.5 py-1 text-[13px] ${selectedEntries.length > 0 ? "pb-16" : ""}`}
           onClick={(e) => { if (e.target === e.currentTarget) clearSelection(); }}
         >
           {loading && sortedEntries.length === 0 ? (
-            <div className="text-center py-14 text-zinc-400">Loading…</div>
+            <div className="text-center py-14 text-zinc-500">Loading…</div>
           ) : sortedEntries.length === 0 ? (
             <div className="text-center py-14 px-3 text-zinc-500 break-words">
               {filteredOut && nameFilter.trim()
                 ? `No names match “${nameFilter.trim()}”`
-                : filteredOut ? "Every file here looks the same on the other side" : "Empty"}
+                : filteredOut ? "Every file here looks the same on the other side" : "This folder is empty"}
             </div>
           ) : (
             sortedEntries.map((entry) => {
@@ -2227,15 +2209,15 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                 data-fs-row-isdir={entry.isDir ? "1" : "0"}
                 data-fs-row-selected={isSel ? "1" : "0"}
                 style={{ gridTemplateColumns }}
-                className={`group grid gap-x-1.5 px-2.5 py-1 border-l-2 cursor-pointer transition-colors items-center scroll-mt-8 ${
+                className={`group relative grid gap-x-2.5 px-2.5 py-1 min-h-7 rounded-md border-l-2 cursor-default items-center scroll-mt-8 text-white data-[drop]:bg-primary/[0.12] data-[drop]:shadow-[inset_0_0_0_1.5px_rgb(var(--primary))] data-[drop]:after:content-[attr(data-drop)] data-[drop]:after:absolute data-[drop]:after:right-2 data-[drop]:after:top-1/2 data-[drop]:after:-translate-y-1/2 data-[drop]:after:h-[18px] data-[drop]:after:px-[7px] data-[drop]:after:rounded-full data-[drop]:after:bg-primary data-[drop]:after:text-black data-[drop]:after:text-[11.5px] data-[drop]:after:font-medium data-[drop]:after:leading-[18px] data-[drop]:after:whitespace-nowrap ${
                   selectedEntries.length > 0 ? "scroll-mb-16" : ""
                 } ${
                   isSel
-                    ? "bg-indigo-500/15 border-indigo-400 text-indigo-100"
+                    ? "bg-primary/[0.16] border-transparent"
                     : mark
-                      ? `${COMPARE_ROW[mark]} text-zinc-200 hover:bg-white/5 hover:text-white`
-                      : "border-transparent text-zinc-200 hover:bg-white/5 hover:text-white"
-                } ${keyNav && isCursor ? "ring-1 ring-inset ring-indigo-400/60" : ""}`}
+                      ? `${COMPARE_ROW[mark]} hover:bg-white/5`
+                      : "border-transparent hover:bg-white/5"
+                } ${keyNav && isCursor ? "ring-1 ring-inset ring-primary/60" : ""}`}
                 title={mark ? COMPARE_LABEL[mark] : undefined}
                 data-fs-compare={mark}
               >
@@ -2244,8 +2226,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                 {inMode && (
                   <span className="flex items-center justify-center">
                     {isSel
-                      ? <CheckSquare size={12} className="text-indigo-300" />
-                      : <Square size={12} className="text-zinc-500 group-hover:text-zinc-300" />}
+                      ? <CheckSquare size={13} className="text-primary" />
+                      : <Square size={13} className="text-zinc-500 group-hover:text-zinc-300" />}
                   </span>
                 )}
                 <div className="flex items-center gap-2 min-w-0 pr-1">
@@ -2254,16 +2236,16 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                     title={entry.isSymlink ? (entry.brokenLink ? "Broken link: target is missing or not accessible" : "Symbolic link") : undefined}
                   >
                     {entry.isDir
-                      ? <Folder size={12} className="text-indigo-300" />
-                      : <File size={12} className={entry.brokenLink ? "text-rose-400/70" : "text-zinc-500"} />}
+                      ? <Folder size={14} className="text-primary" />
+                      : <File size={14} className={entry.brokenLink ? "text-danger/70" : "text-zinc-500"} />}
                     {entry.isSymlink && (
                       <Link2
-                        size={8}
-                        className={`absolute -bottom-1 -right-1.5 rounded-sm bg-zinc-950 ${entry.brokenLink ? "text-rose-400" : "text-sky-300"}`}
+                        size={9}
+                        className={`absolute -bottom-1 -right-1.5 rounded-sm bg-surface ${entry.brokenLink ? "text-danger" : "text-info"}`}
                       />
                     )}
                   </span>
-                  <div title={entry.name} className={`min-w-0 flex-1 truncate text-[11px] ${entry.brokenLink ? "text-zinc-400 line-through decoration-rose-400/50" : "text-zinc-100"}`}>{entry.name}</div>
+                  <div title={entry.name} className={`min-w-0 flex-1 truncate ${entry.brokenLink ? "text-zinc-400 line-through decoration-danger/50" : ""}`}>{entry.name}</div>
                   {mark && <span className="sr-only">{COMPARE_LABEL[mark]}</span>}
                 </div>
                 {shownColumns.map((c) => (
@@ -2279,18 +2261,18 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                   onClick={(e) => openMenu(e, entry)}
                   title="Options"
                   aria-label="Options"
-                  className={`flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/10 hover:!opacity-100 ${
-                    IS_ANDROID || isSel || isCursor ? "opacity-60" : "opacity-0 group-hover:opacity-60"
+                  className={`h-5 flex items-center justify-center rounded text-zinc-400 hover:text-white hover:bg-white/[0.09] focus-visible:opacity-100 ${
+                    IS_ANDROID || isSel || isCursor ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                   }`}
                 >
-                  <MoreVertical size={11} />
+                  <MoreVertical size={13} />
                 </button>
                 {/* What the columns that gave way show: a line of its own
                     under the name, as wide as the row. */}
                 {moved && (
                   <div
                     style={{ gridColumn: `${inMode ? 2 : 1} / -1` }}
-                    className="row-start-2 pl-5 truncate text-[10px] text-zinc-500"
+                    className="row-start-2 pl-[22px] truncate text-[11.5px] text-zinc-500"
                   >
                     {moved}
                   </div>
@@ -2313,34 +2295,34 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         return (
         <div ref={menuRef}
           style={{ top: contextMenu.y, left: contextMenu.x }}
-          className="fixed z-[9999] min-w-[180px] bg-surface border border-white/10 rounded-lg shadow-2xl p-1 backdrop-blur-md font-mono text-[11.5px] text-zinc-200">
+          role="menu" className="fixed z-[9999] min-w-[200px] bg-elevated rounded-lg shadow-pop p-1 text-[13px] text-white">
 
           {/* Primary actions: open a folder or a local file, send what is
               selected to the other pane, live-edit a remote file. */}
           {!multi && contextMenu.entry.isDir && (
             <button onClick={() => { setContextMenu(null); fetch(contextMenu.entry.path); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <Folder size={11} className="text-indigo-400" /><span>Open</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <Folder size={14} className="text-zinc-400" /><span>Open</span>
             </button>
           )}
           {!multi && !contextMenu.entry.isDir && !isRemote && !IS_ANDROID && (
             <button onClick={() => { setContextMenu(null); openLocalEntry(contextMenu.entry); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <ExternalLink size={11} className="text-indigo-400" /><span>Open</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <ExternalLink size={14} className="text-zinc-400" /><span>Open</span>
             </button>
           )}
           {isRemote ? (
             <button onClick={() => { setContextMenu(null); downloadItems(acting); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <Download size={11} className="text-emerald-400" />
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <Download size={14} className="text-zinc-400" />
               <span>Download{multi ? ` (${acting.length})` : "…"}</span>
             </button>
           ) : (
             <button onClick={() => { setContextMenu(null); uploadItems(acting); }}
               disabled={!uploadDir}
               title={uploadDir ? `Upload to ${uploadDir}` : "Open a remote directory first…"}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
-              <Upload size={11} className="text-sky-400" />
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+              <Upload size={14} className="text-zinc-400" />
               <span>Upload{multi ? ` (${acting.length})` : ""}</span>
             </button>
           )}
@@ -2350,15 +2332,15 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               — hide the menu item entirely rather than surface it. */}
           {isRemote && !multi && !contextMenu.entry.isDir && !IS_ANDROID && (
             <button onClick={() => { setContextMenu(null); liveEditEntry(contextMenu.entry); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <ExternalLink size={11} className="text-indigo-400" /><span>Edit (auto-upload)</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <ExternalLink size={14} className="text-zinc-400" /><span>Edit (auto-upload)</span>
             </button>
           )}
 
           {!isRemote && !multi && !IS_ANDROID && (
             <button onClick={() => { setContextMenu(null); revealLocalEntry(contextMenu.entry); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <FolderSearch size={11} className="text-emerald-300" /><span>Reveal in Explorer</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <FolderSearch size={14} className="text-zinc-400" /><span>{IS_WINDOWS ? "Show in Explorer" : /Mac/i.test(navigator.platform) ? "Show in Finder" : "Show in folder"}</span>
             </button>
           )}
 
@@ -2366,26 +2348,26 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               way to pick several rows without a keyboard. */}
           {!inMode ? (
             <button onClick={() => { setContextMenu(null); setSelectMode(true); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <CheckSquare size={11} className="text-indigo-300" /><span>Select</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <CheckSquare size={14} className="text-zinc-400" /><span>Select</span>
             </button>
           ) : !allSelected && (
             <button onClick={() => { setContextMenu(null); selectAllVisible(); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <CheckSquare size={11} className="text-indigo-300" /><span>Select all</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <CheckSquare size={14} className="text-zinc-400" /><span>Select all</span>
             </button>
           )}
 
-          <div className="h-px bg-white/5 my-1" />
+          <div className="h-px bg-white/[0.075] my-1 mx-1" />
 
           <button onClick={() => { setContextMenu(null); setModal({ type: "mkdir", v1: "" }); }}
-            className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-            <Plus size={11} className="text-indigo-300" /><span>New Folder</span>
+            className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+            <Plus size={14} className="text-zinc-400" /><span>New folder</span>
           </button>
           {!multi && (
             <button onClick={() => { setContextMenu(null); setModal({ type: "rename", entry: contextMenu.entry, v1: contextMenu.entry.name }); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <Edit3 size={11} /><span>Rename</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <Edit3 size={14} className="text-zinc-400" /><span>Rename</span>
             </button>
           )}
           <button onClick={() => {
@@ -2397,66 +2379,66 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               if (multi) setModal({ type: "move-bulk", v1: currentPath });
               else setModal({ type: "move", entry: contextMenu.entry, v1: currentPath });
             }}
-            className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-            <Move size={11} /><span>{multi ? `Move (${acting.length}) to…` : "Move to…"}</span>
+            className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+            <Move size={14} className="text-zinc-400" /><span>{multi ? `Move (${acting.length}) to…` : "Move to…"}</span>
           </button>
           {/* A row's name or full path; for several rows, their paths, one
               per line. */}
           {!multi ? (
             <>
               <button onClick={() => { setContextMenu(null); copyText(contextMenu.entry.name, "name"); }}
-                className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-                <Copy size={11} /><span>Copy name</span>
+                className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+                <Copy size={14} className="text-zinc-400" /><span>Copy name</span>
               </button>
               <button onClick={() => { setContextMenu(null); copyText(contextMenu.entry.path, "path"); }}
-                className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-                <Copy size={11} /><span>Copy path</span>
+                className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+                <Copy size={14} className="text-zinc-400" /><span>Copy path</span>
               </button>
             </>
           ) : (
             <button onClick={() => { setContextMenu(null); copyText(acting.map((e) => e.path).join("\n"), `${acting.length} paths`); }}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <Copy size={11} /><span>Copy {acting.length} paths</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <Copy size={14} className="text-zinc-400" /><span>Copy {acting.length} paths</span>
             </button>
           )}
           {!multi && provider.chmod && (
             <button onClick={() => openProperties(contextMenu.entry)}
-              className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white">
-              <Shield size={11} /><span>Properties</span>
+              className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left">
+              <Shield size={14} className="text-zinc-400" /><span>Properties</span>
             </button>
           )}
 
           {/* Archive what is selected, or extract the archive right-clicked:
               into this folder, or into a folder named after it. */}
-          <div className="h-px bg-white/5 my-1" />
+          <div className="h-px bg-white/[0.075] my-1 mx-1" />
           <button onClick={() => { setContextMenu(null); openArchiveDialog(acting); }}
             disabled={!!archiveOff} title={archiveOff}
-            className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
-            <Archive size={11} className="text-amber-300" />
+            className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+            <Archive size={14} className="text-zinc-400" />
             <span>{multi ? `Add ${acting.length} to archive…` : "Add to archive…"}</span>
           </button>
           {!multi && !contextMenu.entry.isDir && archiveKind(contextMenu.entry.name) && (
             <>
               <button onClick={() => { setContextMenu(null); extractEntry(contextMenu.entry, false); }}
                 disabled={!!archiveOff} title={archiveOff}
-                className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
-                <PackageOpen size={11} className="text-amber-300" /><span>Extract here</span>
+                className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+                <PackageOpen size={14} className="text-zinc-400" /><span>Extract here</span>
               </button>
               {extractFolderName(contextMenu.entry.name) && (
                 <button onClick={() => { setContextMenu(null); extractEntry(contextMenu.entry, true); }}
                   disabled={!!archiveOff} title={archiveOff}
-                  className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-white/10 text-left hover:text-white disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
-                  <PackageOpen size={11} className="text-amber-300 shrink-0" />
+                  className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-white/[0.06] text-left disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+                  <PackageOpen size={14} className="text-zinc-400 shrink-0" />
                   <span className="truncate max-w-[220px]">Extract to “{extractFolderName(contextMenu.entry.name)}{provider.pathSep}”</span>
                 </button>
               )}
             </>
           )}
 
-          <div className="h-px bg-white/5 my-1" />
+          <div className="h-px bg-white/[0.075] my-1 mx-1" />
           <button onClick={() => { setContextMenu(null); removeItems(acting); }}
-            className="w-full flex items-center gap-2 p-1.5 rounded hover:bg-rose-950/20 text-left text-rose-400">
-            <Trash2 size={11} /><span>Delete{multi ? ` (${acting.length})` : ""}</span>
+            className="w-full flex items-center gap-2 h-7 px-2 rounded-md hover:bg-danger/[0.12] text-left text-danger">
+            <Trash2 size={14} /><span>Delete{multi ? ` (${acting.length})` : ""}</span>
           </button>
         </div>
         );
@@ -2469,24 +2451,24 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
         <div className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModal(null)}>
           <div onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); setModal(null); } }}
-            className="w-full max-w-[320px] bg-panel border border-white/5 rounded-xl shadow-2xl p-4 font-mono text-[11px]">
+            role="dialog" aria-modal="true" className="w-full max-w-[340px] bg-elevated rounded-xl shadow-sheet p-4 text-[13px] text-white">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-black uppercase tracking-wider text-zinc-300">
+              <h2 className="text-[13px] font-semibold">
                 {modal.type === "rename" ? "Rename" :
-                 modal.type === "mkdir" ? "New Directory" :
+                 modal.type === "mkdir" ? "New folder" :
                  modal.type === "move" ? "Move to…" :
                  modal.type === "archive" ? ((modal.items?.length ?? 0) > 1 ? `Archive ${modal.items!.length} items` : "Add to archive") :
                  modal.type === "move-bulk" ? `Move ${selectedEntries.length} items to…` : "Properties"}
-              </span>
-              <button aria-label="Close" onClick={() => setModal(null)} className="text-zinc-500 hover:text-white"><X size={12} /></button>
+              </h2>
+              <button type="button" aria-label="Close" onClick={() => setModal(null)} className="icon-btn w-6 h-6"><X size={14} /></button>
             </div>
             <div className="space-y-3">
               {modal.type === "properties" ? (
                 <>
-                  <div>Name: <span className="text-zinc-100 font-bold">{modal.entry?.name}</span></div>
-                  <div>Path: <span className="text-zinc-400 text-[10px] block truncate">{modal.entry?.path}</span></div>
+                  <div className="text-zinc-400">Name: <span className="text-white font-medium">{modal.entry?.name}</span></div>
+                  <div className="text-zinc-400">Path: <span className="font-mono text-[12px] block truncate" title={modal.entry?.path}>{modal.entry?.path}</span></div>
                   {modal.entry?.isSymlink && (
-                    <div className="text-[10px] text-amber-300/80">
+                    <div className="text-[12px] text-warning">
                       This is a link: these are the settings of the file it points to, and changes apply to that file.
                     </div>
                   )}
@@ -2516,13 +2498,13 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                     };
                     return (
                       <div className="pt-1">
-                        <label className="text-[10px] text-zinc-400 block mb-1.5 uppercase tracking-wider">Permissions</label>
-                        <div className="grid grid-cols-[60px_repeat(3,1fr)] gap-1 text-center text-[10px] text-zinc-400 font-mono">
+                        <div className="text-[12px] font-medium text-zinc-400 mb-1.5">Permissions</div>
+                        <div className="grid grid-cols-[60px_repeat(3,1fr)] gap-1 text-center text-[12px] text-zinc-400">
                           <div />
                           {bits.map((b) => <div key={b.key} className="font-bold">{b.label}</div>)}
                           {roles.map((role) => (
                             <React.Fragment key={role.key}>
-                              <div className="text-left text-zinc-300 self-center">{role.label}</div>
+                              <div className="text-left text-white self-center">{role.label}</div>
                               {bits.map((b) => {
                                 const on = ((mode >> role.shift) & b.bit) !== 0;
                                 return (
@@ -2530,10 +2512,12 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                                     key={b.key}
                                     type="button"
                                     onClick={() => toggle(role.shift, b.bit)}
-                                    className={`h-6 rounded border transition-colors ${
+                                    aria-pressed={on}
+                                    aria-label={`${role.label} ${b.key === "r" ? "read" : b.key === "w" ? "write" : "execute"}`}
+                                    className={`h-6 rounded-md transition-colors ${
                                       on
-                                        ? "bg-indigo-500/20 border-indigo-400/40 text-indigo-200"
-                                        : "bg-white/[0.04] border-white/10 text-zinc-500 hover:bg-white/[0.08]"
+                                        ? "bg-primary/[0.16] text-primary"
+                                        : "bg-white/[0.06] text-zinc-500 hover:bg-white/[0.09]"
                                     }`}
                                   >
                                     {on ? "✓" : ""}
@@ -2549,7 +2533,7 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
 
                   <div className="flex gap-2 pt-1">
                     <div className="flex-1">
-                      <label className="text-[10px] text-zinc-400 block mb-1">Octal</label>
+                      <label className="text-[12px] font-medium text-zinc-400 block mb-1">Octal</label>
                       <input type="text" value={modal.v1 || ""}
                         onChange={(e) => {
                           // Only accept up to 4 digits (setuid/setgid/sticky
@@ -2558,62 +2542,62 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                           const v = e.target.value.replace(/[^0-7]/g, "").slice(0, 4);
                           setModal({ ...modal, v1: v });
                         }}
-                        className="w-full h-7 px-2 bg-white/5 border border-white/5 rounded text-zinc-200 focus:outline-none focus:border-indigo-400/40 text-[11.5px] font-mono" />
+                        className="field font-mono text-[12px]" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[10px] text-zinc-400 block mb-1">Owner UID</label>
+                      <label className="text-[12px] font-medium text-zinc-400 block mb-1">Owner UID</label>
                       <input type="text" value={modal.v2 || ""} onChange={(e) => setModal({ ...modal, v2: e.target.value })}
-                        className="w-full h-7 px-2 bg-white/5 border border-white/5 rounded text-zinc-200 focus:outline-none focus:border-indigo-400/40 text-[11.5px]" />
+                        className="field" />
                     </div>
                   </div>
                 </>
               ) : modal.type === "archive" ? (
                 <>
                   <div>
-                    <label className="text-[10px] text-zinc-400 block mb-1">Archive name</label>
+                    <label className="text-[12px] font-medium text-zinc-400 block mb-1">Archive name</label>
                     <input type="text" autoFocus value={modal.v1 || ""}
                       onFocus={(e) => e.currentTarget.select()}
                       onChange={(e) => setModal({ ...modal, v1: e.target.value })}
                       onKeyDown={(e) => e.key === "Enter" && submitModal()}
-                      className="w-full h-7 px-2 bg-white/5 border border-white/5 rounded text-zinc-200 focus:outline-none focus:border-indigo-400/40 text-[11.5px] font-mono" />
+                      className="field font-mono text-[12px]" />
                   </div>
                   <div>
-                    <label className="text-[10px] text-zinc-400 block mb-1">Format</label>
+                    <label className="text-[12px] font-medium text-zinc-400 block mb-1">Format</label>
                     <div role="radiogroup" aria-label="Format" className="grid grid-cols-3 gap-1">
                       {ARCHIVE_FORMATS.map((f) => (
                         <button key={f.format} type="button" role="radio" aria-checked={modal.v2 === f.format}
                           onClick={() => setModal({ ...modal, v2: f.format })}
-                          className={`h-7 rounded border transition-colors ${
+                          className={`h-7 rounded-md font-mono text-[12px] transition-colors ${
                             modal.v2 === f.format
-                              ? "bg-indigo-500/20 border-indigo-400/40 text-indigo-200"
-                              : "bg-white/[0.04] border-white/10 text-zinc-400 hover:bg-white/[0.08]"
+                              ? "bg-primary/[0.16] text-primary"
+                              : "bg-white/[0.06] text-zinc-400 hover:bg-white/[0.09] hover:text-white"
                           }`}>
                           {f.ext}
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div className="text-[10px] text-zinc-500 truncate"
+                  <div className="text-[12px] text-zinc-500 truncate"
                     title={provider.joinPath(currentPath, archiveFileName(modal.v1 || "", (modal.v2 || "zip") as ArchiveFormat))}>
-                    Saved here as <span className="text-zinc-300">{archiveFileName(modal.v1 || "", (modal.v2 || "zip") as ArchiveFormat)}</span>
+                    Saved here as <span className="font-mono text-white">{archiveFileName(modal.v1 || "", (modal.v2 || "zip") as ArchiveFormat)}</span>
                   </div>
                 </>
               ) : (
                 <div>
-                  <label className="text-[10px] text-zinc-400 block mb-1">
+                  <label className="text-[12px] font-medium text-zinc-400 block mb-1">
                     {modal.type === "move" || modal.type === "move-bulk"
-                      ? "Destination directory"
+                      ? "Destination folder"
                       : "Name"}
                   </label>
                   <input type="text" autoFocus value={modal.v1 || ""}
                     onChange={(e) => setModal({ ...modal, v1: e.target.value })}
                     onKeyDown={(e) => e.key === "Enter" && submitModal()}
-                    className="w-full h-7 px-2 bg-white/5 border border-white/5 rounded text-zinc-200 focus:outline-none focus:border-indigo-400/40 text-[11.5px] font-mono" />
+                    className="field font-mono text-[12px]" />
                 </div>
               )}
               <div className="flex gap-2 justify-end pt-2">
-                <button onClick={() => setModal(null)} className="px-3 h-7 rounded border border-white/5 text-zinc-400 hover:text-white">Cancel</button>
-                <button onClick={submitModal} className="px-3 h-7 rounded bg-indigo-500 text-snow font-bold hover:bg-indigo-600">{modal.type === "archive" ? "Create" : "Apply"}</button>
+                <button type="button" onClick={() => setModal(null)} className="btn">Cancel</button>
+                <button type="button" onClick={submitModal} className="btn btn-primary">{modal.type === "archive" ? "Create" : "Apply"}</button>
               </div>
             </div>
           </div>

@@ -17956,6 +17956,7 @@ async fn sftp_download_file(
             &event_name,
             serde_json::json!({
                 "id": id, "name": name, "kind": "download",
+                "from": remote_path, "to": local_path, "dir": false,
                 "bytes": bytes, "total": total,
                 "status": status, "error": error,
             }),
@@ -18146,6 +18147,8 @@ async fn sftp_download_dir(
 
     let id_for_emit = id.clone();
     let name_for_emit = folder_name.clone();
+    let from_for_emit = remote_path.clone();
+    let to_for_emit = local_path.clone();
     let app_for_emit = app.clone();
     let event_for_emit = event_name.clone();
     let emit_progress = move |bytes: u64, total: u64, status: &str, error: Option<String>| {
@@ -18153,6 +18156,7 @@ async fn sftp_download_dir(
             &event_for_emit,
             serde_json::json!({
                 "id": id_for_emit, "name": name_for_emit, "kind": "download",
+                "from": from_for_emit, "to": to_for_emit, "dir": true,
                 "bytes": bytes, "total": total,
                 "status": status, "error": error,
             }),
@@ -18402,6 +18406,7 @@ async fn sftp_upload_file(
             &event_name,
             serde_json::json!({
                 "id": id, "name": name, "kind": "upload",
+                "from": local_path, "to": remote_path, "dir": false,
                 "bytes": bytes, "total": total,
                 "status": status, "error": error,
             }),
@@ -18597,6 +18602,8 @@ async fn sftp_upload_dir(
 
     let id_for_emit = id.clone();
     let name_for_emit = folder_name.clone();
+    let from_for_emit = local_path.clone();
+    let to_for_emit = remote_path.clone();
     let app_for_emit = app.clone();
     let event_for_emit = event_name.clone();
     let emit_progress = move |bytes: u64, total: u64, status: &str, error: Option<String>| {
@@ -18604,6 +18611,7 @@ async fn sftp_upload_dir(
             &event_for_emit,
             serde_json::json!({
                 "id": id_for_emit, "name": name_for_emit, "kind": "upload",
+                "from": from_for_emit, "to": to_for_emit, "dir": true,
                 "bytes": bytes, "total": total,
                 "status": status, "error": error,
             }),

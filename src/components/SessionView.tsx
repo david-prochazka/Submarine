@@ -638,6 +638,8 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
   const [view, setView] = useState<SessionViewId>("terminal");
   const [inspTool, setInspToolState] = useState<ToolId>(readInspectorTool);
   const [inspOpen, setInspOpen] = useState(false);
+  // Files puts its layout and Compare controls in the tool's header.
+  const [filesHeaderSlot, setFilesHeaderSlot] = useState<HTMLElement | null>(null);
   const setInspTool = (t: ToolId) => {
     setInspToolState(t);
     try { localStorage.setItem(INSPECTOR_TOOL_KEY, t); } catch { /* ignore */ }
@@ -2261,6 +2263,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                   />
                 ) : undefined
               }
+              actions={activeTool === "files" && toolAlone ? <span ref={setFilesHeaderSlot} className="flex items-center mr-1" /> : undefined}
               onSwitch={setInspTool}
               onDock={view !== "terminal" && !isCompact ? () => dockTool(view) : undefined}
               onPosition={view === "terminal" && !isCompact ? (e) => {
@@ -2283,6 +2286,8 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                   profile={profile}
                   mirrorsConfig={parseObjectList(session.mirrors)}
                   view={activeTool === "mirror" ? "mirror" : "files"}
+                  serverName={session.serverName}
+                  headerSlot={toolAlone ? filesHeaderSlot : null}
                 />
               )}
             </div>

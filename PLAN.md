@@ -38,11 +38,14 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Terminal colour scheme that follows light mode (default "Submarine" scheme only; user-picked schemes stay)
 - [ ] Session tool header styles inside the tools themselves (Files' Local/Remote tabs, Tunnels, Docker, Info sub-tabs) still uppercase: Phase 4 for Files, Phase 10 for the rest
 
-## Phase 4: Files (artboard 3)
+## Phase 4: Files (artboard 3) ✅ done
 
-- [ ] Local and Remote side by side, each with a path bar
-- [ ] Drag ghost and highlighted drop row
-- [ ] Transfer queue drawer that explains failures and offers a fix
+- [x] Local and Remote side by side by default (Local above Remote at phone width; the one-at-a-time layout stays a choice). Flat pane header (name, "This Mac" / server name, sudo, Browse, New folder, Refresh, Filter), path bar with Up, chevron crumbs, bookmark and recent folders. Sentence-case columns, 28px rows, sans names, mono permissions. Layout and Compare controls moved into the tool header (their own bar when docked in the inspector)
+- [x] Drag ghost (tilted card, count badge, "Upload to releases/"); the folder row under the pointer is outlined with a "Drop to upload 3 items" pill, or the whole list when dropping into the open folder. Marked through attributes, so a mousemove doesn't re-render the panes
+- [x] Transfer queue drawer: rows stay until "Clear finished", with speed, time left, destination, and failures in words with a fix (Retry as root for permission denied, Retry for a dropped connection or full disk), plus Show in folder for finished downloads. The backend's transfer events now carry `from`, `to` and `dir` for this. The start and finish toasts are gone; errors still toast
+- [x] Context menu and the Files dialogs (rename, new folder, move, properties, archive) restyled: elevated surface, sentence case, primary accents
+- [ ] Pause and resume a transfer: needs backend support
+- [ ] ⌘⌥T to show or hide the queue: Phase 10 with the other shortcuts
 
 ## Phase 5: Server editor (artboard 4)
 
