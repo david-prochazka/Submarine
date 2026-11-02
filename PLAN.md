@@ -76,11 +76,17 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] No macOS notification (no notification plugin yet), no folder breadcrumb (Monitor › Clients), rules aren't synced: would need backend storage
 - [ ] Closing a dialog opened from the card menu leaves focus on the page, not the card's More button: Phase 10 accessibility pass
 
-## Phase 8: Logins vault (artboard 7)
+## Phase 8: Logins vault (artboard 7) ✅ done
 
-- [ ] Keys and passwords in one list with type and usage
-- [ ] Detail: fingerprint, public key, which servers use it (shown before deleting)
-- [ ] Generate key popover
+- [x] `LoginsVault.tsx`: keys and saved logins in one list (All / SSH keys / Passwords, search, ↑ ↓), each with its type and usage, "Unused" when nothing signs in with it; "Encrypted with your master password" footer. Header breadcrumb Logins › name, New password, Add key (file or paste), Generate key. On phones the list and the detail take turns, with a back button
+- [x] Key detail: type, bits and comment, SHA256 fingerprint worked out from the public key (`util/sshKeyInfo.ts`, matches `ssh-keygen -l`), private key and passphrase status, public key with Copy. Saved login detail: username, password with Reveal and Copy, or the key it signs in with
+- [x] Used by: servers signing in with the key directly or through a saved login ("through Ops login"), each opens a session; the saved logins that use a key. Delete names the servers and logins first
+- [x] Rename (prompt), More: Edit…, Export…, Delete…. Export (`export_ssh_key`) saves the private key (0600) and `<name>.pub` where you choose
+- [x] Generate key popover: ED25519, RSA 4096 or ECDSA P-256, name, comment (`generate_ssh_key` takes `kind` and `comment`; RSA runs off the async threads). The new key is selected
+- [x] Password and key sheets restyled (fields, sentence case, errors in the sheet instead of the log)
+- [ ] Not in the app, so not on the page: created date, password strength and "changed N days ago" (no timestamps stored), passphrase on a generated key (the vault already encrypts it)
+- [ ] "Install on a server…" (append the public key to authorized_keys over a session): needs a backend command
+- [ ] Confirm and prompt dialogs are still the old uppercase style: Phase 10
 
 ## Phase 9: Unlock (artboard 8)
 

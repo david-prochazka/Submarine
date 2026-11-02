@@ -4,12 +4,12 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getVersion } from "@tauri-apps/api/app";
 import {
-  Plus, X, RefreshCw, Terminal, Key, Trash2,
-  ArrowLeftRight, Shield, User, Cpu, TerminalSquare, List, Edit2,
+  Plus, X, RefreshCw, Terminal, Trash2,
+  ArrowLeftRight, Shield, Cpu, TerminalSquare, List, Edit2,
   StickyNote, Search, Square, Copy, ChevronLeft, MoreVertical, Radio,
   ChevronDown, Columns, LayoutGrid, Pin, PinOff, Server,
   Monitor, Folder, Zap, Download, PanelRight, Activity, KeyRound, Library,
-  Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare,
+  Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare, LockKeyhole, Upload,
 } from "lucide-react";
 import { useBroadcast } from "./ui/broadcast";
 
@@ -17,7 +17,7 @@ import ProfileSelectPage from "./components/ProfileSelectPage";
 import logoUrl from "./assets/logo.png";
 import PasswordField from "./components/PasswordField";
 import QuickConnectModal, { QuickAuth } from "./components/QuickConnectModal";
-import { useConfirm, useTextPrompt } from "./ui/confirm";
+import { useConfirm } from "./ui/confirm";
 import { useSlideOverFocus } from "./ui/slideOverFocus";
 import { RenameInput } from "./ui/renameInput";
 import { forgetServerBookmarks } from "./util/sftpBookmarks";
@@ -52,6 +52,7 @@ import RdpSessionView from "./components/RdpSessionView";
 import TelnetSessionView from "./components/TelnetSessionView";
 import VncSessionView from "./components/VncSessionView";
 import MonitoringPanel from "./components/MonitoringPanel";
+import LoginsVault from "./components/LoginsVault";
 import { ErrorBoundary } from "./ui/ErrorBoundary";
 import { parseObjectList } from "./util/serverJson";
 import { readAccent, readAppearance, useAppearance } from "./util/appearance";
@@ -883,7 +884,6 @@ function DesktopApp() {
   };
 
   const confirm = useConfirm();
-  const textPrompt = useTextPrompt();
 
   // Window-close guard. Keep `sessions` mirrored into a ref so the close
   // handler (which is registered ONCE inside useEffect, capturing snapshot
@@ -2134,144 +2134,37 @@ function DesktopApp() {
             )}
 
             {activeView === "vault" && (
-              <div className="flex-1 flex flex-col p-4 sm:p-8 space-y-6 sm:space-y-8 animate-in overflow-y-auto custom-scrollbar">
-                <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-zinc-700 pb-5 sm:pb-6 shrink-0">
-                  <div className="min-w-0">
-                    <h2 className="text-[18px] sm:text-[22px] font-bold text-white tracking-tight">Logins</h2>
-                    <p className="hidden sm:block text-[13px] text-zinc-400">Your saved passwords and SSH keys.</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => { setEditCredData({ id: null, name: "", auth_type: "password", username: "", password: "", key_id: null }); setIsCredPanelOpen(true); }}
-                      title="Add Password"
-                      className="h-9 px-2.5 sm:px-4 bg-zinc-900 text-zinc-200 text-[12px] sm:text-[13px] font-bold rounded-xl border border-white/5 hover:bg-zinc-800 transition-all flex items-center gap-1.5"
-                    >
-                      <Plus size={14} /> <span className="hidden sm:inline">Add Password</span><span className="sm:hidden">Password</span>
-                    </button>
-                    <button
-                      onClick={() => { setEditKeyData({ id: null, name: "", public_key: "", private_key: "", passphrase: "" }); setIsKeyPanelOpen(true); }}
-                      title="Add Key"
-                      className="h-9 px-2.5 sm:px-4 bg-zinc-900 text-zinc-200 text-[12px] sm:text-[13px] font-bold rounded-xl border border-white/5 hover:bg-zinc-800 transition-all flex items-center gap-1.5"
-                    >
-                      <Plus size={14} /> <span className="hidden sm:inline">Add Key</span><span className="sm:hidden">Key</span>
-                    </button>
-                    <button
-                      onClick={async () => {
-                        // Native window.prompt is a no-op in Tauri's Android
-                        // WebView — themed useTextPrompt works everywhere.
-                        const name = await textPrompt({
-                          title: "Generate SSH key",
-                          message: "Give this key a name — it's just for your reference here in Submarine.",
-                          placeholder: "e.g. laptop-2026",
-                          okLabel: "Generate",
-                          validate: (v) => v.length === 0 ? "Name is required" : null,
-                        });
-                        if (name) invoke("generate_ssh_key", { name }).then(() => refreshSshKeys());
-                      }}
-                      title="Generate Key"
-                      className="h-9 px-2.5 sm:px-4 bg-primary text-black text-[12px] sm:text-[13px] font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center gap-1.5"
-                    >
-                      <Key size={14} /> <span className="hidden sm:inline">Generate Key</span><span className="sm:hidden">Generate</span>
-                    </button>
-                  </div>
-                </header>
-
-                <div className="space-y-10 pb-10">
-                  <section>
-                    <h3 className="text-[13px] font-bold text-zinc-400 mb-4 flex items-center gap-2">
-                      <Shield size={14} /> Saved passwords
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-                      {credentials.length === 0 ? (
-                        <div className="col-span-full py-10 text-center text-zinc-600 text-[14px] italic border border-dashed border-white/5 rounded-2xl">Nothing here yet.</div>
-                      ) : (
-                        credentials.map(c => (
-                          <div key={c.id} className="bg-elevated border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="text-[14px] font-bold text-zinc-100 truncate pr-8">{c.name}</h4>
-                              <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity absolute right-3 top-3">
-                                <button aria-label={`Edit ${c.name}`} onClick={async () => {
-                                  // Credentials list now ships `has_password` instead of plaintext;
-                                  // pull the secret on demand for the edit sheet.
-                                  let pw = "";
-                                  if (c.has_password) {
-                                    try { pw = (await invoke<string | null>("reveal_credential_password", { id: c.id })) || ""; }
-                                    catch (e) { addLog(`REVEAL_CRED_FAILED: ${e}`, "error"); }
-                                  }
-                                  setEditCredData({ ...c, password: pw });
-                                  setIsCredPanelOpen(true);
-                                }} className="text-zinc-500 hover:text-white"><Edit2 size={14} /></button>
-                                <button aria-label={`Delete ${c.name}`} onClick={async () => {
-                                  const ok = await confirm({ title: "Delete saved password?", message: `“${c.name}” will be removed. Servers using this login will lose it.`, destructive: true });
-                                  if (!ok) return;
-                                  invoke("delete_credential", { id: c.id }).then(() => { refreshCredentials(); bumpSync(); });
-                                }} className="text-zinc-500 hover:text-red-500"><Trash2 size={14} /></button>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
-                                <User size={10} /> {c.username}
-                              </div>
-                              <div className="flex items-center gap-2 text-[11px] text-zinc-500 font-medium">
-                                <Key size={10} /> {c.has_password ? "••••••••" : "Using SSH key"}
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </section>
-
-                  <section>
-                    <h3 className="text-[13px] font-bold text-zinc-400 mb-4 flex items-center gap-2">
-                      <Key size={14} /> SSH keys
-                    </h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-                      {sshKeys.length === 0 ? (
-                        <div className="col-span-full py-10 text-center text-zinc-600 text-[14px] italic border border-dashed border-white/5 rounded-2xl">No keys saved yet.</div>
-                      ) : (
-                        sshKeys.map((k: any) => (
-                          <div key={k.id} className="bg-elevated border border-white/5 rounded-xl p-3 group relative hover:border-primary/30 transition-all">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="text-[14px] font-bold text-zinc-100 truncate pr-8">{k.name}</h4>
-                              <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity absolute right-3 top-3">
-                                <button aria-label={`Edit ${k.name}`} onClick={async () => {
-                                  // Same pattern as credentials — pull the private key + passphrase
-                                  // on demand instead of leaking them in the list response.
-                                  let secrets: { private_key?: string|null; passphrase?: string|null } = {};
-                                  if (k.has_private_key || k.has_passphrase) {
-                                    try { secrets = await invoke<any>("reveal_ssh_key", { id: k.id }); }
-                                    catch (e) { addLog(`REVEAL_KEY_FAILED: ${e}`, "error"); }
-                                  }
-                                  setEditKeyData({
-                                    ...k,
-                                    private_key: secrets.private_key || "",
-                                    passphrase: secrets.passphrase || "",
-                                  });
-                                  setIsKeyPanelOpen(true);
-                                }} className="text-zinc-500 hover:text-white"><Edit2 size={14} /></button>
-                                <button aria-label={`Delete ${k.name}`} onClick={async () => {
-                                  const ok = await confirm({ title: "Delete SSH key?", message: `“${k.name}” will be removed. This key cannot be recovered.`, destructive: true });
-                                  if (!ok) return;
-                                  invoke("delete_ssh_key", { id: k.id }).then(() => { refreshSshKeys(); bumpSync(); });
-                                }} className="text-zinc-500 hover:text-red-500"><Trash2 size={14} /></button>
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-2 text-[10px] text-zinc-500 font-mono truncate">
-                                {k.public_key.substring(0, 24)}...
-                              </div>
-                              <div className="text-[10px] text-primary/50 font-medium">
-                                Private key
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </section>
-                </div>
-              </div>
+              <LoginsVault
+                credentials={credentials}
+                sshKeys={sshKeys}
+                servers={servers}
+                onNewPassword={() => { setFormError(""); setEditCredData({ id: null, name: "", auth_type: "password", username: "", password: "", key_id: null }); setIsCredPanelOpen(true); }}
+                onAddKey={() => { setFormError(""); setEditKeyData({ id: null, name: "", public_key: "", private_key: "", passphrase: "" }); setIsKeyPanelOpen(true); }}
+                onEditCredential={async (c) => {
+                  // The list carries only `has_password`: fetch the secret for the sheet.
+                  let pw = "";
+                  if (c.has_password) {
+                    try { pw = (await invoke<string | null>("reveal_credential_password", { id: c.id })) || ""; }
+                    catch (e) { addLog(`REVEAL_CRED_FAILED: ${e}`, "error"); }
+                  }
+                  setFormError("");
+                  setEditCredData({ ...c, password: pw });
+                  setIsCredPanelOpen(true);
+                }}
+                onEditKey={async (k) => {
+                  let secrets: { private_key?: string | null; passphrase?: string | null } = {};
+                  if (k.has_private_key || k.has_passphrase) {
+                    try { secrets = await invoke<any>("reveal_ssh_key", { id: k.id }); }
+                    catch (e) { addLog(`REVEAL_KEY_FAILED: ${e}`, "error"); }
+                  }
+                  setFormError("");
+                  setEditKeyData({ ...k, private_key: secrets.private_key || "", passphrase: secrets.passphrase || "" });
+                  setIsKeyPanelOpen(true);
+                }}
+                onOpenServer={openServer}
+                onChanged={(what) => { (what === "keys" ? refreshSshKeys() : refreshCredentials()); bumpSync(); }}
+                addLog={addLog}
+              />
             )}
 
             {/* Sessions live in an absolute layer that overlays the rest of
@@ -3156,7 +3049,7 @@ function DesktopApp() {
       {/* The slide-overs stay mounted while closed (to slide out): inert
           then, so Tab can't reach their fields. */}
       <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
-        <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+        <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
             <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
               <TerminalSquare size={18} className="text-primary" />
@@ -3274,76 +3167,74 @@ function DesktopApp() {
       </div>
 
       <div inert={isCredPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCredPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCredPanelOpen(false)}>
-        <div ref={credPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isCredPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
-            <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
-              <Shield size={18} className="text-primary" />
-              {editCredData.id ? "Edit login" : "New login"}
+        <div ref={credPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isCredPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
+            <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
+              <LockKeyhole size={16} aria-hidden className="text-primary" />
+              {editCredData.id ? "Edit login" : "New password"}
             </h2>
-            <button aria-label="Close" onClick={() => { setIsCredPanelOpen(false); setFormError(""); }} className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white bg-black border border-white/5 hover:bg-white/10 rounded-full transition-all">
+            <button aria-label="Close" onClick={() => { setIsCredPanelOpen(false); setFormError(""); }} className="icon-btn">
               <X size={16} />
             </button>
           </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6">
-            {formError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[12px] font-bold">{formError}</div>}
+          <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4">
+            {formError && <div role="alert" className="rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">{formError}</div>}
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Name</label>
-              <input type="text" className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner" placeholder="e.g. Work server" value={editCredData.name} onChange={e => setEditCredData({ ...editCredData, name: e.target.value })} />
+              <label className="text-[12px] text-zinc-400">Name</label>
+              <input type="text" className="field h-8" placeholder="e.g. Work server" value={editCredData.name} onChange={e => setEditCredData({ ...editCredData, name: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Username</label>
-              <input type="text" className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner" placeholder="Ask when connecting" value={editCredData.username} onChange={e => setEditCredData({ ...editCredData, username: e.target.value })} />
+              <label className="text-[12px] text-zinc-400">Username</label>
+              <input type="text" className="field h-8" placeholder="Ask when connecting" value={editCredData.username} onChange={e => setEditCredData({ ...editCredData, username: e.target.value })} />
             </div>
             <div className="space-y-4 pt-2">
               <div className="flex justify-between items-center">
-                <label className="text-[12px] font-bold text-zinc-400 ml-1">Sign in with</label>
+                <label className="text-[12px] text-zinc-400">Sign in with</label>
                 <select
-                  className="bg-transparent text-[12px] font-bold text-primary outline-none cursor-pointer"
+                  className="field h-7 w-auto text-[12px]"
                   value={editCredData.auth_type || "password"}
                   onChange={e => setEditCredData({ ...editCredData, auth_type: e.target.value })}
                 >
-                  <option value="password" className="bg-panel text-primary">Password</option>
-                  <option value="key" className="bg-panel text-primary">SSH key</option>
+                  <option value="password">Password</option>
+                  <option value="key">SSH key</option>
                 </select>
               </div>
             </div>
             {editCredData.auth_type === "key" ? (
               <div className="space-y-1.5 animate-in fade-in">
-                <label className="text-[12px] font-bold text-zinc-400 ml-1">Pick a key</label>
+                <label className="text-[12px] text-zinc-400">Pick a key</label>
                 <select
-                  className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 transition-all shadow-inner"
+                  className="field h-8"
                   value={editCredData.key_id?.toString() || ""}
                   onChange={e => setEditCredData({ ...editCredData, key_id: e.target.value ? parseInt(e.target.value) : null })}
                 >
-                  <option value="" className="bg-black text-zinc-500">-- Pick a key --</option>
+                  <option value="">Pick a key</option>
                   {sshKeys?.map((k: any) => (
-                    <option key={k.id} value={k.id.toString()} className="bg-black text-white">{k.name}</option>
+                    <option key={k.id} value={k.id.toString()}>{k.name}</option>
                   ))}
                 </select>
               </div>
             ) : (
               <div className="space-y-1.5 animate-in fade-in">
-                <label className="text-[12px] font-bold text-zinc-400 ml-1">Password</label>
+                <label className="text-[12px] text-zinc-400">Password</label>
                 <PasswordField
                   value={editCredData.password || ""}
                   onChange={(v) => setEditCredData({ ...editCredData, password: v })}
-                  className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner"
+                  className="field h-8"
                 />
-                <p className="text-[11px] text-zinc-500 ml-1">Leave empty to be asked when connecting.</p>
+                <p className="text-[11.5px] leading-[15px] text-zinc-500">Leave empty to be asked when connecting.</p>
               </div>
             )}
           </div>
-          <div className="p-6 border-t border-white/5 shrink-0">
+          <div className="p-4 border-t border-white/[0.075] shrink-0">
             <button 
               onClick={async () => {
                 if (!editCredData.name) {
-                  setFormError("Name is required.");
-                  addLog("Name is required.", "error");
+                  setFormError("Give the login a name.");
                   return;
                 }
                 if (editCredData.auth_type === "key" && !editCredData.key_id) {
-                  setFormError("Please select a linked SSH Private Key.");
-                  addLog("Please select a linked SSH Private Key.", "error");
+                  setFormError("Pick the SSH key this login signs in with.");
                   return;
                 }
                 try {
@@ -3362,13 +3253,13 @@ function DesktopApp() {
                   setIsCredPanelOpen(false);
                   refreshCredentials();
                   bumpSync();
-                  addLog("Credential saved.", "success");
+                  addLog(`Saved ${editCredData.name}.`, "success");
                 } catch (e) {
-                  setFormError(`Failed to save credential: ${e}`);
+                  setFormError(`Couldn't save the login: ${e}`);
                   addLog(`CRED_SAVE_ERROR: ${e}`, "error");
                 }
               }} 
-              className="w-full h-10 bg-primary text-black font-bold rounded-lg text-[13px] tracking-tight hover:brightness-110 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="btn btn-primary w-full h-8"
             >
               Save
             </button>
@@ -3377,18 +3268,18 @@ function DesktopApp() {
       </div>
 
       <div inert={isKeyPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isKeyPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsKeyPanelOpen(false)}>
-        <div ref={keyPanelRef} tabIndex={-1} className={`w-full max-w-[450px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isKeyPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
-            <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
-              <Key size={18} className="text-primary" />
-              {editKeyData.id ? "Edit SSH key" : "New SSH key"}
+        <div ref={keyPanelRef} tabIndex={-1} className={`w-full max-w-[450px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isKeyPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
+            <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
+              <KeyRound size={16} aria-hidden className="text-primary" />
+              {editKeyData.id ? "Edit SSH key" : "Add SSH key"}
             </h2>
-            <button aria-label="Close" onClick={() => { setIsKeyPanelOpen(false); setFormError(""); }} className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white bg-black border border-white/5 hover:bg-white/10 rounded-full transition-all">
+            <button aria-label="Close" onClick={() => { setIsKeyPanelOpen(false); setFormError(""); }} className="icon-btn">
               <X size={16} />
             </button>
           </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6">
-            {formError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[12px] font-bold">{formError}</div>}
+          <div className="p-4 sm:p-5 flex-1 overflow-y-auto space-y-4">
+            {formError && <div role="alert" className="rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">{formError}</div>}
             {/* Reading the key out of ~/.ssh beats making the user cat it in a
                 terminal and paste two multi-line blobs. Fields are filled in
                 rather than saved outright — the name is a guess from the
@@ -3424,38 +3315,38 @@ function DesktopApp() {
                   addLog(`KEY_FILE_READ_ERROR: ${e}`, "error");
                 }
               }}
-              className="w-full h-9 flex items-center justify-center gap-2 text-[12px] font-bold text-primary bg-primary/10 border border-primary/30 hover:bg-primary/20 rounded-lg transition-all"
+              className="btn w-full h-8"
             >
-              <Key size={13} />
+              <Upload size={13} aria-hidden />
               Load from a key file
             </button>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Name</label>
-              <input type="text" className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner" placeholder="e.g. My laptop key" value={editKeyData.name} onChange={e => setEditKeyData({ ...editKeyData, name: e.target.value })} />
+              <label className="text-[12px] text-zinc-400">Name</label>
+              <input type="text" className="field h-8" placeholder="e.g. My laptop key" value={editKeyData.name} onChange={e => setEditKeyData({ ...editKeyData, name: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Public key</label>
-              <textarea className="w-full h-24 bg-black rounded-lg p-3 text-[13px] text-zinc-400 font-mono border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner custom-scrollbar resize-none" placeholder="ssh-ed25519 ..." value={editKeyData.public_key} onChange={e => setEditKeyData({ ...editKeyData, public_key: e.target.value })} />
+              <label className="text-[12px] text-zinc-400">Public key</label>
+              <textarea className="field h-24 py-2 font-mono text-[12px] leading-[18px] resize-none custom-scrollbar" placeholder="ssh-ed25519 ..." value={editKeyData.public_key} onChange={e => setEditKeyData({ ...editKeyData, public_key: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Private key</label>
-              <textarea className="w-full h-32 bg-black rounded-lg p-3 text-[13px] text-zinc-400 font-mono border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner custom-scrollbar resize-none" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" value={editKeyData.private_key} onChange={e => setEditKeyData({ ...editKeyData, private_key: e.target.value })} />
+              <label className="text-[12px] text-zinc-400">Private key</label>
+              <textarea className="field h-32 py-2 font-mono text-[12px] leading-[18px] resize-none custom-scrollbar" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----" value={editKeyData.private_key} onChange={e => setEditKeyData({ ...editKeyData, private_key: e.target.value })} />
             </div>
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Passphrase (if any)</label>
+              <label className="text-[12px] text-zinc-400">Passphrase (if any)</label>
               <PasswordField
                 value={editKeyData.passphrase || ""}
                 onChange={(v) => setEditKeyData({ ...editKeyData, passphrase: v })}
-                className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner"
+                className="field h-8"
               />
-              <p className="text-[11px] text-zinc-500 ml-1">For an encrypted key, leave empty to be asked when connecting.</p>
+              <p className="text-[11.5px] leading-[15px] text-zinc-500">For an encrypted key, leave empty to be asked when connecting.</p>
             </div>
           </div>
-          <div className="p-6 border-t border-white/5 shrink-0">
+          <div className="p-4 border-t border-white/[0.075] shrink-0">
             <button 
               onClick={async () => {
                 if (!editKeyData.name || !editKeyData.private_key) {
-                  addLog("Name and Private Key are required.", "error");
+                  setFormError("A key needs a name and its private key.");
                   return;
                 }
                 try {
@@ -3472,13 +3363,13 @@ function DesktopApp() {
                   setIsKeyPanelOpen(false);
                   refreshSshKeys();
                   bumpSync();
-                  addLog("SSH Key saved.", "success");
+                  addLog(`Saved ${editKeyData.name}.`, "success");
                 } catch (e) {
-                  setFormError(`Failed to save SSH Key: ${e}`);
+                  setFormError(`Couldn't save the key: ${e}`);
                   addLog(`KEY_SAVE_ERROR: ${e}`, "error");
                 }
               }} 
-              className="w-full h-10 bg-primary text-black font-bold rounded-lg text-[13px] tracking-tight hover:brightness-110 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+              className="btn btn-primary w-full h-8"
             >
               Save
             </button>

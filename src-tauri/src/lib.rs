@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::fs;
 use tauri::Manager;
 use serde_json::json;
-use ssh_key::{private::{Ed25519Keypair, Ed25519PrivateKey}, PrivateKey};
+use ssh_key::PrivateKey;
 mod ssh_manager;
 mod tunnel;
 mod telnet;
@@ -5967,12 +5967,39 @@ struct GeneratedSshKey {
     public_key: String,
 }
 
+/// Key types `generate_ssh_key` makes: the three the connect path signs with.
+fn generated_key_algorithm(kind: Option<&str>) -> Result<ssh_key::Algorithm, String> {
+    match kind.unwrap_or("ed25519") {
+        "ed25519" => Ok(ssh_key::Algorithm::Ed25519),
+        "rsa" => Ok(ssh_key::Algorithm::Rsa { hash: None }),
+        "ecdsa" => Ok(ssh_key::Algorithm::Ecdsa { curve: ssh_key::EcdsaCurve::NistP256 }),
+        other => Err(format!("[SSH] UNSUPPORTED_KEY_TYPE: can't generate {other} keys.")),
+    }
+}
+
 #[tauri::command]
-async fn generate_ssh_key(state: tauri::State<'_, DbState>, name: String) -> Result<GeneratedSshKey, String> {
-    let mut seed = [0u8; 32];
-    rand::rng().fill_bytes(&mut seed);
-    let keypair = Ed25519Keypair::from(Ed25519PrivateKey::from_bytes(&seed));
-    let priv_key = PrivateKey::from(keypair);
+async fn generate_ssh_key(
+    state: tauri::State<'_, DbState>,
+    name: String,
+    kind: Option<String>,
+    comment: Option<String>,
+) -> Result<GeneratedSshKey, String> {
+    let algorithm = generated_key_algorithm(kind.as_deref())?;
+    // RSA 4096 takes a second or more: off the async runtime's threads.
+    let mut priv_key = tauri::async_runtime::spawn_blocking(move || {
+        let mut rng = rand::rng();
+        match algorithm {
+            ssh_key::Algorithm::Rsa { .. } => ssh_key::private::RsaKeypair::random(&mut rng, 4096)
+                .map(|kp| PrivateKey::from(kp)),
+            other => PrivateKey::random(&mut rng, other),
+        }
+    })
+    .await
+    .map_err(|e| format!("[SSH] KEYGEN_FAILED: {}", e))?
+    .map_err(|e| format!("[SSH] KEYGEN_FAILED: {}", e))?;
+    if let Some(c) = comment.as_deref().map(str::trim).filter(|c| !c.is_empty()) {
+        priv_key.set_comment(c);
+    }
     let pub_ssh = priv_key.public_key().to_openssh()
         .map_err(|e| format!("[SSH] PUB_EXPORT_FAILED: {}", e))?;
     let priv_ssh = priv_key.to_openssh(ssh_key::LineEnding::LF)
@@ -5980,7 +6007,7 @@ async fn generate_ssh_key(state: tauri::State<'_, DbState>, name: String) -> Res
 
     let conn_guard = state.conn.lock().map_err(|_| "[STATE] LOCK_FAILED")?;
     let conn = conn_guard.as_ref().ok_or("[STATE] DATABASE_NOT_INITIALIZED")?;
-    
+
     conn.execute("INSERT INTO ssh_keys (name, public_key, private_key) VALUES (?1, ?2, ?3)", rusqlite::params![name, pub_ssh, priv_ssh])
         .map_err(|e| format!("[DATABASE] KEY_INSERT_FAILED: {}", e))?;
     let id = conn.last_insert_rowid();
@@ -5988,6 +6015,69 @@ async fn generate_ssh_key(state: tauri::State<'_, DbState>, name: String) -> Res
     drop(conn_guard);
     save_vault_internal(&state)?;
     Ok(GeneratedSshKey { id, public_key: pub_ssh })
+}
+
+/// Save a vault key as an OpenSSH key pair: the private key at the chosen
+/// path (owner-only on Unix) and the public key beside it as `<path>.pub`.
+/// None when the dialog is cancelled.
+#[tauri::command]
+async fn export_ssh_key(state: tauri::State<'_, DbState>, id: i32) -> Result<Option<String>, String> {
+    #[cfg(target_os = "android")]
+    {
+        let _ = (state, id);
+        Err("Exporting a key isn't available on Android: copy its public key instead.".into())
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        let (name, public_key, private_key): (String, String, Option<String>) = {
+            let conn_guard = state.conn.lock().map_err(|_| "[STATE] LOCK_FAILED")?;
+            let conn = conn_guard.as_ref().ok_or("[STATE] DATABASE_NOT_INITIALIZED")?;
+            conn.query_row(
+                "SELECT name, public_key, private_key FROM ssh_keys WHERE id = ?1",
+                rusqlite::params![id],
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+            ).map_err(|e| format!("[DATABASE] KEY_NOT_FOUND: {}", e))?
+        };
+        let private_key = private_key.filter(|k| !k.trim().is_empty())
+            .ok_or("[SSH] NO_PRIVATE_KEY: this entry holds only a public key.")?;
+        let file_name: String = name.chars()
+            .map(|c| if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' { c } else { '_' })
+            .collect();
+        let mut dialog = rfd::FileDialog::new()
+            .set_title("Export SSH key")
+            .set_file_name(if file_name.is_empty() { "id_key" } else { &file_name });
+        if let Some(dirs) = directories::UserDirs::new() {
+            let ssh_dir = dirs.home_dir().join(".ssh");
+            if ssh_dir.is_dir() {
+                dialog = dialog.set_directory(&ssh_dir);
+            }
+        }
+        let Some(dst) = dialog.save_file() else { return Ok(None) };
+        let pub_dst = PathBuf::from(format!("{}.pub", dst.to_string_lossy()));
+
+        let mut body = private_key.trim_end().to_string();
+        body.push('\n');
+        #[cfg(unix)]
+        {
+            use std::io::Write;
+            use std::os::unix::fs::OpenOptionsExt;
+            let mut f = fs::OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(&dst)
+                .map_err(|e| format!("[FILE] EXPORT_WRITE_FAILED to {:?}: {}", dst, e))?;
+            // An existing file keeps its old mode through open(): tighten it.
+            fs::set_permissions(&dst, std::os::unix::fs::PermissionsExt::from_mode(0o600))
+                .map_err(|e| format!("[FILE] EXPORT_CHMOD_FAILED on {:?}: {}", dst, e))?;
+            f.write_all(body.as_bytes())
+                .map_err(|e| format!("[FILE] EXPORT_WRITE_FAILED to {:?}: {}", dst, e))?;
+        }
+        #[cfg(not(unix))]
+        fs::write(&dst, body.as_bytes())
+            .map_err(|e| format!("[FILE] EXPORT_WRITE_FAILED to {:?}: {}", dst, e))?;
+        if !public_key.trim().is_empty() {
+            fs::write(&pub_dst, format!("{}\n", public_key.trim()))
+                .map_err(|e| format!("[FILE] EXPORT_WRITE_FAILED to {:?}: {}", pub_dst, e))?;
+        }
+        Ok(Some(dst.to_string_lossy().into_owned()))
+    }
 }
 
 /// The `-----BEGIN … PRIVATE KEY-----` line of a PEM key, skipping anything
@@ -9474,6 +9564,22 @@ mod key_format_tests {
         assert_eq!(server_display_name(&conn, 7).as_deref(), Some("prod"));
         assert_eq!(server_display_name(&conn, 8), None);
         assert_eq!(server_display_name(&conn, 9), None);
+    }
+
+    // Generated ED25519 and ECDSA keys carry their comment and decode on the
+    // connect path. RSA is left out: 4096 bits takes too long in a debug test.
+    #[test]
+    fn generated_keys_decode_on_the_connect_path() {
+        for kind in ["ed25519", "ecdsa"] {
+            let alg = generated_key_algorithm(Some(kind)).unwrap();
+            let mut k = ssh_key::PrivateKey::random(&mut rand::rng(), alg).unwrap();
+            k.set_comment("ci@host");
+            let pem = k.to_openssh(ssh_key::LineEnding::LF).unwrap().to_string();
+            assert!(validate_ssh_private_key(&pem).is_ok(), "{kind}");
+            assert!(decode_private_key(&pem, None).is_ok(), "{kind}");
+            assert!(k.public_key().to_openssh().unwrap().ends_with(" ci@host"), "{kind}");
+        }
+        assert!(generated_key_algorithm(Some("dsa")).is_err());
     }
 
     // A key whose bcrypt KDF asks for billions of rounds is refused before any
@@ -22013,7 +22119,7 @@ pub fn run() {
             profile_share_status, stop_sharing, profile_sync_stats, share_key_state, accept_share_key, share_replace_key, held_deletions_list, resolve_held_deletions,
             set_editor_label,
             add_server, save_quick_connect_node, edit_server, delete_server, add_mirror_to_server, get_servers, allow_held, get_ssh_keys, set_server_color, set_folder_color, set_server_notes, set_server_run_on_connect, set_server_jump_host, set_server_protocol, reorder_servers, clone_server, reveal_server_password, reveal_credential_password, reveal_ssh_key,
-            get_credentials, generate_ssh_key,
+            get_credentials, generate_ssh_key, export_ssh_key,
             add_folder, rename_folder, delete_folder, get_folders, move_folder, move_server_to_folder,
             add_command, edit_command, set_command_scope, delete_command, get_commands,
             cmd_history_add, cmd_history_list, cmd_history_clear,
