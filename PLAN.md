@@ -20,12 +20,14 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 
 ## Phase 2: Servers home (artboards 1, 1b)
 
-- [ ] Header: back/forward, breadcrumb (Servers › Clients), Grid/List segmented control, New server, Connect (primary)
-- [ ] Page title with live summary ("6 servers, 3 connected, 1 reconnecting"), filter field, sort menu
-- [ ] Server cards: icon tile, name, `user@host:port` in mono, status pill, tag chips (colour, protocol, OS), "Last connected…" swapped for Connect / Files / Edit on hover or focus
-- [ ] List layout
-- [ ] Favorites section in the sidebar (needs a favourite flag on servers) and per-server status dots
-- [ ] Empty state: one clear first action (New server, ⌘N), import from PuTTY / MobaXterm / `~/.ssh/config` / JSON with detected hosts highlighted
+- [x] Header: back/forward (⌘[ ⌘]), breadcrumb (Servers › Clients, steps take drops), Grid/List segmented control, New folder, New server, Quick connect (primary; becomes the palette's Connect in Phase 6)
+- [x] Page title with live summary ("6 servers, 3 connected, 1 connecting"), filter field, sort menu (your order / name / last connected; dragging only in your order)
+- [x] Server cards: icon tile in the server's colour, name, `user@host:port` in mono, status pill from the open session, chips (protocol, jump host, tunnels, opens at start), "Last connected…" (per device, `util/lastConnected.ts`) swapped for Connect / Edit / More (Duplicate, Delete) on hover or focus. No OS or named tags: the app doesn't store them. No Files button yet: it needs a way to open a session on its Files tool (Phase 3)
+- [x] List layout (table; narrow widths drop columns)
+- [x] Folders as compact tiles above the servers (open, drop into, rename, delete)
+- [ ] Favorites section in the sidebar (needs a favourite flag on servers, synced) and servers with status dots under their folders in the sidebar
+- [x] Empty state: New server, Quick connect, import from `~/.ssh/config` (host count shown, highlighted when it has hosts) / PuTTY / MobaXterm / JSON (file picker, parsed straight into the import dialog)
+- [ ] The window title bar still sits above the page header; merging the two waits for Phase 3 (the tabs live there)
 
 ## Phase 3: Terminal session (artboard 2)
 

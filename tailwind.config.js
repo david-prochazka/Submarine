@@ -86,6 +86,15 @@ export default {
         sheet: "var(--shadow-sheet)",
         control: "var(--shadow-control)",
       },
+      keyframes: {
+        sonar: {
+          "0%": { transform: "scale(.6)", opacity: ".55" },
+          "100%": { transform: "scale(1.6)", opacity: "0" },
+        },
+      },
+      animation: {
+        sonar: "sonar 3.2s ease-out infinite",
+      },
       transitionTimingFunction: {
         DEFAULT: "cubic-bezier(.2,.8,.2,1)",
         out: "cubic-bezier(.2,.8,.2,1)",

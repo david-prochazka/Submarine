@@ -99,6 +99,60 @@ select optgroup {
   }
 }
 
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 h-7 px-3 rounded-[7px] border-[0.5px] border-white/[0.14] bg-control shadow-control text-white font-medium whitespace-nowrap transition-colors hover:bg-white/[0.09] disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .btn-primary {
+    @apply bg-primary text-black border-transparent hover:bg-primary hover:brightness-110;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent border-transparent shadow-none text-zinc-400 hover:text-white;
+  }
+
+  .btn-sm {
+    @apply h-6 px-2.5 text-[12px] rounded-md;
+  }
+
+  .icon-btn {
+    @apply relative inline-flex items-center justify-center w-7 h-7 shrink-0 rounded-md text-zinc-400 transition-colors hover:bg-white/[0.09] hover:text-white disabled:opacity-40 disabled:pointer-events-none;
+  }
+
+  .seg {
+    @apply inline-flex p-0.5 gap-0.5 rounded-[7px] bg-white/[0.06];
+  }
+
+  .seg-item {
+    @apply inline-flex items-center justify-center gap-1.5 h-6 min-w-[28px] px-2 rounded-[5px] text-[12px] font-medium text-zinc-400 hover:text-white;
+  }
+
+  .seg-item[aria-pressed="true"] {
+    @apply bg-control text-white shadow-control;
+  }
+
+  .field {
+    @apply h-7 w-full rounded-md border-[0.5px] border-white/[0.14] bg-field px-2.5 text-white outline-none transition-shadow focus:border-primary focus:ring-[3px] focus:ring-primary/30;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-[5px] h-5 px-[7px] rounded-full text-[11.5px] font-medium whitespace-nowrap;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 h-[22px] px-2 rounded-md bg-white/[0.06] text-[12px] text-zinc-400;
+  }
+
+  .tile {
+    @apply relative rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border-strong)] transition-[background-color,box-shadow];
+  }
+
+  .tile-hover {
+    @apply hover:bg-elevated hover:shadow-[0_0_0_0.5px_var(--border-strong),var(--shadow-pop)];
+  }
+}
+
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

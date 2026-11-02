@@ -1,13 +1,73 @@
-import { Search, Plus, Server, Globe, Folder, FolderPlus, ChevronLeft, ChevronRight, Trash2, Edit2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound } from "lucide-react";
+import { Search, Plus, Server, Monitor, TerminalSquare, Folder, FolderPlus, ChevronRight, ArrowLeft, ArrowRight, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound, ArrowUpDown } from "lucide-react";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useConfirm } from "../ui/confirm";
 import { HeldReview } from "./HeldReview";
 import { HeldDeletions } from "./HeldDeletions";
 import { folderTree } from "../util/folderTree";
+import { sinceLabel } from "../util/lastConnected";
+import { ServersEmpty, type ImportRequest } from "./ServersEmpty";
 
-export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, isMobile }: any) => {
+export type ServerStatus = "connected" | "connecting" | "failed";
+
+const STATUS: Record<ServerStatus, { label: string; tone: string; dot: string }> = {
+  connected: { label: "Connected", tone: "bg-success/[0.12] text-success", dot: "bg-success" },
+  connecting: { label: "Connecting", tone: "bg-warning/[0.13] text-warning", dot: "bg-warning animate-pulse motion-reduce:animate-none" },
+  failed: { label: "Disconnected", tone: "bg-danger/[0.12] text-danger", dot: "bg-danger" },
+};
+
+const PROTOCOLS: Record<string, { label: string; icon: typeof Server }> = {
+  ssh: { label: "SSH", icon: Server },
+  rdp: { label: "RDP", icon: Monitor },
+  vnc: { label: "VNC", icon: Monitor },
+  telnet: { label: "Telnet", icon: TerminalSquare },
+};
+const protocolOf = (s: any) => PROTOCOLS[s.protocol] ?? PROTOCOLS.ssh;
+
+const addressOf = (s: any) => `${s.username ? `${s.username}@` : ""}${s.host}:${s.port ?? 22}`;
+
+const tunnelCount = (s: any) => {
+  try { const t = JSON.parse(s.tunnels || "[]"); return Array.isArray(t) ? t.length : 0; } catch { return 0; }
+};
+
+type ViewMode = "grid" | "list";
+type SortMode = "manual" | "name" | "recent";
+const VIEW_KEY = "submarine-servers-view";
+const SORT_KEY = "submarine-servers-sort";
+const SORT_LABELS: Record<SortMode, string> = { manual: "Your order", name: "Name", recent: "Last connected" };
+
+const readPref = <T extends string>(key: string, allowed: readonly T[], fallback: T): T => {
+  try {
+    const v = localStorage.getItem(key) as T | null;
+    return v && allowed.includes(v) ? v : fallback;
+  } catch { return fallback; }
+};
+const writePref = (key: string, value: string) => {
+  try { localStorage.setItem(key, value); } catch { /* storage blocked: the choice lasts this run */ }
+};
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, serverStatus = {}, lastConnected = {}, onImport, isMobile }: any) => {
   const [search, setSearch] = useState("");
+  const [view, setViewState] = useState<ViewMode>(() => readPref(VIEW_KEY, ["grid", "list"] as const, "grid"));
+  const setView = (v: ViewMode) => { setViewState(v); writePref(VIEW_KEY, v); };
+  const [sort, setSortState] = useState<SortMode>(() => readPref(SORT_KEY, ["manual", "name", "recent"] as const, "manual"));
+  const setSort = (v: SortMode) => { setSortState(v); writePref(SORT_KEY, v); };
+  // The card whose "More" menu is open.
+  const [menuFor, setMenuFor] = useState<number | null>(null);
+  useEffect(() => {
+    if (menuFor === null) return;
+    const close = (e: Event) => {
+      if (e instanceof KeyboardEvent ? e.key === "Escape" : !(e.target as HTMLElement).closest?.("[data-card-menu]")) setMenuFor(null);
+    };
+    window.addEventListener("pointerdown", close);
+    window.addEventListener("keydown", close);
+    return () => {
+      window.removeEventListener("pointerdown", close);
+      window.removeEventListener("keydown", close);
+    };
+  }, [menuFor]);
   // Changes someone else made in a shared profile that this device holds
   // back until its user allows them (see HeldReview).
   const heldCount: number = (servers || []).reduce((n: number, s: any) => n + (s.held?.length || 0), 0);
@@ -83,9 +143,12 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     } catch { /* parent logs it; the input stays open for a retry */ }
   };
 
+  const needle = search.trim().toLowerCase();
   const filteredServers = servers?.filter((s: any) =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.host.includes(search)
+    !needle ||
+    s.name.toLowerCase().includes(needle) ||
+    String(s.host).toLowerCase().includes(needle) ||
+    String(s.username || "").toLowerCase().includes(needle)
   ) || [];
 
   const currentFolder = folders?.find((f: any) => f.id === activeFolderId);
@@ -94,9 +157,15 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
   // or still respect the folder. Let's just show them flat if searching.
   const isSearching = search.trim() !== "";
 
-  const displayedServers = isSearching
+  const inPlace = isSearching
     ? filteredServers
     : filteredServers.filter((s: any) => tree.serverFolder(s) === activeFolderId);
+  const byName = (a: any, b: any) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" });
+  const displayedServers = sort === "name"
+    ? [...inPlace].sort(byName)
+    : sort === "recent"
+      ? [...inPlace].sort((a: any, b: any) => (lastConnected[b.id] ?? 0) - (lastConnected[a.id] ?? 0) || byName(a, b))
+      : inPlace;
   const displayedFolders = isSearching ? [] : tree.childrenOf(activeFolderId);
 
   // Drag a server or a folder onto a folder card (into it) or onto a step of
@@ -125,7 +194,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
   // order returns; on release the final order is persisted via onReorderServers
   // and held until the props catch up so there's no flash of the old order.
   // Disabled while searching (results aren't the stored order).
-  const canReorder = !!onReorderServers && !isSearching;
+  const canReorder = !!onReorderServers && !isSearching && sort === "manual";
   const [dragId, setDragId] = useState<number | null>(null);
   // Live id order during a drag (null when not dragging). Rendered from when set.
   const [order, setOrder] = useState<number[] | null>(null);
@@ -387,168 +456,266 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     };
   }, [folderDragId]);
   const draggedFolder = folderDragId != null ? folders?.find((f: any) => f.id === folderDragId) : null;
-  const dragging = dragId !== null || folderDragId !== null;
 
-  // Compact horizontal node card: a monogram avatar carries identity, the
-  // server projects its own colour as a left accent bar. Kept short (h-16) so
-  // name + host read clearly. Rendered as a plain keyed <div> (not a nested
-  // component) so React reuses the same DOM node across renders — that's what
-  // lets the FLIP effect measure and animate real positions. While this card is
-  // the one being dragged it renders as a dashed placeholder holding the slot;
-  // the floating clone (portal, below) is what the pointer carries.
-  const renderServer = (s: any) => {
-    const accent = s.color || 'rgb(var(--primary))';
-    const monogram = (s.name || '').trim().charAt(0).toUpperCase();
-    if (dragId === s.id) {
-      return (
-        <div
-          key={`server-${s.id}`}
-          data-sid={s.id}
-          aria-hidden
-          className="h-16 rounded-xl border-2 border-dashed border-primary/40 bg-primary/[0.05]"
-        />
-      );
+  // Back and forward walk the folders opened here, the way a browser walks
+  // pages. Opening a folder from the sidebar counts as a step too.
+  const [hist, setHist] = useState<{ stack: (number | null)[]; i: number }>(() => ({ stack: [activeFolderId], i: 0 }));
+  useEffect(() => {
+    setHist((h) => (h.stack[h.i] === activeFolderId ? h : { stack: [...h.stack.slice(0, h.i + 1), activeFolderId], i: h.i + 1 }));
+  }, [activeFolderId]);
+  const go = (delta: number) => {
+    const i = hist.i + delta;
+    if (i < 0 || i >= hist.stack.length) return;
+    setHist({ ...hist, i });
+    setActiveFolderId(hist.stack[i]);
+  };
+  const goRef = useRef(go);
+  goRef.current = go;
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
+      if ((e.target as HTMLElement)?.closest?.("input, textarea, select, [contenteditable]")) return;
+      if (e.key === "[") { e.preventDefault(); goRef.current(-1); }
+      if (e.key === "]") { e.preventDefault(); goRef.current(1); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const statusOf = (s: any): ServerStatus | null => serverStatus[s.id] ?? null;
+  const counts = displayedServers.reduce((c: Record<string, number>, s: any) => {
+    const st = statusOf(s);
+    if (st) c[st] = (c[st] ?? 0) + 1;
+    return c;
+  }, {});
+  const summary = isSearching
+    ? (displayedServers.length === 0 ? "No servers match" : plural(displayedServers.length, "match", "matches"))
+    : [
+        displayedFolders.length > 0 ? plural(displayedFolders.length, "folder", "folders") : null,
+        displayedServers.length > 0 || displayedFolders.length === 0 ? plural(displayedServers.length, "server", "servers") : null,
+        counts.connected ? `${counts.connected} connected` : null,
+        counts.connecting ? `${counts.connecting} connecting` : null,
+        counts.failed ? `${counts.failed} disconnected` : null,
+      ].filter(Boolean).join(", ");
+  const title = isSearching ? "Search" : currentFolder?.name ?? "All servers";
+
+  const statusPill = (st: ServerStatus) => (
+    <span className={`pill ${STATUS[st].tone}`}>
+      <span aria-hidden className={`w-1.5 h-1.5 rounded-full ${STATUS[st].dot}`} />
+      {STATUS[st].label}
+    </span>
+  );
+
+  const deleteServer = async (s: any) => {
+    setMenuFor(null);
+    if (await confirm({ title: "Delete server?", message: `“${s.name}” will be removed from this profile.`, destructive: true })) {
+      onRemoveServer(s.id);
     }
+  };
+
+  // Hidden until the card is hovered or holds the focus, on a device that
+  // can hover; always shown on touch.
+  const reveal = (pinned: boolean) => pinned
+    ? ""
+    : "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:translate-y-[3px] [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-focus-within:translate-y-0";
+
+  const actions = (s: any, compact = false) => {
+    const open = menuFor === s.id;
     return (
-      <div
-        key={`server-${s.id}`}
-        data-sid={s.id}
-        onClick={() => { if (draggedRef.current) return; onOpenServer(s); }}
-        className="group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-panel to-panel border border-white/5 hover:border-primary/40 hover:bg-white/[0.015] transition-colors duration-150 cursor-pointer overflow-hidden"
-      >
-        {/* Per-server colour accent: a crisp left bar. */}
-        <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} />
-
-        {/* Drag handle (grip) — grab to reorder. Hidden until hover on desktop,
-            always shown on touch (no hover there). touch-action:none stops the
-            gesture from scrolling the list while dragging. Pointer only, so
-            not a Tab stop: from the keyboard it would do nothing. */}
-        {canReorder && (
-          <button
-            tabIndex={-1}
-            onPointerDown={(e) => beginDrag(e, s.id)}
-            onClick={(e) => e.stopPropagation()}
-            title={onMoveServer ? "Drag to reorder, or onto a folder" : "Drag to reorder"}
-            className="shrink-0 -ml-1.5 -mr-1 p-1 rounded-md text-zinc-600 hover:text-zinc-300 cursor-grab active:cursor-grabbing opacity-100 sm:opacity-0 sm:group-hover:opacity-100 [@media(hover:none)]:!opacity-100 transition-opacity"
-            style={{ touchAction: 'none' }}
-          >
-            <GripVertical size={14} />
-          </button>
-        )}
-
-        {/* Monogram avatar. */}
-        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/25 to-primary/[0.03] border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0">
-          {monogram
-            ? <span className="font-black text-[14px] leading-none">{monogram}</span>
-            : <Server size={14} />}
-        </div>
-
-        {/* Name + host — flex-1 + min-w-0 so long values truncate cleanly. */}
-        <div className="min-w-0 flex-1">
-          {/* A button so the keyboard can open it too: its click bubbles to
-              the card's own handler. */}
-          <h3 className="font-bold text-zinc-100 text-[13px] truncate tracking-tight leading-tight">
-            <button type="button" className="max-w-full truncate text-left rounded outline-none focus-visible:ring-2 focus-visible:ring-primary/60">{s.name}</button>
-          </h3>
-          <div className="flex items-center gap-1 mt-0.5">
-            {s.protocol === 'rdp'
-              ? <span title="RDP server" className="shrink-0 px-1 rounded text-[9px] font-bold tracking-wider leading-[14px] text-sky-300 bg-sky-500/10 border border-sky-500/20">RDP</span>
-              : s.protocol === 'telnet'
-                ? <span title="Telnet server (not encrypted)" className="shrink-0 px-1 rounded text-[9px] font-bold tracking-wider leading-[14px] text-amber-300 bg-amber-500/10 border border-amber-500/20">TELNET</span>
-                : s.protocol === 'vnc'
-                  ? <span title="VNC server" className="shrink-0 px-1 rounded text-[9px] font-bold tracking-wider leading-[14px] text-violet-300 bg-violet-500/10 border border-violet-500/20">VNC</span>
-                  : <Globe size={10} className="text-zinc-400 shrink-0" />}
-            <span className="text-[10.5px] text-zinc-300 font-mono truncate">{s.host}</span>
-          </div>
-        </div>
-
-        {/* Actions: absolute + hover-revealed on desktop so the name gets the
-            full width; inline + always-visible on mobile (no hover there). */}
-        <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 sm:absolute sm:right-1.5 sm:top-1/2 sm:-translate-y-1/2 sm:pl-8 sm:bg-gradient-to-l sm:from-panel sm:via-panel sm:to-transparent transition-all duration-200">
-          {onCloneServer && (
+      <div className={`flex items-center justify-end gap-1.5 transition duration-150 ${reveal(open)}`} onClick={(e) => e.stopPropagation()}>
+        <button type="button" onClick={() => onOpenServer(s)} className="btn btn-primary btn-sm">Connect</button>
+        <button type="button" onClick={() => onEditServer(s)} aria-label={`Edit ${s.name}`} title="Edit" className="btn btn-sm px-1.5">
+          <Pencil size={13} aria-hidden />
+        </button>
+        {(onCloneServer || onRemoveServer) && (
+          <div data-card-menu className="relative">
             <button
-              onClick={(e) => { e.stopPropagation(); onCloneServer(s.id); }}
-              title="Clone"
-              className="p-1.5 rounded-lg text-zinc-500 hover:text-primary hover:bg-white/5 transition-all"
+              type="button"
+              onClick={() => setMenuFor(open ? null : s.id)}
+              aria-label={`More for ${s.name}`}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              className="btn btn-sm px-1.5"
             >
-              <Copy size={13} />
+              <MoreHorizontal size={13} aria-hidden />
             </button>
-          )}
-          <button
-            onClick={(e) => { e.stopPropagation(); onEditServer(s); }}
-            title="Edit"
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-          >
-            <Edit2 size={13} />
-          </button>
-          <button
-            onClick={async (e) => {
-              e.stopPropagation();
-              if (await confirm({ title: 'Delete server?', message: `“${s.name}” will be removed from this profile.`, destructive: true })) {
-                onRemoveServer(s.id);
-              }
-            }}
-            title="Delete"
-            className="p-1.5 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-white/5 transition-all"
-          >
-            <Trash2 size={13} />
-          </button>
-        </div>
+            {open && (
+              <div role="menu" className={`absolute right-0 z-30 min-w-[150px] p-1 rounded-lg bg-elevated shadow-pop ${compact ? "bottom-full mb-1" : "top-full mt-1"}`}>
+                {onCloneServer && (
+                  <button type="button" role="menuitem" onClick={() => { setMenuFor(null); onCloneServer(s.id); }} className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-left text-white hover:bg-white/[0.09]">
+                    <Copy size={13} aria-hidden className="text-zinc-400" /> Duplicate
+                  </button>
+                )}
+                {onRemoveServer && (
+                  <button type="button" role="menuitem" onClick={() => deleteServer(s)} className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-left text-danger hover:bg-danger/10">
+                    <Trash2 size={13} aria-hidden /> Delete
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     );
   };
 
-  // Folders share the compact horizontal language so the grid reads as one
-  // surface: a tinted folder glyph, name + server count, inline rename in
-  // place, and the same hover lift as server cards.
-  const FolderCard = ({ f }: { f: any }) => {
+  const grip = (s: any, className: string) => canReorder ? (
+    // Pointer only, so not a Tab stop: from the keyboard it would do nothing.
+    <button
+      type="button"
+      tabIndex={-1}
+      aria-hidden
+      onPointerDown={(e) => beginDrag(e, s.id)}
+      onClick={(e) => e.stopPropagation()}
+      title={onMoveServer ? "Drag to reorder, or onto a folder" : "Drag to reorder"}
+      className={`p-0.5 rounded text-zinc-500 hover:text-white cursor-grab active:cursor-grabbing transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 ${className}`}
+      style={{ touchAction: "none" }}
+    >
+      <GripVertical size={14} />
+    </button>
+  ) : null;
+
+  const iconTile = (s: any, size = 36) => {
+    const P = protocolOf(s);
+    return (
+      <span
+        aria-hidden
+        className="shrink-0 rounded-[9px] flex items-center justify-center bg-white/[0.06] text-zinc-400"
+        style={{ width: size, height: size, color: s.color || undefined }}
+      >
+        <P.icon size={Math.round(size * 0.47)} />
+      </span>
+    );
+  };
+
+  // Plain keyed elements, not nested components, so React keeps the same DOM
+  // node across renders: that's what lets the FLIP effect animate real
+  // positions. The card being dragged stays as a dashed placeholder; the
+  // floating clone (portal, below) is what the pointer carries.
+  const renderCard = (s: any) => {
+    if (dragId === s.id) {
+      return <div key={`server-${s.id}`} data-sid={s.id} aria-hidden className="min-h-[136px] rounded-[10px] border-2 border-dashed border-primary/40 bg-primary/[0.05]" />;
+    }
+    const st = statusOf(s);
+    const since = sinceLabel(lastConnected[s.id]);
+    const tunnels = tunnelCount(s);
+    return (
+      <article
+        key={`server-${s.id}`}
+        data-sid={s.id}
+        aria-label={s.name}
+        onClick={() => { if (!draggedRef.current) onOpenServer(s); }}
+        className="group tile tile-hover p-4 cursor-pointer"
+      >
+        {grip(s, "absolute left-0.5 top-[25px]")}
+        <div className="flex items-start gap-3">
+          {iconTile(s)}
+          <div className="flex-1 min-w-0">
+            <h3 className="text-[14px] leading-5 font-semibold text-white">
+              {/* A button so the keyboard can open it too: its click bubbles to the card. */}
+              <button type="button" className="block max-w-full truncate text-left rounded-sm">{s.name}</button>
+            </h3>
+            <div className="mt-px font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</div>
+          </div>
+          {st && statusPill(st)}
+        </div>
+        <div className="flex flex-wrap gap-1.5 mt-3.5">
+          <span className="chip">{protocolOf(s).label}</span>
+          {s.jump_host_id != null && <span className="chip">Via jump host</span>}
+          {tunnels > 0 && <span className="chip">{plural(tunnels, "tunnel", "tunnels")}</span>}
+          {s.autostart && <span className="chip">Opens at start</span>}
+        </div>
+        <div className="relative flex items-center mt-3.5 h-6">
+          <span className={`text-[12px] text-zinc-500 transition-opacity hidden [@media(hover:hover)]:inline ${menuFor === s.id ? "opacity-0" : "group-hover:opacity-0 group-focus-within:opacity-0"}`}>
+            {since ? `Last connected ${since.charAt(0).toLowerCase()}${since.slice(1)}` : "Not connected from this device yet"}
+          </span>
+          <div className="absolute right-0 top-0">{actions(s)}</div>
+        </div>
+      </article>
+    );
+  };
+
+  const renderRow = (s: any, i: number) => {
+    if (dragId === s.id) {
+      return (
+        <tr key={`server-${s.id}`} data-sid={s.id} aria-hidden>
+          <td colSpan={6} className="p-0"><div className="h-11 border-2 border-dashed border-primary/40 bg-primary/[0.05]" /></td>
+        </tr>
+      );
+    }
+    const st = statusOf(s);
+    const P = protocolOf(s);
+    return (
+      <tr
+        key={`server-${s.id}`}
+        data-sid={s.id}
+        onClick={() => { if (!draggedRef.current) onOpenServer(s); }}
+        className={`group h-11 cursor-pointer hover:bg-white/5 focus-within:bg-white/5 ${i > 0 ? "border-t border-white/[0.075]" : ""}`}
+      >
+        <td className="pl-4 pr-3 relative">
+          {grip(s, "absolute left-0 top-1/2 -translate-y-1/2")}
+          <span className="flex items-center gap-2.5 min-w-0 font-medium text-white">
+            <span aria-hidden className="w-2 h-2 shrink-0 rounded-full" style={{ background: s.color || "rgb(var(--subtle))" }} />
+            <button type="button" className="truncate text-left rounded">{s.name}</button>
+          </span>
+        </td>
+        <td className="hidden sm:table-cell px-3 font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</td>
+        <td className="hidden md:table-cell px-3 text-zinc-400">
+          <span className="flex items-center gap-1.5"><P.icon size={13} aria-hidden />{P.label}</span>
+        </td>
+        <td className="hidden lg:table-cell px-3 text-zinc-400 truncate">{sinceLabel(lastConnected[s.id]) ?? "—"}</td>
+        <td className="px-3">
+          {st
+            ? <span className={`flex items-center gap-1.5 ${STATUS[st].tone.split(" ").pop()}`}><span aria-hidden className={`w-1.5 h-1.5 rounded-full ${STATUS[st].dot}`} />{STATUS[st].label}</span>
+            : <span className="text-zinc-500">Idle</span>}
+        </td>
+        <td className="pr-3">{actions(s, true)}</td>
+      </tr>
+    );
+  };
+
+  // Folders: compact tiles above the servers. Open one with a click, drop a
+  // server or folder on it to move it in, rename or delete it in place.
+  const folderTile = (f: any) => {
     const serverCount = servers?.filter((s: any) => tree.serverFolder(s) === f.id).length || 0;
     const folderCount = tree.childrenOf(f.id).length;
     const isRenaming = renaming?.id === f.id;
-    const accent = f.color || 'rgb(var(--primary))';
     const isTarget = dropTarget === f.id;
-    const isDragged = folderDragId === f.id;
     const contents = [
-      folderCount > 0 ? (folderCount === 1 ? '1 folder' : `${folderCount} folders`) : null,
-      serverCount === 1 ? '1 server' : `${serverCount} servers`,
-    ].filter(Boolean).join(' · ');
+      folderCount > 0 ? plural(folderCount, "folder", "folders") : null,
+      plural(serverCount, "server", "servers"),
+    ].filter(Boolean).join(", ");
     return (
       <div
+        key={`folder-${f.id}`}
         data-drop-folder={f.id}
         onClick={() => { if (!isRenaming && !draggedRef.current) setActiveFolderId(f.id); }}
-        className={`group relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border transition-colors duration-150 cursor-pointer overflow-hidden ${
-          isTarget ? 'border-primary ring-2 ring-primary/60 bg-primary/10' : 'border-white/5 hover:border-primary/40 hover:bg-white/[0.015]'
-        } ${isDragged ? 'opacity-40' : ''}`}
+        className={`group tile flex items-center gap-3 h-14 pl-3 pr-2 cursor-pointer ${
+          isTarget ? "bg-primary/10 shadow-[0_0_0_1.5px_rgb(var(--primary))]" : "tile-hover"
+        } ${folderDragId === f.id ? "opacity-40" : ""}`}
       >
-        <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: accent }} />
-
-        {/* Drag handle: drop the folder into another one, or up the path. */}
         {canMoveFolders && !isRenaming && (
           <button
+            type="button"
             tabIndex={-1}
+            aria-hidden
             onPointerDown={(e) => beginFolderDrag(e, f.id)}
             onClick={(e) => e.stopPropagation()}
             title="Drag into another folder"
-            className="shrink-0 -ml-1.5 -mr-1 p-1 rounded-md text-zinc-600 hover:text-zinc-300 cursor-grab active:cursor-grabbing opacity-100 sm:opacity-0 sm:group-hover:opacity-100 [@media(hover:none)]:!opacity-100 transition-opacity"
-            style={{ touchAction: 'none' }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 p-0.5 rounded text-zinc-500 hover:text-white cursor-grab active:cursor-grabbing transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
+            style={{ touchAction: "none" }}
           >
             <GripVertical size={14} />
           </button>
         )}
-
-        {/* Folder glyph avatar. */}
-        <div
-          className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shadow-inner shrink-0"
-          style={{ color: f.color || undefined }}
-        >
-          <Folder size={16} className={f.color ? '' : 'text-primary'} />
-        </div>
-
-        {/* Name (inline-editable) + count. */}
-        <div className="min-w-0 flex-1">
+        <span aria-hidden className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-white/[0.06]" style={{ color: f.color || undefined }}>
+          <Folder size={16} className={f.color ? "" : "text-zinc-400"} />
+        </span>
+        <div className="flex-1 min-w-0">
           {isRenaming ? (
             <input
               autoFocus
+              aria-label="Folder name"
               value={renaming!.draft}
               onChange={(e) => setRenaming({ id: f.id, draft: e.target.value })}
               onClick={(e) => e.stopPropagation()}
@@ -556,329 +723,280 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
                 if (e.key === "Enter") { e.preventDefault(); commitRename(); }
                 if (e.key === "Escape") { e.preventDefault(); setRenaming(null); }
               }}
-              className="w-full h-7 px-2 bg-black/40 border border-primary/40 rounded-lg text-[13px] font-bold text-white outline-none"
+              className="field h-7"
             />
           ) : (
             <>
-              <h3 className="font-bold text-zinc-100 text-[13px] truncate tracking-tight leading-tight">
-                <button type="button" className="max-w-full truncate text-left rounded outline-none focus-visible:ring-2 focus-visible:ring-primary/60">{f.name}</button>
+              <h3 className="font-medium text-white leading-[18px]">
+                <button type="button" className="block max-w-full truncate text-left rounded-sm">{f.name}</button>
               </h3>
-              <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.12em]">
-                {contents}
-              </span>
+              <span className="block text-[12px] text-zinc-500 truncate">{contents}</span>
             </>
           )}
         </div>
-
-        {/* Right cluster: count badge (idle) that swaps to actions on hover. */}
         {isRenaming ? (
-          <div className="flex items-center gap-0.5 shrink-0">
-            <button
-              onClick={(e) => { e.stopPropagation(); commitRename(); }}
-              title="Save name"
-              className="p-1.5 text-emerald-400 hover:bg-white/10 rounded-lg"
-            >
-              <Check size={14} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setRenaming(null); }}
-              title="Cancel"
-              className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-white/10 rounded-lg"
-            >
-              <X size={14} />
-            </button>
+          <div className="flex items-center shrink-0" onClick={(e) => e.stopPropagation()}>
+            <button type="button" onClick={commitRename} aria-label="Save name" className="icon-btn text-success"><Check size={14} /></button>
+            <button type="button" onClick={() => setRenaming(null)} aria-label="Cancel" className="icon-btn"><X size={14} /></button>
           </div>
         ) : (
-          <div className="relative flex items-center shrink-0">
-            <span className="text-[10px] bg-scrim text-zinc-400 px-1.5 py-0.5 rounded-md font-mono group-hover:opacity-0 group-has-[:focus-visible]:opacity-0 transition-opacity">{serverCount}</span>
-            <div className="absolute right-0 flex items-center gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 [@media(hover:none)]:!opacity-100 transition-all bg-gradient-to-l from-panel via-panel to-transparent pl-6">
-              <button
-                onClick={(e) => { e.stopPropagation(); setRenaming({ id: f.id, draft: f.name || "" }); }}
-                title="Rename folder"
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-primary hover:bg-white/5 transition-all"
-              >
-                <Edit2 size={13} />
+          <div className={`flex items-center shrink-0 transition ${reveal(false)}`} onClick={(e) => e.stopPropagation()}>
+            {onRenameFolder && (
+              <button type="button" onClick={() => setRenaming({ id: f.id, draft: f.name || "" })} aria-label={`Rename ${f.name}`} title="Rename" className="icon-btn">
+                <Pencil size={13} />
               </button>
+            )}
+            {onRemoveFolder && (
               <button
-                onClick={async (e) => {
-                  e.stopPropagation();
+                type="button"
+                onClick={async () => {
                   // Everything below goes too: say how much.
                   const inside = tree.subtreeOf(f.id);
                   const subfolders = inside.size - 1;
                   const allServers = servers?.filter((s: any) => inside.has(tree.serverFolder(s) as number)).length || 0;
                   const what = [
-                    subfolders > 0 ? (subfolders === 1 ? '1 folder' : `${subfolders} folders`) : null,
-                    allServers === 1 ? '1 server' : `${allServers} servers`,
-                  ].filter(Boolean).join(' and ');
+                    subfolders > 0 ? plural(subfolders, "folder", "folders") : null,
+                    plural(allServers, "server", "servers"),
+                  ].filter(Boolean).join(" and ");
                   const message = subfolders > 0
                     ? `“${f.name}” and everything inside it (${what}) will be removed.`
                     : `“${f.name}” and every server inside it (${what}) will be removed.`;
-                  if (await confirm({ title: 'Delete folder?', message, destructive: true })) {
-                    onRemoveFolder(f.id);
-                  }
+                  if (await confirm({ title: "Delete folder?", message, destructive: true })) onRemoveFolder(f.id);
                 }}
-                title="Delete folder"
-                className="p-1.5 rounded-lg text-zinc-500 hover:text-red-500 hover:bg-white/5 transition-all"
+                aria-label={`Delete ${f.name}`}
+                title="Delete"
+                className="icon-btn hover:text-danger"
               >
                 <Trash2 size={13} />
               </button>
-            </div>
+            )}
           </div>
         )}
       </div>
     );
   };
 
+  const banner = (icon: React.ReactNode, text: React.ReactNode, onReview: () => void) => (
+    <div role="status" className="flex items-center gap-3 rounded-lg bg-warning/[0.13] px-3 py-2 text-[12.5px] text-white">
+      <span className="text-warning shrink-0">{icon}</span>
+      <span className="flex-1 min-w-0">{text}</span>
+      <button type="button" onClick={onReview} className="btn btn-sm shrink-0">Review</button>
+    </div>
+  );
+
+  const isEmpty = servers?.length === 0 && folders?.length === 0;
+  const showFolders = displayedFolders.length > 0 || (!isSearching && newFolder !== null);
+  const path = activeFolderId !== null && !isSearching ? tree.pathOf(activeFolderId) : [];
+
   return (
-    <div className="flex-1 flex flex-col h-full p-6 overflow-hidden bg-transparent">
-      <div className="relative max-w-sm w-full mx-auto mb-6 shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
-        <input
-          type="text"
-          placeholder="Search servers…"
-          className="w-full h-9 bg-elevated border border-white/10 rounded-lg pl-9 pr-4 text-[13px] text-zinc-100 outline-none focus:border-primary/50 focus:bg-elevated transition-all placeholder:text-zinc-600 shadow-inner"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
-
-      {heldCount > 0 && onAllowHeld && (
-        <div role="status" className="max-w-xl w-full mx-auto -mt-3 mb-5 shrink-0 flex items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2 text-[12px] text-amber-100/90">
-          <ShieldAlert size={14} className="text-amber-400 shrink-0" />
-          <span className="flex-1 min-w-0">
-            {heldCount === 1
-              ? "A change from someone you share this profile with is waiting for your OK."
-              : `${heldCount} changes from people you share this profile with are waiting for your OK.`}
-          </span>
-          <button
-            onClick={() => setReviewOpen(true)}
-            className="shrink-0 px-2.5 h-7 rounded text-[10.5px] font-bold uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 text-amber-200 hover:bg-amber-400/20"
-          >
-            Review
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-surface">
+      <header className="h-[52px] shrink-0 flex items-center gap-2 pl-2.5 pr-3 border-b border-white/[0.075]">
+        <div className="flex gap-0.5">
+          <button type="button" onClick={() => go(-1)} disabled={hist.i === 0} aria-label="Back" title="Back (⌘[)" className="icon-btn">
+            <ArrowLeft size={16} aria-hidden />
+          </button>
+          <button type="button" onClick={() => go(1)} disabled={hist.i >= hist.stack.length - 1} aria-label="Forward" title="Forward (⌘])" className="icon-btn">
+            <ArrowRight size={16} aria-hidden />
           </button>
         </div>
-      )}
-      {reviewOpen && onAllowHeld && (
-        <HeldReview servers={servers || []} onAllow={onAllowHeld} onClose={closeReview} />
-      )}
-      {deletionCount > 0 && onResolveDeletions && (
-        <div role="status" className="max-w-xl w-full mx-auto -mt-3 mb-5 shrink-0 flex items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2 text-[12px] text-amber-100/90">
-          <Trash2 size={14} className="text-amber-400 shrink-0" />
-          <span className="flex-1 min-w-0">
-            {deletionCount === 1 ? "An item was" : `${deletionCount} items were`} deleted by someone you share this
-            profile with. {deletionCount === 1 ? "It stays" : "They stay"} here until you decide.
-          </span>
-          <button
-            onClick={() => setDeletionsOpen(true)}
-            className="shrink-0 px-2.5 h-7 rounded text-[10.5px] font-bold uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 text-amber-200 hover:bg-amber-400/20"
-          >
-            Review
-          </button>
-        </div>
-      )}
-      {deletionsOpen && onResolveDeletions && (
-        <HeldDeletions items={heldDeletions || []} onResolve={onResolveDeletions} onClose={closeDeletions} />
-      )}
-      {keyChange && onAcceptKey && (
-        <div role="status" className="max-w-xl w-full mx-auto -mt-3 mb-5 shrink-0 flex items-center gap-3 rounded-lg border border-amber-400/25 bg-amber-400/[0.06] px-3 py-2 text-[12px] text-amber-100/90">
-          <KeyRound size={14} className="text-amber-400 shrink-0" />
-          <span className="flex-1 min-w-0">
-            This shared profile's key has changed. Your changes aren't uploaded until you accept the new key.
-          </span>
-          <button
-            onClick={reviewKey}
-            className="shrink-0 px-2.5 h-7 rounded text-[10.5px] font-bold uppercase tracking-wider bg-amber-400/10 border border-amber-400/30 text-amber-200 hover:bg-amber-400/20"
-          >
-            Review
-          </button>
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto custom-scrollbar pr-1 pb-10">
-
-        {/* Header navigation if in folder */}
-        {!isSearching && activeFolderId !== null && (
-          <div className="flex items-center gap-3 mb-6 flex-wrap">
-            <button aria-label="Back"
-              title="Up one level"
-              onClick={() => setActiveFolderId(tree.parentOf(activeFolderId))}
-              className="w-8 h-8 bg-black rounded-xl border border-white/5 flex items-center justify-center hover:bg-white/10 hover:text-white text-zinc-500 transition-all shadow-inner shrink-0"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            {/* The path down to this folder. Each step above it opens that
-                level, and takes a server or folder dropped on it. */}
-            {/* At least 12rem wide: on a narrow window the buttons wrap below
-                it rather than squeezing the path to nothing. */}
-            <nav aria-label="Folder path" className="flex items-center gap-1 flex-1 min-w-[12rem] flex-wrap text-[13px]">
-              {[{ id: "root", name: "All servers" }, ...tree.pathOf(activeFolderId)].map((step: any, i: number, all: any[]) => {
-                const last = i === all.length - 1;
-                const target: DropTarget = step.id === "root" ? "root" : step.id;
-                const hot = dropTarget === target;
-                return (
-                  <span key={String(step.id)} className="flex items-center gap-1 min-w-0">
-                    {i > 0 && <ChevronRight size={13} className="text-zinc-600 shrink-0" />}
-                    {last ? (
-                      <span className="font-bold text-primary tracking-tight flex items-center gap-1.5 truncate">
-                        <Folder size={15} className="shrink-0" /> <span className="truncate">{step.name}</span>
-                      </span>
-                    ) : (
-                      <button
-                        data-drop-folder={target}
-                        onClick={() => setActiveFolderId(step.id === "root" ? null : step.id)}
-                        className={`px-1.5 py-0.5 rounded-md truncate max-w-[12rem] transition-colors ${
-                          hot ? 'bg-primary/20 text-primary ring-2 ring-primary/60' : 'text-zinc-400 hover:text-white hover:bg-white/5'
-                        } ${dragging ? 'ring-1 ring-white/10' : ''}`}
-                      >
-                        {step.name}
-                      </button>
-                    )}
-                  </span>
-                );
-              })}
-            </nav>
+        {/* Each step above the open folder opens it, and takes a server or
+            folder dropped on it. */}
+        <nav aria-label="Location" className="flex items-center gap-0.5 flex-1 min-w-0 overflow-hidden">
+          {[{ id: "root", name: "Servers" }, ...path].map((step: any, i: number, all: any[]) => {
+            const last = i === all.length - 1;
+            const target: DropTarget = step.id === "root" ? "root" : step.id;
+            return (
+              <span key={String(step.id)} className={`flex items-center gap-0.5 ${last ? "min-w-0" : "shrink-0"}`}>
+                {i > 0 && <ChevronRight size={13} aria-hidden className="text-zinc-500 shrink-0" />}
+                {last ? (
+                  <span aria-current="page" className="h-6 px-1.5 flex items-center rounded-[5px] font-semibold text-white truncate">{step.name}</span>
+                ) : (
+                  <button
+                    type="button"
+                    data-drop-folder={target}
+                    onClick={() => setActiveFolderId(step.id === "root" ? null : step.id)}
+                    className={`h-6 px-1.5 rounded-[5px] max-w-[12rem] truncate transition-colors ${
+                      dropTarget === target ? "bg-primary/15 text-primary shadow-[0_0_0_1.5px_rgb(var(--primary))]" : "text-zinc-400 hover:bg-white/5 hover:text-white"
+                    }`}
+                  >
+                    {step.name}
+                  </button>
+                )}
+              </span>
+            );
+          })}
+        </nav>
+        {!isEmpty && (
+          <div className="flex items-center gap-2 shrink-0">
+            <div role="group" aria-label="Layout" className="seg">
+              <button type="button" onClick={() => setView("grid")} aria-pressed={view === "grid"} aria-label="Grid" title="Grid" className="seg-item">
+                <LayoutGrid size={14} aria-hidden />
+              </button>
+              <button type="button" onClick={() => setView("list")} aria-pressed={view === "list"} aria-label="List" title="List" className="seg-item">
+                <List size={14} aria-hidden />
+              </button>
+            </div>
             {onCreateFolder && (
-              <button
-                onClick={() => setNewFolder((v) => v ?? "")}
-                title="Make a folder inside this one"
-                className="h-8 px-3 bg-primary/10 text-primary border border-primary/25 hover:bg-primary/20 rounded-lg flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider shrink-0"
-              >
-                <FolderPlus size={13} /> Add folder
+              <button type="button" onClick={() => setNewFolder((v) => v ?? "")} aria-label="New folder" title="New folder" className="icon-btn">
+                <FolderPlus size={16} aria-hidden />
               </button>
             )}
-            {/* Adding a server from inside a folder pre-selects this folder
-                in the new-node panel, so the user doesn't have to repeat
-                the choice they just clicked into. */}
-            <button
-              onClick={() => onAddClick(activeFolderId)}
-              className="h-8 px-3 bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 rounded-lg flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider shrink-0"
-            >
-              <Plus size={13} /> Add server
+            <button type="button" onClick={() => onAddClick(activeFolderId)} aria-label="New server" className="btn">
+              <Plus size={14} aria-hidden /><span className="hidden sm:inline">New server</span>
             </button>
+            {onQuickConnect && (
+              <button type="button" onClick={onQuickConnect} aria-label="Quick connect" title="Connect to a host that isn't saved" className="btn btn-primary">
+                <Zap size={14} aria-hidden /><span className="hidden sm:inline">Quick connect</span>
+              </button>
+            )}
           </div>
         )}
+      </header>
 
-        {servers?.length === 0 && folders?.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <button
-              onClick={onAddClick}
-              className="flex flex-col items-center gap-4 p-12 rounded-3xl border-2 border-dashed border-zinc-800 hover:border-primary/40 hover:bg-primary/5 transition-all group"
-            >
-              <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center text-primary shadow-[0_0_15px_rgba(var(--primary),0.1)] transition-transform">
-                <Plus size={28} />
-              </div>
-              <div className="text-center">
-                <h3 className="text-[15px] font-bold text-white tracking-tight">Add your first server</h3>
-                <p className="text-[12px] text-zinc-500 mt-1">Tap here to get started.</p>
-              </div>
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* Compact action toolbar (root only) — sized to its own content
-                rather than filling a full grid cell like the cards. */}
-            {(!isSearching && activeFolderId === null) && (
-              <div className="flex items-center gap-2 mb-4 flex-wrap">
-                <button
-                  onClick={onAddClick}
-                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary/10 border border-primary/25 text-primary text-[11px] font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors"
-                >
-                  <Plus size={13} /> Add server
-                </button>
-                {onCreateFolder && (
-                  <button
-                    onClick={() => setNewFolder((v) => v ?? "")}
-                    title="Group servers in a folder"
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-primary/10 border border-primary/25 text-primary text-[11px] font-bold uppercase tracking-wider hover:bg-primary/20 transition-colors"
-                  >
-                    <FolderPlus size={13} /> Add folder
-                  </button>
-                )}
-                {onQuickConnect && (
-                  <button
-                    onClick={onQuickConnect}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-300/90 text-[11px] font-bold uppercase tracking-wider hover:bg-amber-500/20 hover:text-amber-200 transition-colors"
-                  >
-                    <Zap size={13} /> Quick connect
-                  </button>
-                )}
-              </div>
-            )}
+      {reviewOpen && onAllowHeld && <HeldReview servers={servers || []} onAllow={onAllowHeld} onClose={closeReview} />}
+      {deletionsOpen && onResolveDeletions && <HeldDeletions items={heldDeletions || []} onResolve={onResolveDeletions} onClose={closeDeletions} />}
 
-          <div ref={gridRef} className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'} gap-3`}>
+      {isEmpty ? (
+        <ServersEmpty onNewServer={() => onAddClick(null)} onQuickConnect={onQuickConnect} onImport={(req: ImportRequest) => onImport?.(req)} />
+      ) : (
+        <div className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? "px-4 pt-5 pb-8" : "px-8 pt-7 pb-10"}`}>
+          {(heldCount > 0 && onAllowHeld) || (deletionCount > 0 && onResolveDeletions) || (keyChange && onAcceptKey) ? (
+            <div className="flex flex-col gap-2 mb-5">
+              {heldCount > 0 && onAllowHeld && banner(
+                <ShieldAlert size={15} />,
+                heldCount === 1
+                  ? "A change from someone you share this profile with is waiting for your OK."
+                  : `${heldCount} changes from people you share this profile with are waiting for your OK.`,
+                () => setReviewOpen(true),
+              )}
+              {deletionCount > 0 && onResolveDeletions && banner(
+                <Trash2 size={15} />,
+                <>{deletionCount === 1 ? "An item was" : `${deletionCount} items were`} deleted by someone you share this profile with. {deletionCount === 1 ? "It stays" : "They stay"} here until you decide.</>,
+                () => setDeletionsOpen(true),
+              )}
+              {keyChange && onAcceptKey && banner(
+                <KeyRound size={15} />,
+                "This shared profile's key has changed. Your changes aren't uploaded until you accept the new key.",
+                reviewKey,
+              )}
+            </div>
+          ) : null}
 
-            {/* The folder being made with "Add folder": a card to name it.
-                Plain JSX, not a nested component, so typing keeps focus. */}
-            {!isSearching && newFolder !== null && (
-              <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border border-primary/40 overflow-hidden">
-                <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary" />
-                <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shadow-inner shrink-0">
-                  <FolderPlus size={16} className="text-primary" />
-                </div>
+          <div className="flex flex-wrap items-end justify-between gap-4 mb-5">
+            <div className="min-w-0">
+              <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em] text-white truncate">{title}</h1>
+              <p className="mt-0.5 text-zinc-400">{summary}</p>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <label className="relative block flex-1 sm:w-[220px] sm:flex-none">
+                <Search size={14} aria-hidden className="absolute left-[9px] top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input
-                  autoFocus
-                  aria-label="New folder name"
-                  placeholder="Folder name…"
-                  value={newFolder}
-                  onChange={(e) => setNewFolder(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") { e.preventDefault(); commitNewFolder(); }
-                    if (e.key === "Escape") { e.preventDefault(); setNewFolder(null); }
-                  }}
-                  className="min-w-0 flex-1 h-7 px-2 bg-black/40 border border-primary/40 rounded-lg text-[13px] font-bold text-white outline-none placeholder:text-zinc-600 placeholder:font-normal"
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Filter by name or host"
+                  aria-label="Filter servers"
+                  className="field pl-7"
                 />
-                <div className="flex items-center gap-0.5 shrink-0">
-                  <button
-                    onClick={commitNewFolder}
-                    disabled={!newFolder.trim()}
-                    title="Create folder"
-                    aria-label="Create folder"
-                    className="p-1.5 text-emerald-400 hover:bg-white/10 rounded-lg disabled:opacity-40 disabled:hover:bg-transparent"
-                  >
-                    <Check size={14} />
-                  </button>
-                  <button
-                    onClick={() => setNewFolder(null)}
-                    title="Cancel"
-                    aria-label="Cancel new folder"
-                    className="p-1.5 text-zinc-400 hover:text-rose-400 hover:bg-white/10 rounded-lg"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* The folders inside the open one (or the top level); none while searching. */}
-            {displayedFolders.map((f: any) => (
-              <FolderCard key={`folder-${f.id}`} f={f} />
-            ))}
-
-            {/* Render Servers — honours the live drag order while reordering. */}
-            {orderedServers.map((s: any) => renderServer(s))}
-
-            {/* Empty Folder State */}
-            {!isSearching && activeFolderId !== null && displayedServers.length === 0 && displayedFolders.length === 0 && newFolder === null && (
-              <div className="col-span-full py-10 text-center text-zinc-600 text-xs italic">
-                Nothing in this folder yet. Add a server or folder here, or drag a server onto this folder from the level above.
-              </div>
-            )}
-
-            {/* Empty Search State */}
-            {isSearching && displayedServers.length === 0 && (
-              <div className="col-span-full py-10 text-center text-zinc-600 text-xs italic">
-                No matches.
-              </div>
-            )}
-
+              </label>
+              <label className="btn btn-ghost relative pr-2 hover:bg-white/[0.09]">
+                <ArrowUpDown size={13} aria-hidden />
+                <span className="hidden sm:inline">Sort: {SORT_LABELS[sort].toLowerCase()}</span>
+                <select
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value as SortMode)}
+                  aria-label="Sort servers"
+                  className="absolute inset-0 opacity-0 cursor-pointer"
+                >
+                  {(Object.keys(SORT_LABELS) as SortMode[]).map((k) => <option key={k} value={k}>{SORT_LABELS[k]}</option>)}
+                </select>
+              </label>
+            </div>
           </div>
-          </>
-        )}
-      </div>
 
-      {/* Floating drag clone — a fixed-position copy of the node that the
-          pointer carries while the grid reflows underneath. pointer-events:none
-          so it never intercepts the elementFromPoint / hover logic. */}
+          {showFolders && (
+            <section aria-label="Folders" className="mb-6">
+              <div className={`grid gap-3 ${isMobile ? "grid-cols-1" : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"}`}>
+                {/* Plain JSX, not a nested component, so typing keeps focus. */}
+                {!isSearching && newFolder !== null && (
+                  <div className="tile flex items-center gap-3 h-14 pl-3 pr-2 shadow-[0_0_0_1px_rgb(var(--primary))]">
+                    <span aria-hidden className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-primary/[0.12] text-primary">
+                      <FolderPlus size={16} />
+                    </span>
+                    <input
+                      autoFocus
+                      aria-label="New folder name"
+                      placeholder="Folder name"
+                      value={newFolder}
+                      onChange={(e) => setNewFolder(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); commitNewFolder(); }
+                        if (e.key === "Escape") { e.preventDefault(); setNewFolder(null); }
+                      }}
+                      className="field flex-1 min-w-0"
+                    />
+                    <button type="button" onClick={commitNewFolder} disabled={!newFolder.trim()} aria-label="Create folder" className="icon-btn text-success"><Check size={14} /></button>
+                    <button type="button" onClick={() => setNewFolder(null)} aria-label="Cancel new folder" className="icon-btn"><X size={14} /></button>
+                  </div>
+                )}
+                {displayedFolders.map(folderTile)}
+              </div>
+            </section>
+          )}
+
+          {displayedServers.length > 0 && (view === "grid" ? (
+            <div ref={gridRef} className={`grid gap-4 ${isMobile ? "grid-cols-1" : "md:grid-cols-2 xl:grid-cols-3 min-[1800px]:grid-cols-4"}`}>
+              {orderedServers.map(renderCard)}
+            </div>
+          ) : (
+            <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)]">
+              <table className="w-full table-fixed border-collapse">
+                <caption className="sr-only">Servers in {title}</caption>
+                <colgroup>
+                  <col className="w-[34%] sm:w-[24%]" />
+                  <col className="hidden sm:table-column sm:w-[26%]" />
+                  <col className="hidden md:table-column md:w-[10%]" />
+                  <col className="hidden lg:table-column lg:w-[14%]" />
+                  <col className="w-[30%] sm:w-[13%]" />
+                  <col className="w-[36%] sm:w-[170px]" />
+                </colgroup>
+                <thead>
+                  <tr className="h-8 text-left text-[11.5px] font-semibold text-zinc-500 border-b border-white/[0.075]">
+                    <th scope="col" className="pl-4 pr-3 font-semibold">Name</th>
+                    <th scope="col" className="hidden sm:table-cell px-3 font-semibold">Address</th>
+                    <th scope="col" className="hidden md:table-cell px-3 font-semibold">Protocol</th>
+                    <th scope="col" className="hidden lg:table-cell px-3 font-semibold">Last connected</th>
+                    <th scope="col" className="px-3 font-semibold">Status</th>
+                    <th scope="col" className="pr-3"><span className="sr-only">Actions</span></th>
+                  </tr>
+                </thead>
+                <tbody ref={gridRef as any}>
+                  {orderedServers.map(renderRow)}
+                </tbody>
+              </table>
+            </div>
+          ))}
+
+          {!isSearching && displayedServers.length === 0 && displayedFolders.length === 0 && newFolder === null && (
+            <div className="py-12 text-center text-zinc-500">
+              <p>Nothing in this folder yet.</p>
+              <button type="button" onClick={() => onAddClick(activeFolderId)} className="btn mt-3">
+                <Plus size={14} aria-hidden /> New server here
+              </button>
+            </div>
+          )}
+
+          {canReorder && displayedServers.length > 1 && !isMobile && (
+            <p className="flex items-center gap-2 mt-7 text-[12px] text-zinc-500">
+              <GripVertical size={13} aria-hidden />
+              Drag a server by its handle to reorder it, or onto a folder or a step of the path to move it.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* The copy the pointer carries while the list reflows underneath.
+          pointer-events:none so it never gets in the way of elementFromPoint. */}
       {draggedServer && createPortal(
         <div
           ref={cloneRef}
@@ -888,26 +1006,17 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             transform: `translate(${pointerRef.current.x - grabOffsetRef.current.x}px, ${pointerRef.current.y - grabOffsetRef.current.y}px) rotate(1.5deg) scale(1.03)`,
           }}
         >
-          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-panel to-panel border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
-            <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: draggedServer.color || 'rgb(var(--primary))' }} />
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/25 to-primary/[0.03] border border-primary/20 flex items-center justify-center text-primary shadow-inner shrink-0">
-              {(draggedServer.name || '').trim().charAt(0)
-                ? <span className="font-black text-[14px] leading-none">{(draggedServer.name || '').trim().charAt(0).toUpperCase()}</span>
-                : <Server size={14} />}
-            </div>
+          <div className="tile flex items-center gap-3 p-3 bg-elevated shadow-[0_0_0_1px_rgb(var(--primary)),var(--shadow-pop)]">
+            {iconTile(draggedServer, 32)}
             <div className="min-w-0 flex-1">
-              <h3 className="font-bold text-zinc-100 text-[13px] truncate tracking-tight leading-tight">{draggedServer.name}</h3>
-              <div className="flex items-center gap-1 mt-0.5">
-                <Globe size={10} className="text-zinc-400 shrink-0" />
-                <span className="text-[10.5px] text-zinc-300 font-mono truncate">{draggedServer.host}</span>
-              </div>
+              <div className="font-semibold text-white truncate">{draggedServer.name}</div>
+              <div className="font-mono text-[12px] text-zinc-400 truncate">{addressOf(draggedServer)}</div>
             </div>
           </div>
         </div>,
         document.body
       )}
 
-      {/* The same floating copy for a folder being dragged. */}
       {draggedFolder && createPortal(
         <div
           ref={folderCloneRef}
@@ -917,12 +1026,11 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             transform: `translate(${pointerRef.current.x - grabOffsetRef.current.x}px, ${pointerRef.current.y - grabOffsetRef.current.y}px) rotate(1.5deg) scale(1.03)`,
           }}
         >
-          <div className="relative flex items-center gap-3 h-16 pl-3.5 pr-2 rounded-xl bg-gradient-to-br from-elevated to-panel border border-primary/50 ring-1 ring-primary/40 shadow-2xl shadow-black/60 overflow-hidden">
-            <span aria-hidden className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: draggedFolder.color || 'rgb(var(--primary))' }} />
-            <div className="w-9 h-9 rounded-lg bg-black/40 border border-white/10 flex items-center justify-center shadow-inner shrink-0" style={{ color: draggedFolder.color || undefined }}>
-              <Folder size={16} className={draggedFolder.color ? '' : 'text-primary'} />
-            </div>
-            <h3 className="font-bold text-zinc-100 text-[13px] truncate tracking-tight leading-tight">{draggedFolder.name}</h3>
+          <div className="tile flex items-center gap-3 h-14 pl-3 pr-2 bg-elevated shadow-[0_0_0_1px_rgb(var(--primary)),var(--shadow-pop)]">
+            <span aria-hidden className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center bg-white/[0.06]" style={{ color: draggedFolder.color || undefined }}>
+              <Folder size={16} className={draggedFolder.color ? "" : "text-zinc-400"} />
+            </span>
+            <span className="font-medium text-white truncate">{draggedFolder.name}</span>
           </div>
         </div>,
         document.body

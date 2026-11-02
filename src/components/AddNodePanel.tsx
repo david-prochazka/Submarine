@@ -51,7 +51,7 @@ type ImportedSshKey = {
   encrypted: boolean;
 };
 
-const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credentials, sshKeys, refreshSshKeys, folders, refreshFolders, refreshServers, servers, isEditMode, formError, isMobile }: any) => {
+const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credentials, sshKeys, refreshSshKeys, folders, refreshFolders, refreshServers, servers, isEditMode, formError, isMobile, importRequest }: any) => {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   // An RDP (issue #3), telnet (#179) or VNC server has a host, port, login
   // and maybe an SSH server to go through; the SSH-only parts of the form
@@ -148,14 +148,14 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
 
   // Parse whatever's in the textarea. Rust auto-detects the format so we
   // don't need three separate importers here.
-  const parsePastedImport = async () => {
+  const parsePastedImport = async (text: string = importPasteText) => {
     setImportLoading(true);
     setImportError(null);
     setImportNotice(null);
     setImportHosts([]);
     setImportSelected(new Set());
     try {
-      const hosts = await invoke<ImportedHost[]>("parse_client_import", { text: importPasteText });
+      const hosts = await invoke<ImportedHost[]>("parse_client_import", { text });
       setImportHosts(hosts);
     } catch (e: any) {
       setImportError(typeof e === "string" ? e : (e?.message || String(e)));
@@ -183,6 +183,20 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
       }
     }
   };
+
+  // The servers home's empty state asks for an import: the SSH config, or a
+  // file's text, parsed right away as if it had been pasted.
+  useEffect(() => {
+    if (!importRequest) return;
+    if (importRequest.source === "ssh") {
+      openImportModal();
+      return;
+    }
+    setImportOpen(true);
+    setImportSource("paste");
+    setImportPasteText(importRequest.text);
+    parsePastedImport(importRequest.text);
+  }, [importRequest?.n]);
 
   const closeImportModal = () => {
     if (importBusy) return;
@@ -1296,7 +1310,7 @@ const AddNodePanel = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
                   />
                   <div className="flex justify-end">
                     <button
-                      onClick={parsePastedImport}
+                      onClick={() => parsePastedImport()}
                       disabled={!importPasteText.trim()}
                       className="h-8 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/30 hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                     >

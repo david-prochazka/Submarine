@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -33,7 +33,9 @@ import { USE_SSH_CONFIG_KEY, readUseSshConfig } from "./util/sshConfig";
 import { DEFAULT_RDP_OPTIONS, readRdpOptions, writeRdpOptions } from "./util/rdpOptions";
 import { DEFAULT_VNC_OPTIONS, readVncOptions, writeVncOptions } from "./util/vncOptions";
 import { Sidebar } from "./components/Sidebar";
-import { NodeGrid } from "./components/NodeGrid";
+import { NodeGrid, type ServerStatus } from "./components/NodeGrid";
+import type { ImportRequest } from "./components/ServersEmpty";
+import { readLastConnected, recordConnected } from "./util/lastConnected";
 import { folderTree } from "./util/folderTree";
 import { CommandScope, describeScope, parseCommandScope, scopeToJson } from "./util/commandScope";
 import CommandScopePicker from "./components/CommandScopePicker";
@@ -186,6 +188,21 @@ function DesktopApp() {
   // dropdown gives the tab strip predictable width and matches iOS/
   // Android convention of "current context on top, tap to switch".
   const [mobileSessionPickerOpen, setMobileSessionPickerOpen] = useState(false);
+  // Each saved server's live state, from its open session: what the server
+  // cards and rows show. A server with no session has no entry.
+  const serverStatus = useMemo(() => {
+    const out: Record<number, ServerStatus> = {};
+    for (const s of sessions) {
+      if (!s.serverId) continue;
+      const st = sessionStatuses[s.id] ?? "connecting";
+      out[s.serverId] = st === "connected" ? "connected" : st === "connecting" ? "connecting" : "failed";
+    }
+    return out;
+  }, [sessions, sessionStatuses]);
+  const [lastConnected, setLastConnected] = useState(readLastConnected);
+  // The import the servers home asked for; AddNodePanel opens its import
+  // dialog with it.
+  const [importRequest, setImportRequest] = useState<(ImportRequest & { n: number }) | null>(null);
   const handleSessionStatus = useCallback((sessionId: string, status: string) => {
     setSessionStatuses((prev) => (prev[sessionId] === status ? prev : { ...prev, [sessionId]: status }));
   }, []);
@@ -910,6 +927,7 @@ function DesktopApp() {
 
   const openServer = (server: any) => {
     const sessionId = `session-${server.id}`;
+    setLastConnected((prev) => recordConnected(prev, server.id));
     const existing = sessions.find(s => s.id === sessionId);
     if (!existing) {
       setSessions([...sessions, {
@@ -1847,6 +1865,9 @@ function DesktopApp() {
                 onAcceptKey={acceptShareKey}
                 heldDeletions={heldDeletions}
                 onResolveDeletions={resolveHeldDeletions}
+                serverStatus={serverStatus}
+                lastConnected={lastConnected}
+                onImport={(req: ImportRequest) => setImportRequest((prev) => ({ ...req, n: (prev?.n ?? 0) + 1 }))}
                 onRemoveServer={removeServer}
                 onRemoveFolder={removeFolder}
                 onRenameFolder={renameFolder}
@@ -2728,6 +2749,7 @@ function DesktopApp() {
         isOpen={isPanelOpen} onClose={() => { setIsPanelOpen(false); setFormError(""); }}
         newNode={newNode} setNewNode={setNewNode}
         isEditMode={!!newNode.id}
+        importRequest={importRequest}
         onSave={async () => {
           if (!newNode.name || !newNode.host) {
             setFormError("Name and Host are required.");
