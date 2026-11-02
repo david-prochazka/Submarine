@@ -11,6 +11,7 @@ import { Eye, EyeOff } from "lucide-react";
 // fields in each form. We just add `pr-10` to make room for the eye button.
 
 interface Props {
+  id?: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
@@ -21,12 +22,13 @@ interface Props {
 }
 
 const PasswordField = ({
-  value, onChange, placeholder, className, autoFocus, onKeyDown, disabled,
+  id, value, onChange, placeholder, className, autoFocus, onKeyDown, disabled,
 }: Props) => {
   const [show, setShow] = useState(false);
   return (
     <div className="relative">
       <input
+        id={id}
         type={show ? "text" : "password"}
         value={value}
         onChange={(e: any) => onChange(e.target.value)}

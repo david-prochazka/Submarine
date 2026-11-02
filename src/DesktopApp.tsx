@@ -40,7 +40,7 @@ import { folderTree } from "./util/folderTree";
 import { CommandScope, describeScope, parseCommandScope, scopeToJson } from "./util/commandScope";
 import CommandScopePicker from "./components/CommandScopePicker";
 import type { HeldDeletion } from "./components/HeldDeletions";
-import AddNodePanel from "./components/AddNodePanel";
+import ServerEditor from "./components/ServerEditor";
 import TerminalView from "./components/TerminalView";
 import SettingsPanel from "./components/SettingsPanel";
 import ProfilePanel from "./components/ProfilePanel";
@@ -223,7 +223,7 @@ function DesktopApp() {
     return out;
   }, [sessions, sessionStatuses]);
   const [lastConnected, setLastConnected] = useState(readLastConnected);
-  // The import the servers home asked for; AddNodePanel opens its import
+  // The import the servers home asked for; ServerEditor opens its import
   // dialog with it.
   const [importRequest, setImportRequest] = useState<(ImportRequest & { n: number }) | null>(null);
   const handleSessionStatus = useCallback((sessionId: string, status: string) => {
@@ -2790,7 +2790,7 @@ function DesktopApp() {
         </div>
       )}
 
-      <AddNodePanel
+      <ServerEditor
         isOpen={isPanelOpen} onClose={() => { setIsPanelOpen(false); setFormError(""); }}
         newNode={newNode} setNewNode={setNewNode}
         isEditMode={!!newNode.id}

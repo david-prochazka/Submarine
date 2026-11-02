@@ -39,6 +39,7 @@ mod ssh_config;
 mod proxy_command;
 mod open_policy;
 mod known_hosts;
+mod probe;
 mod rdp;
 mod quick_unlock;
 mod rdp_client;
@@ -21996,6 +21997,7 @@ pub fn run() {
             check_db_exists, setup_master_db, persist_vault,
             quick_unlock::quick_unlock_support, quick_unlock::quick_unlock_status, quick_unlock::quick_unlock_enable,
             quick_unlock::quick_unlock_disable, quick_unlock::quick_unlock,
+            probe::resolve_host, probe::test_server_connection,
             list_profiles, cloud_list_sync_profiles, cloud_delete_profile, force_push_profile, select_profile, create_profile, delete_profile, close_profile,
             export_profile, import_profile_pick, import_profile_save, import_profile_bytes,
             get_secure_screen, set_secure_screen,

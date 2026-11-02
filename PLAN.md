@@ -47,12 +47,14 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] Pause and resume a transfer: needs backend support
 - [ ] ⌘⌥T to show or hide the queue: Phase 10 with the other shortcuts
 
-## Phase 5: Server editor (artboard 4)
+## Phase 5: Server editor (artboard 4) ✅ done
 
-- [ ] Sheet with seven grouped sections instead of the long slide-over
-- [ ] Inline live validation; issues shown on the section list
-- [ ] Test connection: DNS, port and host key before saving
-
+- [x] Sheet (`ServerEditor.tsx`) in place of the slide-over: header with the server's colour, folder and last edit; section list (Connection, Authentication, Organisation, Proxy, Port forwarding, Mirrors, Startup for SSH; Display ("Remote desktop" / "Screen") for RDP and VNC; telnet has the first four); grouped label/control rows; tabs across the top below 768 px, full screen on phones. Esc cancels, ⌘S / Ctrl+S saves
+- [x] Inline validation (`util/serverIssues.ts`): name, host, port, saved login or key picked, proxy host and port, forwards (ports, duplicate local ports, a target host:port as the backend wants it), mirror folders. A field shows its issue once left, or all show after Save; counts on the section list; Save jumps to the first one. A forward's target is now host and port fields (the old placeholder suggested a bare "80", which the backend refused)
+- [x] Test connection (`probe.rs`, `test_server_connection`): `~/.ssh/config` alias, DNS, port (or through the SOCKS5 / HTTP proxy), then for SSH the host key against known_hosts files and the vault (trusted, new, changed, refused). Stops after key exchange: no login, nothing saved. Through a jump host it tests the jump host and says so. Live "Resolves to …" under Host (`resolve_host`)
+- [x] Import dialog split out (`ServerImportDialog.tsx`), sentence case; its Escape no longer reaches the editor
+- [x] Shared form rows (`FormRows`, RDP share fields) on the new field, segment and switch styles, which also fixes the dark switch knob in light mode in the RDP and VNC tab panels
+- [ ] Not in the app, so not in the sheet: keep-alive, compression, terminal type, agent auth, favourites, working folder, "open with" tools, mirror sync modes
 ## Phase 6: Command palette (artboard 5)
 
 - [ ] ⌘K fuzzy search across servers, actions, folders and saved commands

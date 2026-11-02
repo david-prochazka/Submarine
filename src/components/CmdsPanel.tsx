@@ -50,7 +50,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
   // are for some servers only (util/commandScope). Null: not a saved server.
   const [scopeIds, setScopeIds] = useState<{ server: string | null; folders: string[] } | null>(null);
 
-  // Node notes — the per-server free-form notes from AddNodePanel, surfaced
+  // Node notes — the per-server free-form notes from the server editor, surfaced
   // here so the user can read/edit them next to commands + notes without
   // bouncing back to the server editor. Source of truth is the same SQLite
   // column (servers.notes) — we fetch via get_servers and save via

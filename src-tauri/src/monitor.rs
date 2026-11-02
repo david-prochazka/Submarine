@@ -701,10 +701,10 @@ impl client::Handler for MonitorHandler {
 /// Trait-object wrapper so we can hand russh's `connect_stream` either a
 /// direct TcpStream, a tokio_socks SOCKS5 stream, or a CONNECT-tunneled
 /// TcpStream — depending on the node's proxy config — via the same path.
-trait AsyncStream: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static {}
+pub(crate) trait AsyncStream: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static {}
 impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + 'static> AsyncStream for T {}
 
-struct StreamBox(Box<dyn AsyncStream>);
+pub(crate) struct StreamBox(pub(crate) Box<dyn AsyncStream>);
 impl tokio::io::AsyncRead for StreamBox {
     fn poll_read(
         mut self: std::pin::Pin<&mut Self>,
@@ -739,7 +739,7 @@ impl tokio::io::AsyncWrite for StreamBox {
 /// Build the underlying transport, honouring the node's proxy settings.
 /// Same matrix as the interactive connect path, kept narrow to the three
 /// kinds we already support there.
-async fn open_transport(auth: &NodeAuth, connect_timeout: Duration) -> Result<Box<dyn AsyncStream>, String> {
+pub(crate) async fn open_transport(auth: &NodeAuth, connect_timeout: Duration) -> Result<Box<dyn AsyncStream>, String> {
     match auth.proxy_type.as_str() {
         "socks5" => {
             let p_host = auth.proxy_host.as_deref().filter(|s| !s.is_empty())

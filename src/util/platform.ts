@@ -19,6 +19,10 @@ export const IS_LINUX: boolean =
 export const IS_WINDOWS: boolean =
   typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent);
 
+// macOS, where shortcuts take ⌘ instead of Ctrl.
+export const IS_MAC: boolean =
+  typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent);
+
 // True when we're inside a Tauri WebView (desktop or Android). Kept for future
 // use — some UI may want to differentiate a browser preview from packaged app.
 export const IS_TAURI: boolean =
