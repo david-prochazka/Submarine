@@ -454,17 +454,21 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
             aria-label="Forward name"
             className="field"
           />
+          <div role="radiogroup" aria-label="Forward type" className="seg w-full grid grid-cols-3">
+            {(["D", "L", "R"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="radio"
+                aria-checked={draft.type === t}
+                onClick={() => setDraft({ ...draft, type: t })}
+                className={`seg-item ${draft.type === t ? "bg-control text-white shadow-control" : ""}`}
+              >
+                {t === "D" ? "Dynamic" : t === "L" ? "Local" : "Remote"}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2">
-            <select
-              value={draft.type}
-              onChange={(e) => setDraft({ ...draft, type: e.target.value as "D" | "L" | "R" })}
-              aria-label="Forward type"
-              className="field w-auto shrink-0"
-            >
-              <option value="D" className="bg-elevated">Dynamic</option>
-              <option value="L" className="bg-elevated">Local</option>
-              <option value="R" className="bg-elevated">Remote</option>
-            </select>
             <input
               value={draft.local}
               onChange={(e) => setDraft({ ...draft, local: e.target.value })}

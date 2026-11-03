@@ -11,6 +11,7 @@ import TunnelsPanel from "./TunnelsPanel";
 import InfoPanel from "./InfoPanel";
 import { CmdsPanel } from "./CmdsPanel";
 import { RenameInput } from "../ui/renameInput";
+import { Switch } from "./FormRows";
 import { useIsCompact } from "../hooks/useViewport";
 import { fontFamilyCss, readFontFamily, readFontSize } from "../util/terminalFont";
 import { readShellSyncPairs, useShellSyncServer, type ShellSyncPair } from "../util/shellSync";
@@ -124,12 +125,12 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
         // after every toggle, so only a real pointer opens it.
         onMouseEnter={(e) => { if (window.matchMedia('(hover: hover)').matches) showGuide(e.currentTarget); }}
         onMouseLeave={() => setGuideAt(null)}
-        // Keyboard focus only: a mouse click focuses the checkbox too, and
+        // Keyboard focus only: a mouse click focuses the switch too, and
         // the guide would then outlive the pointer leaving.
         onFocus={(e) => { if (e.target.matches(':focus-visible')) showGuide(e.currentTarget); }}
         onBlur={() => setGuideAt(null)}
       >
-        <input type="checkbox" className="w-3 h-3 accent-primary" checked={on} aria-label="Dedicated session" onChange={(e) => onToggle(e.target.checked)} />
+        <Switch small label="Dedicated session" checked={on} onChange={onToggle} />
         <span>Dedicated</span>
         {on && (
           <span
@@ -165,7 +166,7 @@ const SepToggle = ({ on, onToggle, status, hint, onReconnect }: {
         document.body
       )}
       {/* Reconnect just the dedicated connection — outside the <label> so a
-          click can't toggle the checkbox. Shown whenever the toggle is on and
+          click can't flip the switch. Shown whenever the toggle is on and
           no connect attempt is already in flight; also the retry affordance
           after a red (failed) dot. */}
       {on && onReconnect && status !== 'pending' && (

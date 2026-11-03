@@ -76,16 +76,28 @@ export function SwitchRow({ label, hint, checked, onChange }: {
         <div className="font-medium text-white">{label}</div>
         {hint && <div className="text-[11.5px] text-zinc-500 leading-[15px]">{hint}</div>}
       </div>
-      <button
-        type="button"
-        onClick={() => onChange(!checked)}
-        role="switch"
-        aria-label={label}
-        aria-checked={checked}
-        className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${checked ? "bg-primary" : "bg-white/[0.08]"}`}
-      >
-        <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${checked ? "translate-x-[14px]" : ""}`} />
-      </button>
+      <Switch label={label} checked={checked} onChange={onChange} />
     </div>
+  );
+}
+
+// The switch on its own; `small` fits a tool header.
+export function Switch({ label, checked, onChange, small = false }: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  small?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      role="switch"
+      aria-label={label}
+      aria-checked={checked}
+      className={`relative shrink-0 rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${small ? "w-7 h-4" : "w-9 h-[22px]"} ${checked ? "bg-primary" : "bg-white/[0.08]"}`}
+    >
+      <span className={`absolute top-0.5 left-0.5 rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${small ? "w-3 h-3" : "w-[18px] h-[18px]"} ${checked ? (small ? "translate-x-3" : "translate-x-[14px]") : ""}`} />
+    </button>
   );
 }
