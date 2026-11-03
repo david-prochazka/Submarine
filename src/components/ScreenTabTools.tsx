@@ -96,7 +96,7 @@ function ReconnectBar({ onReconnect }: { onReconnect: () => void }) {
   );
 }
 
-const KEPT = <p className="text-[10.5px] text-zinc-600 leading-snug">Kept for this server on this device.</p>;
+const KEPT = <p className="text-[10.5px] text-zinc-500 leading-snug">Kept for this server on this device.</p>;
 
 function Figure({ label, value }: { label: string; value: string }) {
   return (
@@ -139,7 +139,7 @@ export function LinkPanel({ link, onLessData }: { link: LinkStats | null; onLess
           Use less data…
         </button>
       )}
-      <p className="text-[10.5px] text-zinc-600 leading-snug">
+      <p className="text-[10.5px] text-zinc-500 leading-snug">
         The delay is how long the server takes to answer, through everything on the way (SSH servers, VPNs). Under {GOOD_BELOW_MS} ms is good; from {WEAK_FROM_MS} ms on, every click shows the wait.
       </p>
     </>

@@ -100,7 +100,7 @@ const SyncServerSetting = ({ view, signedIn, onChanged }: Props) => {
   };
 
   const input =
-    "w-full h-9 px-3 bg-zinc-900/60 border border-white/10 rounded-lg text-[12.5px] font-mono text-zinc-50 placeholder:text-zinc-600 outline-none focus:border-primary/50 disabled:opacity-50";
+    "w-full h-9 px-3 bg-zinc-900/60 border border-white/10 rounded-lg text-[12.5px] font-mono text-zinc-50 placeholder:text-zinc-500 outline-none focus:border-primary/50 disabled:opacity-50";
   const proxyLabel = proxy.mode === "manual" ? (proxy.url ? hostOf(proxy.url) : "Manual") : PROXY_MODES.find((m) => m.mode === proxy.mode)!.label;
 
   return (
@@ -118,7 +118,7 @@ const SyncServerSetting = ({ view, signedIn, onChanged }: Props) => {
           <span className={`font-mono truncate ${view.is_custom ? "text-primary" : "text-zinc-400"}`} title={view.server}>
             {hostOf(view.server)}
           </span>
-          {view.is_custom && <span className="text-zinc-600 shrink-0">(custom)</span>}
+          {view.is_custom && <span className="text-zinc-500 shrink-0">(custom)</span>}
           <button onClick={startEdit} className="ml-auto shrink-0 hover:text-primary">
             Change
           </button>
@@ -135,7 +135,7 @@ const SyncServerSetting = ({ view, signedIn, onChanged }: Props) => {
             aria-label="Sync server URL"
             autoFocus
           />
-          <p className="text-zinc-600">Empty for the default. Use https:// (http:// only for localhost).</p>
+          <p className="text-zinc-500">Empty for the default. Use https:// (http:// only for localhost).</p>
 
           <button
             type="button"

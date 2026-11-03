@@ -284,7 +284,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                 {TAB_LABELS[id]}
                 {id === "commands" && <span className="text-zinc-500 tabular-nums">{commands.length}</span>}
                 {id === "notes" && <span className="text-zinc-500 tabular-nums">{notes.length}</span>}
-                {id === "node" && isNodeDirty && <span className="w-1.5 h-1.5 rounded-full bg-warning" aria-label="Unsaved" />}
+                {id === "node" && isNodeDirty && <span className="w-1.5 h-1.5 rounded-full bg-warning" role="img" aria-label="Unsaved" />}
               </button>
             ))}
           </div>
@@ -422,9 +422,9 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                     <div className="p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
+                          <h2 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
                             {c.title}
-                          </h4>
+                          </h2>
                           <pre
                             className="mt-1.5 p-1.5 px-2 bg-terminal rounded-md font-mono text-[11.5px] text-zinc-400 truncate whitespace-nowrap overflow-hidden"
                             title={c.content}
@@ -463,10 +463,10 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               );
             })
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-zinc-600 text-center px-4">
+            <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-center px-4">
               <Terminal size={32} className="opacity-20 mb-2" />
               <span className="text-xs font-bold text-zinc-500">No Commands Found</span>
-              <p className="text-[11.5px] mt-1 text-zinc-600 max-w-[200px]">
+              <p className="text-[11.5px] mt-1 text-zinc-500 max-w-[200px]">
                 {searchQuery ? "No matches for your search query." : "Save commands in the main app to surface them here."}
               </p>
             </div>
@@ -496,9 +496,9 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                     {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
+                    <h2 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
                       {(expanded ? edit.title : n.title) || "Untitled"}
-                    </h4>
+                    </h2>
                     {!expanded && (
                       <p className="mt-1 text-[11.5px] text-zinc-500 truncate">
                         {(n.body || "").split('\n')[0] || <span className="italic">(empty)</span>}
@@ -557,10 +557,10 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
             );
           })
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 text-zinc-600 text-center px-4">
+          <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-center px-4">
             <StickyNote size={32} className="opacity-20 mb-2" />
             <span className="text-xs font-bold text-zinc-500">No Notes Found</span>
-            <p className="text-[11.5px] mt-1 text-zinc-600 max-w-[200px]">
+            <p className="text-[11.5px] mt-1 text-zinc-500 max-w-[200px]">
               {searchQuery ? "No matches for your search query." : "Add notes from the Notes tab to surface them here."}
             </p>
           </div>

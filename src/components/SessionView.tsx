@@ -1583,7 +1583,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
           >
             {logs.map((l, i) => (
               <div key={i} className={`mb-2 ${l.type === 'error' ? 'text-red-400' : l.type === 'success' ? 'text-primary' : 'text-zinc-400'}`}>
-                <span className="text-zinc-600 opacity-50 mr-3">[{l.time}]</span>
+                <span className="text-zinc-500 opacity-50 mr-3">[{l.time}]</span>
                 {l.msg}
               </div>
             ))}
@@ -1603,6 +1603,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
   // Connected State with Nested Tabs
   return (
     <div className="relative flex-1 flex flex-col bg-background overflow-hidden animate-in fade-in">
+      {isActiveView && !chromeless && <h1 className="sr-only">{displayName || session.serverName}</h1>}
       {/* Auth prompts during an AUTO-RECONNECT. The full-screen view above only
           renders on the first connect (reconnectAttempt===0); once a reconnect
           cycle is running we show the terminal behind a slim banner, so the

@@ -232,7 +232,7 @@ export const Sidebar = ({
             type="button"
             onClick={onSearch}
             aria-keyshortcuts={searchShortcut}
-            className="w-full h-[30px] flex items-center gap-2 px-2.5 rounded-[7px] bg-white/[0.06] text-[13px] text-zinc-500 text-left transition-colors hover:bg-white/[0.09] hover:text-zinc-400"
+            className="w-full h-[30px] flex items-center gap-2 px-2.5 rounded-[7px] bg-white/[0.06] text-[13px] text-zinc-400 text-left transition-colors hover:bg-white/[0.09] hover:text-zinc-300"
           >
             <Search size={14} aria-hidden className="shrink-0" />
             <span className="flex-1 min-w-0 truncate">Search or run…</span>
@@ -277,7 +277,7 @@ export const Sidebar = ({
                   <item.icon size={15} aria-hidden className={`shrink-0 ${iconTone(active)}`} />
                   <span className="flex-1 min-w-0 truncate">{item.label}</span>
                   {item.alerts > 0
-                    ? <span className="pill h-4 px-1.5 text-[10.5px] bg-danger/[0.12] text-danger tabular-nums" aria-label={item.alerts === 1 ? "1 alert" : `${item.alerts} alerts`}>{item.alerts}</span>
+                    ? <span className="pill h-4 px-1.5 text-[10.5px] bg-danger/[0.12] text-danger tabular-nums">{item.alerts}<span className="sr-only">{item.alerts === 1 ? " alert" : " alerts"}</span></span>
                     : <Count n={item.count} />}
                 </button>
               </li>

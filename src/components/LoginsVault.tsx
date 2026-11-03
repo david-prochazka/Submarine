@@ -318,7 +318,7 @@ export default function LoginsVault({
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="block font-medium text-white truncate">{x.name}</span>
-                        <span className="block text-[11.5px] leading-[15px] text-zinc-500 truncate">{x.meta}</span>
+                        <span className={`block text-[11.5px] leading-[15px] truncate ${on ? "text-zinc-400" : "text-zinc-500"}`}>{x.meta}</span>
                       </span>
                       {x.unused && <span className="pill bg-white/[0.06] text-zinc-400">Unused</span>}
                     </button>

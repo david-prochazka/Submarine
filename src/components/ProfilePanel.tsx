@@ -516,7 +516,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             <div className="flex items-center gap-1.5 text-[12px] text-zinc-500" title="Encrypted vault size on this device">
               <HardDrive size={11} />
               {fmtBytes(stats.vault_bytes)}
-              <span className="text-zinc-600">·</span>
+              <span className="text-zinc-500">·</span>
               {stats.total_records} items
             </div>
           </div>
@@ -530,7 +530,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                   <span className="text-[12px] text-zinc-500 font-mono truncate max-w-[45%]">
                     {e.edited_by || "unattributed"}
                   </span>
-                  <span className="text-[12px] text-zinc-600 shrink-0 w-16 text-right">{hlcAgo(e.updated_at)}</span>
+                  <span className="text-[12px] text-zinc-500 shrink-0 w-16 text-right">{hlcAgo(e.updated_at)}</span>
                 </div>
               ))}
             </div>

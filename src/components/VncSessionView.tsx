@@ -401,7 +401,7 @@ export default function VncSessionView({ session, displayName, onClose, onStatus
                     key={i}
                     className={`mb-2 ${l.type === "error" ? "text-red-400" : l.type === "success" ? "text-primary" : l.type === "warning" ? "text-amber-300/90" : "text-zinc-400"}`}
                   >
-                    <span className="text-zinc-600 opacity-50 mr-3">[{l.time}]</span>
+                    <span className="text-zinc-500 opacity-50 mr-3">[{l.time}]</span>
                     {l.msg}
                   </div>
                 ))}

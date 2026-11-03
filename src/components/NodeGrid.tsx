@@ -611,10 +611,10 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         <div className="flex items-start gap-3">
           {iconTile(s)}
           <div className="flex-1 min-w-0">
-            <h3 className="text-[14px] leading-5 font-semibold text-white">
+            <h2 className="text-[14px] leading-5 font-semibold text-white">
               {/* A button so the keyboard can open it too: its click bubbles to the card. */}
               <button type="button" className="block max-w-full truncate text-left rounded-sm">{s.name}</button>
-            </h3>
+            </h2>
             <div className="mt-px font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</div>
           </div>
           {st && statusPill(st)}
@@ -727,9 +727,9 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             />
           ) : (
             <>
-              <h3 className="font-medium text-white leading-[18px]">
+              <h2 className="font-medium text-white leading-[18px]">
                 <button type="button" className="block max-w-full truncate text-left rounded-sm">{f.name}</button>
-              </h3>
+              </h2>
               <span className="block text-[12px] text-zinc-500 truncate">{contents}</span>
             </>
           )}

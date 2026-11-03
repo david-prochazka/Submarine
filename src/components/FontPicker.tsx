@@ -199,7 +199,7 @@ export default function FontPicker({
 
           <div className="px-3 pt-2 pb-1 text-[11px] font-semibold text-zinc-500">Built-in</div>
           {builtInRows.length ? builtInRows.map((r) => renderRow(r, index++)) : (
-            <div className="px-3 py-1.5 text-[11.5px] text-zinc-600">No match</div>
+            <div className="px-3 py-1.5 text-[11.5px] text-zinc-500">No match</div>
           )}
 
           <div className="my-1.5 border-t border-white/[0.075]" role="separator" />
@@ -219,11 +219,11 @@ export default function FontPicker({
             </div>
           )}
           {installedOnly.length > 0 && !installedRows.length && (
-            <div className="px-3 py-1.5 text-[11.5px] text-zinc-600">No match</div>
+            <div className="px-3 py-1.5 text-[11.5px] text-zinc-500">No match</div>
           )}
           {installedMono.map((r) => renderRow(r, index++))}
           {installedProp.length > 0 && (
-            <div className="px-3 pt-2.5 pb-1 text-[11.5px] font-semibold text-zinc-600">
+            <div className="px-3 pt-2.5 pb-1 text-[11.5px] font-semibold text-zinc-500">
               Proportional — columns may not line up in a terminal
             </div>
           )}

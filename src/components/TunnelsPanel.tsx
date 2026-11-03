@@ -430,7 +430,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
         <div className="flex items-center gap-2 min-w-0 text-[12.5px] text-zinc-400">
           <Activity size={12} className="shrink-0" />
           <span className="whitespace-nowrap">{total} {total === 1 ? "forward" : "forwards"}</span>
-          {total > 0 && <span className="text-zinc-600 font-normal whitespace-nowrap truncate">· {runningCount} running</span>}
+          {total > 0 && <span className="text-zinc-500 font-normal whitespace-nowrap truncate">· {runningCount} running</span>}
         </div>
         <button
           onClick={() => { setAdding((a) => !a); setError(null); }}
@@ -540,7 +540,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
           >
             <FileText size={13} aria-hidden />
             <span>Log</span>
-            <span className="text-zinc-600 font-normal">
+            <span className="text-zinc-500 font-normal">
               ({logFilter ? logs.filter((l) => l.tunnel_id === logFilter).length : logs.length})
             </span>
             {logFilter && (
@@ -585,7 +585,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
               const visible = logFilter ? logs.filter((l) => l.tunnel_id === logFilter) : logs;
               if (visible.length === 0) {
                 return (
-                  <div className="text-zinc-600 text-center py-4">
+                  <div className="text-zinc-500 text-center py-4">
                     No log entries {logFilter ? "for this tunnel" : "yet"}.
                   </div>
                 );
@@ -609,13 +609,13 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
                                           "bg-white/5 text-zinc-500";
                 return (
                   <div key={i} className="flex items-start gap-1.5">
-                    <span className="text-zinc-600 shrink-0">{hh}:{mm}:{ss}</span>
+                    <span className="text-zinc-500 shrink-0">{hh}:{mm}:{ss}</span>
                     <span className={`px-1 rounded font-sans text-[12px] font-medium shrink-0 ${eventTone}`}>
                       {l.event}
                     </span>
                     <span className={`flex-1 break-all ${tone}`}>
                       {l.target && <span className="text-zinc-200">{l.target}</span>}
-                      {l.peer && <span className="text-zinc-600"> ← {l.peer}</span>}
+                      {l.peer && <span className="text-zinc-500"> ← {l.peer}</span>}
                       {l.message && (
                         <span className={l.target || l.peer ? "text-zinc-500 ml-1" : ""}>
                           {l.target || l.peer ? "· " : ""}{l.message}

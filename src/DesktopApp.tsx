@@ -1333,7 +1333,7 @@ function DesktopApp() {
         <img src={logoUrl} alt="" draggable={false} className="h-6 w-auto max-w-[24px] object-contain select-none" />
         <span className="text-[12px] font-bold text-white tracking-tight">Submarine</span>
         {appVersion && (
-          <span data-tauri-drag-region className="text-[11px] text-zinc-500/60 tracking-tight tabular-nums">v{appVersion}</span>
+          <span data-tauri-drag-region className="text-[11px] text-zinc-500 tracking-tight tabular-nums">v{appVersion}</span>
         )}
       </div>
 
@@ -1605,11 +1605,13 @@ function DesktopApp() {
               <span
                 title={dotTitle}
                 className={`w-1.5 h-1.5 rounded-full mr-2 shrink-0 ${dotTone}`}
+                role="img"
                 aria-label={dotTitle}
               />
               {isBroadcastTarget && (
                 <span
                   title="Broadcast target"
+                  role="img"
                   aria-label="Broadcast target"
                   className="w-1.5 h-1.5 rounded-full mr-1.5 shrink-0 bg-warning"
                 />
@@ -1870,8 +1872,8 @@ function DesktopApp() {
             className="w-10 h-full flex items-center justify-center hover:bg-white/5 transition-colors group"
           >
             {isMaximized
-              ? <Copy size={12} className="text-zinc-600 group-hover:text-zinc-300 scale-x-[-1]" />
-              : <Square size={11} className="text-zinc-600 group-hover:text-zinc-300" />}
+              ? <Copy size={12} className="text-zinc-500 group-hover:text-zinc-300 scale-x-[-1]" />
+              : <Square size={11} className="text-zinc-500 group-hover:text-zinc-300" />}
           </button>
           <button title="Close" onClick={() => appWindow.close()} className="w-10 h-full flex items-center justify-center hover:bg-red-500 group transition-all"><X size={14} className="text-zinc-500 group-hover:text-snow" /></button>
         </div>
@@ -2505,7 +2507,7 @@ function DesktopApp() {
                 <div ref={wallAreaRef} className="flex-1 relative bg-black/40 overflow-auto custom-scrollbar">
                   {wallItems.length === 0 ? (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center px-6 pointer-events-none">
-                      <LayoutGrid size={40} className="text-zinc-600" />
+                      <LayoutGrid size={40} className="text-zinc-500" />
                       <div className="text-zinc-400 text-[13px] max-w-md leading-relaxed">
                         The Wall is a pinboard for watching multiple <em>terminals</em> at once.<br/>
                         Right-click a session tab or use the <span className="text-primary font-semibold">Add</span> button above to pin any terminal from any server.
@@ -2543,7 +2545,7 @@ function DesktopApp() {
                               <span className="font-semibold text-white truncate">
                                 {tabLabel(sess)}
                               </span>
-                              <span className="text-zinc-600">·</span>
+                              <span className="text-zinc-500">·</span>
                               <span className="text-zinc-400 truncate flex-1">
                                 {term?.title ?? item.terminalId}
                               </span>
@@ -2790,9 +2792,9 @@ function DesktopApp() {
                           return (
                             <li key={cmd.id} className="tile tile-hover group flex flex-col p-3.5 min-h-[132px]">
                               <div className="flex items-start gap-2 mb-2">
-                                <h3 className="flex-1 min-w-0 font-semibold text-white truncate">
+                                <h2 className="flex-1 min-w-0 font-semibold text-white truncate">
                                   <button type="button" onClick={edit} className="max-w-full truncate text-left after:absolute after:inset-0 after:rounded-[10px]">{cmd.title}</button>
-                                </h3>
+                                </h2>
                                 <button type="button" aria-label={`Delete ${cmd.title}`} onClick={async () => {
                                   const ok = await confirm({ title: "Delete command?", message: `“${cmd.title}” will be removed.`, destructive: true });
                                   if (!ok) return;
@@ -2817,10 +2819,10 @@ function DesktopApp() {
                           return (
                             <li key={n.id} className="tile tile-hover group flex flex-col p-3.5 min-h-[148px]">
                               <div className="flex items-start gap-2 mb-1.5">
-                                <h3 className="flex-1 min-w-0 font-semibold text-white truncate">
+                                <h2 className="flex-1 min-w-0 font-semibold text-white truncate">
                                   <button type="button" onClick={() => { setEditNoteData({ id: n.id, title: n.title || "", body: n.body || "" }); setIsNotePanelOpen(true); }}
                                     className="max-w-full truncate text-left after:absolute after:inset-0 after:rounded-[10px]">{title}</button>
-                                </h3>
+                                </h2>
                                 <button type="button" aria-label={`Delete ${title}`} onClick={async () => {
                                   const ok = await confirm({ title: "Delete note?", message: `“${title}” will be removed.`, destructive: true });
                                   if (!ok) return;

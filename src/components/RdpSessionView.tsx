@@ -384,7 +384,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
     >
       {logs.map((l, i) => (
         <div key={i} className={`mb-2 ${l.type === "error" ? "text-red-400" : l.type === "success" ? "text-primary" : l.type === "warning" ? "text-amber-300" : "text-zinc-400"}`}>
-          <span className="text-zinc-600 opacity-50 mr-3">[{l.time}]</span>
+          <span className="text-zinc-500 opacity-50 mr-3">[{l.time}]</span>
           {l.msg}
         </div>
       ))}

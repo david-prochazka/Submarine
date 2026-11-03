@@ -596,7 +596,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
                   spellCheck={false}
                   className="field flex-1 min-w-0 font-mono text-[12px]"
                 />
-                <ArrowRight size={14} className="text-zinc-600 shrink-0" />
+                <ArrowRight size={14} className="text-zinc-500 shrink-0" />
                 <input
                   type="text"
                   value={pair.remote}
@@ -711,10 +711,11 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             {/* Accent Color */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="font-medium text-white">Accent colour</label>
+                <label htmlFor="settings-accent" className="font-medium text-white">Accent colour</label>
                 <div className="flex items-center gap-2">
-                  <input 
-                    type="color" 
+                  <input
+                    id="settings-accent"
+                    type="color"
                     value={settings.primaryColor || '#3ecfc4'} 
                     onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
                     className="w-6 h-6 rounded-md bg-transparent cursor-pointer border-none p-0"

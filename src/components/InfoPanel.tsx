@@ -1118,7 +1118,7 @@ const NetworkTab = ({ sessionId, data }: { sessionId: string; data: NetworkData 
                   <span className="shrink-0">· MTU {n.mtu || "—"}</span>
                 </div>
                 {n.addrs.length === 0 ? (
-                  <div className="text-[11.5px] text-zinc-600 italic">no addresses</div>
+                  <div className="text-[11.5px] text-zinc-500 italic">no addresses</div>
                 ) : (
                   <div className="space-y-0.5">
                     {n.addrs.map((a, i) => (
@@ -1254,7 +1254,7 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[11.5px] text-zinc-600 italic pt-0.5">none</span>
+                        <span className="text-[11.5px] text-zinc-500 italic pt-0.5">none</span>
                       )}
                     </div>
                   ))}
@@ -1391,7 +1391,7 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
                 </button>
                 {open && (
                   c.count === 0 ? (
-                    <div className="px-3 py-2 text-[11.5px] text-zinc-600 italic border-t border-white/5">empty</div>
+                    <div className="px-3 py-2 text-[11.5px] text-zinc-500 italic border-t border-white/5">empty</div>
                   ) : detail?.loading ? (
                     <div className="px-3 py-2 text-[11.5px] text-zinc-500 border-t border-white/5 flex items-center gap-2">
                       <Loader2 size={11} className="animate-spin" /> Loading…
@@ -1401,7 +1401,7 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
                   ) : detail?.text != null ? (
                     <div className="border-t border-white/5 max-h-[40vh] overflow-auto custom-scrollbar">
                       <pre className="text-[12px] font-mono text-zinc-300 px-2.5 py-1.5 select-text whitespace-pre">
-                        {detail.text.trim() || <span className="text-zinc-600 italic">empty</span>}
+                        {detail.text.trim() || <span className="text-zinc-500 italic">empty</span>}
                       </pre>
                     </div>
                   ) : null
@@ -1541,11 +1541,11 @@ const PortsTab = ({ data, sessionId, onRefresh }: { data: PortsData; sessionId: 
                         {r.localPort ? <CopyValue value={r.localPort}>{r.localPort}</CopyValue> : "—"}
                       </td>
                       <td className="px-2 py-1 align-middle text-zinc-400 truncate" title={r.localAddr}>
-                        {r.localAddr ? (anyBind ? <span className="text-zinc-600">{r.localAddr}</span> : <CopyValue value={r.localAddr}>{r.localAddr}</CopyValue>) : ""}
+                        {r.localAddr ? (anyBind ? <span className="text-zinc-500">{r.localAddr}</span> : <CopyValue value={r.localAddr}>{r.localAddr}</CopyValue>) : ""}
                       </td>
                       <td className="px-2 py-1 align-middle text-[11px] text-zinc-500 truncate" title={r.state}>{r.state || ""}</td>
                       <td className="px-2 py-1 align-middle text-zinc-200 truncate" title={r.process}>
-                        {r.process ? <CopyValue value={r.process}>{r.process}</CopyValue> : <span className="text-zinc-600 italic">hidden</span>}
+                        {r.process ? <CopyValue value={r.process}>{r.process}</CopyValue> : <span className="text-zinc-500 italic">hidden</span>}
                       </td>
                       <td className="px-2 py-1 align-middle text-zinc-500 whitespace-nowrap">{r.pid || ""}</td>
                       <td className="px-1 py-1 align-middle text-right">
@@ -1750,7 +1750,7 @@ const ProcessesTab = ({ sessionId, disabled, visible = true }: { sessionId: stri
             )}
           </div>
         )}
-        <div className="mt-2 text-[11.5px] text-zinc-600 flex items-center gap-2">
+        <div className="mt-2 text-[11.5px] text-zinc-500 flex items-center gap-2">
           {intervalMs
             ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> auto · every {intervalMs / 1000}s</span>
             : <span>manual refresh</span>}
@@ -2023,7 +2023,7 @@ const StatusBadge = ({ tone, children }: { tone: "green" | "amber" | "red" | "zi
 // it shrinks with the pane instead of a fixed 176px that forced header wraps.
 const FilterInput = ({ value, onChange, placeholder }: { value: string; onChange: (s: string) => void; placeholder?: string }) => (
   <div className="relative w-full min-w-0">
-    <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+    <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
     <input
       type="text"
       value={value}

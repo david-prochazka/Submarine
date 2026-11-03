@@ -14,11 +14,11 @@ const mirror = (shade) => SHADES[SHADES.length - 1 - SHADES.indexOf(shade)];
 
 // Cool neutrals from the design tokens: 400 = muted, 500 = subtle, 900 = panel.
 const ZINC_DARK = {
-  50: "#F4F5F7", 100: "#E8EAED", 200: "#D5D9DE", 300: "#BCC2C9", 400: "#A3A9B1", 500: "#8B929B",
+  50: "#F4F5F7", 100: "#E8EAED", 200: "#D5D9DE", 300: "#BCC2C9", 400: "#A3A9B1", 500: "#9198A1",
   600: "#6A717A", 700: "#3A3F46", 800: "#2B2F35", 900: "#1D2024", 950: "#131518",
 };
 const ZINC_LIGHT = {
-  50: "#0E1013", 100: "#1A1D21", 200: "#2A2E33", 300: "#3A3F46", 400: "#555C65", 500: "#69707A",
+  50: "#0E1013", 100: "#1A1D21", 200: "#2A2E33", 300: "#3A3F46", 400: "#555C65", 500: "#626973",
   600: "#8B929B", 700: "#B9BEC5", 800: "#DDE0E4", 900: "#EEF0F2", 950: "#F7F8F9",
 };
 

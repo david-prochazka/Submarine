@@ -1754,7 +1754,7 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
       <div className={`shrink-0 border-b border-white/[0.075] ${rootMode ? "bg-danger/[0.06]" : ""}`}>
         <div ref={headerRowRef} className={`relative min-h-10 px-3 py-1.5 flex flex-wrap items-center gap-y-1 ${fit.tight ? "gap-x-1" : "gap-x-2"}`}>
           <div className={`flex items-baseline gap-2 min-w-0 ${fit.rows === 2 ? "basis-full" : "flex-1"}`}>
-            <h3 className="text-[13px] font-semibold text-white shrink-0">{provider.label}</h3>
+            <h2 className="text-[13px] font-semibold text-white shrink-0">{provider.label}</h2>
             {subtitle && <span className="text-[12px] text-zinc-500 truncate min-w-0" title={subtitle}>{subtitle}</span>}
             {viaShell && (
               <span

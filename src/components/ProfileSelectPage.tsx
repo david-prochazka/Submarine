@@ -754,7 +754,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
         className="hidden"
         onChange={onImportFilePicked}
       />
-      <div className="relative w-full max-w-[360px] m-auto flex flex-col">
+      <main className="relative w-full max-w-[360px] m-auto flex flex-col">
         <header className="flex flex-col items-center text-center select-none">
           <div className="relative grid h-28 w-28 place-items-center">
             {view === "unlock" && (
@@ -1123,7 +1123,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
         {(view === "profiles" || (view === "create" && firstRun)) && (
           <CloudBar status={cloudStatus} host={cloudHost} busy={busy} firstRun={firstRun} onManage={() => setCloudOpen(true)} />
         )}
-      </div>
+      </main>
 
       {/* GitHub, the update check and the running version side by side,
           with a live "new version" notice underneath when one is available

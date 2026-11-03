@@ -593,7 +593,7 @@ const NetworksView = ({ state }: { state: TabState<NetworkRow[]> }) => {
                 <div className="text-[11px] font-mono font-bold text-white truncate">{n.name}</div>
                 <div className="text-[11.5px] text-zinc-500 font-mono truncate">{n.driver} · scope:{n.scope}</div>
               </div>
-              <span className="shrink-0 text-[11px] font-mono text-zinc-600">{n.id.slice(0, 12)}</span>
+              <span className="shrink-0 text-[11px] font-mono text-zinc-500">{n.id.slice(0, 12)}</span>
             </div>
           ))}
         </div>
@@ -1193,7 +1193,7 @@ const ConfigView = ({ data }: { data: any }) => {
             {mounts.map((m, i) => (
               <div key={i} className="bg-white/[0.04] rounded-md px-2 py-1 text-[12px] font-mono">
                 <div className="text-zinc-300 truncate"><span className="text-zinc-500">{m.Type}:</span> {m.Source || m.Name}</div>
-                <div className="text-zinc-400 truncate">→ {m.Destination} <span className="text-zinc-600">{m.Mode || (m.RW === false ? "ro" : "rw")}</span></div>
+                <div className="text-zinc-400 truncate">→ {m.Destination} <span className="text-zinc-500">{m.Mode || (m.RW === false ? "ro" : "rw")}</span></div>
               </div>
             ))}
           </div>
@@ -1214,7 +1214,7 @@ const ConfigView = ({ data }: { data: any }) => {
               </div>
             ))}
             {Object.keys(exposed).filter(p => !(p in portBindings)).map(p => (
-              <div key={p} className="text-[11px] font-mono text-zinc-500">{p} <span className="text-zinc-600 italic">(exposed only)</span></div>
+              <div key={p} className="text-[11px] font-mono text-zinc-500">{p} <span className="text-zinc-500 italic">(exposed only)</span></div>
             ))}
           </div>
         )}
@@ -1334,7 +1334,7 @@ const SubBtn = ({ active, onClick, icon, children }: { active: boolean; onClick:
 
 const FilterInput = ({ value, onChange, placeholder }: { value: string; onChange: (s: string) => void; placeholder?: string }) => (
   <div className="relative">
-    <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+    <Search size={11} className="absolute left-2 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
     <input
       type="text"
       value={value}

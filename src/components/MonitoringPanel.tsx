@@ -643,7 +643,7 @@ const ServerCard = ({
       <div className="flex items-center gap-2.5">
         <span aria-hidden className="w-2 h-2 rounded-full shrink-0 bg-zinc-500" style={color ? { background: color } : undefined} />
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{row.name}</h3>
+          <h2 className="font-semibold text-white truncate">{row.name}</h2>
           <div className="text-[11.5px] text-zinc-500 truncate">
             <span className="font-mono">{row.host}{row.port !== 22 ? `:${row.port}` : ""}</span>
             {ago && !row.paused && <span> · {ago}</span>}

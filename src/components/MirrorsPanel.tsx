@@ -583,7 +583,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
       <div className="shrink-0 border-t border-white/[0.075] bg-surface">
         <div className="px-3 h-8 flex items-center justify-between border-b border-white/[0.075]">
           <span className="text-[12px] font-medium text-zinc-400 flex items-center gap-1.5">
-            <FileText size={13} aria-hidden /> Log <span className="text-zinc-600 font-normal">({logs.length})</span>
+            <FileText size={13} aria-hidden /> Log <span className="text-zinc-500 font-normal">({logs.length})</span>
           </span>
           <button
             onClick={() => setLogs([])}
@@ -600,7 +600,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
           className="h-36 overflow-auto px-2 py-1 font-mono text-[11.5px] leading-[17px] space-y-0.5 select-text cursor-text"
         >
           {logs.length === 0 ? (
-            <div className="text-zinc-600 text-center py-4">No log entries yet.</div>
+            <div className="text-zinc-500 text-center py-4">No log entries yet.</div>
           ) : (
             logs.map((l, i) => {
               const ts = new Date(l.ts_ms);
@@ -620,7 +620,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
                                             "bg-white/5 text-zinc-400";
               return (
                 <div key={i} className="flex items-start gap-1.5">
-                  <span className="text-zinc-600 shrink-0">{hh}:{mm}:{ss}</span>
+                  <span className="text-zinc-500 shrink-0">{hh}:{mm}:{ss}</span>
                   <span className={`px-1 rounded font-sans text-[12px] font-medium shrink-0 ${eventTone}`}>{l.event}</span>
                   <span className={`flex-1 break-all ${tone}`}>
                     {l.path && <span className="text-zinc-200">{l.path}</span>}
