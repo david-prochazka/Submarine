@@ -12,7 +12,7 @@ import { createRemoteProvider } from "../fs/remoteProvider";
 import { useOverwritePrompt, useTextPrompt } from "../ui/confirm";
 import { useIsNarrow } from "../hooks/useViewport";
 import { bookmarksKey } from "../util/sftpBookmarks";
-import { IS_ANDROID, IS_WINDOWS } from "../util/platform";
+import { IS_ANDROID, IS_MAC, IS_WINDOWS } from "../util/platform";
 
 // Root (sudo) mode for the remote pane — see `sftp_set_elevated` in lib.rs.
 type ElevationStatus = { elevated: boolean; passwordless: boolean };
@@ -535,6 +535,23 @@ const SftpWorkspace = ({ sessionId, disabled = false, serverId = 0, mirrorsConfi
   );
 
   const queueShown = shownView === "files" && transfers.length > 0;
+
+  // ⌘⌥T (Ctrl+Alt+Shift+T off the Mac) shows or hides the queue of the
+  // Files view on screen. Hidden sessions keep theirs mounted, so only the
+  // one with a box on screen answers. Not over a dialog.
+  useEffect(() => {
+    if (!queueShown) return;
+    const onKey = (e: KeyboardEvent) => {
+      const combo = IS_MAC ? e.metaKey && e.altKey && !e.ctrlKey && !e.shiftKey : e.ctrlKey && e.altKey && e.shiftKey && !e.metaKey;
+      if (!combo || e.code !== "KeyT" || e.repeat) return;
+      if (!rootRef.current?.getClientRects().length || document.querySelector('[role="dialog"], [role="alertdialog"]')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      toggleQueue();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  });
 
   return (
     <div ref={rootRef} className="flex-1 flex flex-col h-full overflow-hidden bg-surface relative">

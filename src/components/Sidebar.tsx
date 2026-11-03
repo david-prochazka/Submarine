@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { folderTree } from "../util/folderTree";
 import BrandMark from "./BrandMark";
+import { HAS_LIGHTS, LIGHTS_INSET } from "./WindowControls";
 
 const COLLAPSED_KEY = "submarine-sidebar-collapsed";
 
@@ -22,6 +23,9 @@ const Count = ({ n }: { n: number }) =>
   n > 0 ? <span className="text-[11px] text-zinc-500 tabular-nums px-0.5">{n}</span> : null;
 
 const alertLabel = (label: string, n: number) => (n > 0 ? `${label}, ${n === 1 ? "1 alert" : `${n} alerts`}` : label);
+
+const STATUS_DOT: Record<string, string> = { connected: "bg-emerald-400", connecting: "bg-amber-400 animate-pulse", failed: "bg-rose-500" };
+const STATUS_LABEL: Record<string, string> = { connected: "Connected", connecting: "Connecting", failed: "Disconnected" };
 
 // A count on an icon, for the rail and the phone dock.
 const AlertDot = ({ n }: { n: number }) => (
@@ -45,7 +49,7 @@ export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
   loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, onSearch, searchShortcut, lockShortcut,
-  toggleRequest = 0, sidebarShortcut, settingsShortcut,
+  toggleRequest = 0, sidebarShortcut, settingsShortcut, serverStatus = {}, onOpenServer,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -79,6 +83,16 @@ export const Sidebar = ({
     () => new Set<number>(activeFolderId != null && tree.has(activeFolderId) ? tree.pathOf(activeFolderId).map((f: any) => f.id) : []),
     [activeFolderId, tree],
   );
+
+  const serversIn = useMemo(() => {
+    const by = new Map<number, any[]>();
+    for (const s of servers) {
+      const f = tree.serverFolder(s);
+      if (f == null || !openPath.has(f)) continue;
+      by.set(f, [...(by.get(f) ?? []), s]);
+    }
+    return by;
+  }, [servers, tree, openPath]);
 
   const tools = [
     { id: "vault", icon: KeyRound, label: "Logins", count: loginCount, alerts: 0 },
@@ -141,7 +155,8 @@ export const Sidebar = ({
         active ? "bg-primary/15 text-primary" : "text-zinc-400 hover:bg-white/5 hover:text-white"
       }`;
     return (
-      <aside aria-label="Sidebar" className="w-14 h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col items-center py-2 gap-1 overflow-y-auto no-scrollbar">
+      <aside aria-label="Sidebar" className={`${HAS_LIGHTS ? "w-[76px]" : "w-14"} h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col items-center pb-2 gap-1 overflow-y-auto no-scrollbar`}>
+        {HAS_LIGHTS ? <div data-tauri-drag-region className="h-11 w-full shrink-0 border-b border-white/[0.075] mb-1" /> : <div className="h-1 shrink-0" />}
         <button type="button" onClick={toggleCollapsed} aria-label="Show sidebar" title={sidebarShortcut ? `Show sidebar (${sidebarShortcut})` : "Show sidebar"} aria-keyshortcuts={sidebarShortcut} className={railBtn(false)}>
           <PanelLeftOpen size={17} aria-hidden />
         </button>
@@ -180,6 +195,29 @@ export const Sidebar = ({
     );
   }
 
+  const renderServer = (s: any, depth: number) => {
+    const active = activeTab === `session-${s.id}`;
+    const status = serverStatus[s.id];
+    return (
+      <li key={`s${s.id}`}>
+        <button
+          type="button"
+          onClick={() => onOpenServer?.(s)}
+          aria-current={active ? "page" : undefined}
+          className={`${itemBase} ${itemTone(active)}`}
+          style={{ paddingLeft: 8 + depth * 14 + 18 }}
+        >
+          <span
+            role="img"
+            aria-label={status ? STATUS_LABEL[status] : "Not connected"}
+            className={`w-1.5 h-1.5 shrink-0 rounded-full ${status ? STATUS_DOT[status] : "bg-zinc-600"}`}
+          />
+          <span className="flex-1 min-w-0 truncate">{s.name}</span>
+        </button>
+      </li>
+    );
+  };
+
   const renderFolder = (f: any, depth: number): React.ReactNode => {
     const active = activeTab === "nodes" && activeFolderId === f.id;
     const open = openPath.has(f.id);
@@ -197,13 +235,18 @@ export const Sidebar = ({
           <ChevronRight
             size={12}
             aria-hidden
-            className={`shrink-0 text-zinc-500 transition-transform duration-150 ${children.length === 0 ? "invisible" : ""} ${open ? "rotate-90" : ""}`}
+            className={`shrink-0 text-zinc-500 transition-transform duration-150 ${children.length === 0 && countIn(f.id) === 0 ? "invisible" : ""} ${open ? "rotate-90" : ""}`}
           />
           <Icon size={15} aria-hidden className={`shrink-0 ${f.color ? "" : iconTone(active)}`} style={f.color ? { color: f.color } : undefined} />
           <span className="flex-1 min-w-0 truncate">{f.name}</span>
           <Count n={countIn(f.id)} />
         </button>
-        {open && children.length > 0 && <ul>{children.map((c: any) => renderFolder(c, depth + 1))}</ul>}
+        {open && (children.length > 0 || serversIn.has(f.id)) && (
+          <ul>
+            {children.map((c: any) => renderFolder(c, depth + 1))}
+            {(serversIn.get(f.id) ?? []).map((s: any) => renderServer(s, depth + 1))}
+          </ul>
+        )}
       </li>
     );
   };
@@ -212,7 +255,7 @@ export const Sidebar = ({
 
   return (
     <aside aria-label="Sidebar" className="w-[232px] h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col relative z-10">
-      <div data-tauri-drag-region className="h-11 shrink-0 flex items-center gap-2 pl-4 pr-2">
+      <div data-tauri-drag-region className={`h-11 shrink-0 flex items-center gap-2 pr-2 ${HAS_LIGHTS ? LIGHTS_INSET : "pl-4"}`}>
         <BrandMark className="h-5 w-5 shrink-0" />
         <span data-tauri-drag-region className="flex-1 text-[13px] font-semibold text-white tracking-tight">Supermarine</span>
         <button

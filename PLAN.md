@@ -25,7 +25,8 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Server cards: icon tile in the server's colour, name, `user@host:port` in mono, status pill from the open session, chips (protocol, jump host, tunnels, opens at start), "Last connected…" (per device, `util/lastConnected.ts`) swapped for Connect / Edit / More (Duplicate, Delete) on hover or focus. No OS or named tags: the app doesn't store them. No Files button yet: it needs a way to open a session on its Files tool (Phase 3)
 - [x] List layout (table; narrow widths drop columns)
 - [x] Folders as compact tiles above the servers (open, drop into, rename, delete)
-- [ ] Favorites section in the sidebar (needs a favourite flag on servers, synced) and servers with status dots under their folders in the sidebar
+- [x] Servers with status dots under their folders in the sidebar: an open folder (the one shown, and the folders above it) lists its servers after its subfolders; a click connects or switches, the session in front is highlighted. A folder holding only servers gets its chevron
+- [ ] Favorites section in the sidebar: needs a favourite flag on servers, synced
 - [x] Empty state: New server, Quick connect, import from `~/.ssh/config` (host count shown, highlighted when it has hosts) / PuTTY / MobaXterm / JSON (file picker, parsed straight into the import dialog)
 - [ ] The window title bar still sits above the page header; merging the two waits for Phase 3 (the tabs live there)
 
@@ -45,7 +46,7 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Transfer queue drawer: rows stay until "Clear finished", with speed, time left, destination, and failures in words with a fix (Retry as root for permission denied, Retry for a dropped connection or full disk), plus Show in folder for finished downloads. The backend's transfer events now carry `from`, `to` and `dir` for this. The start and finish toasts are gone; errors still toast
 - [x] Context menu and the Files dialogs (rename, new folder, move, properties, archive) restyled: elevated surface, sentence case, primary accents
 - [ ] Pause and resume a transfer: needs backend support
-- [ ] ⌘⌥T to show or hide the queue: Phase 10 with the other shortcuts
+- [x] ⌘⌥T (Ctrl+Alt+Shift+T off the Mac) shows or hides the queue of the Files view on screen, not over a dialog; named in the queue button's tooltip
 
 ## Phase 5: Server editor (artboard 4) ✅ done
 
@@ -61,7 +62,7 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Servers (open sessions first, then by last connected; status shown): ↩ connect or switch, ⌘↩ edit, ⌥↩ open beside the session in front (cross-server split). Actions: the session's tools (⌘2–⌘8), Split, Toggle inspector, Edit this server, Broadcast, New server, Quick connect, Import from `~/.ssh/config`, the sections, Activity log, appearance, Lock. Folders open in Servers. Saved commands for the server in front (scope respected) run in its active terminal; ⌥↩ types without running
 - [x] ↑ ↓, PgUp/PgDn, ⌃N/⌃P on the Mac; the footer names what ↩, ⌘↩ and ⌥↩ do for the selected row; Esc clears, then closes and returns focus. Combobox + listbox with groups for screen readers
 - [x] Sidebar "Search or run… ⌘K" field, and a search button on the collapsed rail. SessionView takes a `request` prop (view, split, inspector) for the palette
-- [ ] No way to open it on a phone yet (no keyboard, no sidebar): a search button in the mobile title bar or dock
+- [x] On a phone: a search button at the end of the title bar opens it
 - [ ] Shortcuts the design lists but the app doesn't have yet (⌘N, ⌘E, ⌘L, ⌘⇧M, ⌘⇧L, ⌘T) aren't shown: they show once Phase 10 wires them
 
 ## Phase 7: Monitor (artboard 6) ✅ done
@@ -118,6 +119,15 @@ The app is now called Supermarine, with a new logo: "Logo C Porthole (chosen)" o
 - [ ] Windows: a new `productName` likely gives the NSIS installer a new folder and uninstall entry, and the MSI a new upgrade code, so "Submarine" may stay installed beside "Supermarine" (data is shared through the identifier). Check on Windows; pin `bundle.windows.wix.upgradeCode` or have the installer remove the old one. Linux .deb/.rpm package names follow `productName` too
 - [ ] The screenshots in `docs/screenshots/` and `website/img` still show the old logo and name; `website/img/og.png` and the store listings need the new artwork
 - [ ] The repository name, the cloud host (`submarine.sinaxhpm.com`), the website path and the download links: last, with the upstream owner
+
+## Phase 12: Traffic lights
+
+The window's controls are the macOS traffic lights at the top-left on every desktop, in place of the Windows-style minimise / maximise / close at the top-right.
+
+- [x] macOS: the system's own lights. `tauri.macos.conf.json` turns decorations back on with an overlay title bar (`titleBarStyle: Overlay`, hidden title, lights at x 16, y 24 so they centre on the 44 px bar). The window-state plugin no longer saves or restores decorations, or a state saved while the window was frameless would turn the lights off again
+- [x] Windows and Linux (and the browser preview): `WindowControls.tsx` draws them in the same place: close, minimise, zoom (maximise), glyphs on hover, grey while the window is in the background. Out of the Tab order, like the native ones; the gaps between them still drag the window
+- [x] Room for them: the sidebar header, the title bar when locked or narrow, and the collapsed rail (76 px with a 44 px drag strip on top) keep the top-left 80 px clear. Android is unchanged
+- [ ] Check on Windows and Linux in a real build: the drawn lights' hover and the double-click on the bar to maximise
 
 ## Notes
 

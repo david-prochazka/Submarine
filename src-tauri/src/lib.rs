@@ -22053,8 +22053,15 @@ pub fn run() {
     // it intercepts window events; no JS-facing commands to lock down.
     // Mobile builds skip this entirely: Android decides window geometry,
     // not us, and the plugin's crate isn't compiled into the Android target.
+    // Decorations stay out of it: the window config decides them (native
+    // traffic lights on macOS), and a state saved before that would turn them
+    // back off.
     #[cfg(not(target_os = "android"))]
-    let builder = builder.plugin(tauri_plugin_window_state::Builder::default().build());
+    let builder = builder.plugin(
+        tauri_plugin_window_state::Builder::default()
+            .with_state_flags(tauri_plugin_window_state::StateFlags::all() & !tauri_plugin_window_state::StateFlags::DECORATIONS)
+            .build(),
+    );
     // Cross-platform URL opener — Android (Intent.ACTION_VIEW), Windows
     // (start), macOS (open), Linux (xdg-open). about.rs's open_external_url
     // dispatches through this so the same code path works in the desktop

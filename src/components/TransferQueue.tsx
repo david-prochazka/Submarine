@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { AlertTriangle, Ban, ChevronDown, ChevronUp, Download, FolderOpen, Trash2, Upload, X } from "lucide-react";
-import { IS_ANDROID } from "../util/platform";
+import { IS_ANDROID, IS_MAC } from "../util/platform";
 
 // One upload, download or long folder delete, as the backend reports it on
 // `sftp-transfer-{session}` (~10 times a second), plus what the workspace
@@ -86,6 +86,8 @@ interface TransferQueueProps {
 
 // The drawer along the bottom of Files: every transfer of this session with
 // its progress, how it ended, and for a failure why and what to do.
+const QUEUE_SHORTCUT = IS_MAC ? "⌘⌥T" : "Ctrl+Alt+Shift+T";
+
 const TransferQueue = ({ transfers, open, onToggle, onCancel, onClearFinished, onFix, onReveal, canSudo }: TransferQueueProps) => {
   const rootRef = useRef<HTMLElement | null>(null);
   const [compact, setCompact] = useState(false);
@@ -123,7 +125,8 @@ const TransferQueue = ({ transfers, open, onToggle, onCancel, onClearFinished, o
           onClick={onToggle}
           aria-expanded={open}
           aria-label={open ? "Hide transfers" : "Show transfers"}
-          title={open ? "Hide transfers" : "Show transfers"}
+          title={`${open ? "Hide transfers" : "Show transfers"} (${QUEUE_SHORTCUT})`}
+          aria-keyshortcuts={QUEUE_SHORTCUT}
         >
           {open ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
         </button>

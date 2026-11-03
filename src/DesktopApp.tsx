@@ -6,7 +6,7 @@ import { getVersion } from "@tauri-apps/api/app";
 import {
   Plus, X, RefreshCw, Terminal, Trash2,
   ArrowLeftRight, Shield, Cpu, TerminalSquare, List, Edit2,
-  StickyNote, Search, Square, Copy, ChevronLeft, MoreVertical, Radio,
+  StickyNote, Search, ChevronLeft, MoreVertical, Radio,
   ChevronDown, Columns, LayoutGrid, Pin, PinOff, Server,
   Monitor, Folder, Zap, Download, PanelRight, Activity, KeyRound, Library,
   Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare, LockKeyhole, Upload,
@@ -23,6 +23,7 @@ import { RenameInput } from "./ui/renameInput";
 import { forgetServerBookmarks } from "./util/sftpBookmarks";
 import { useIsNarrow } from "./hooks/useViewport";
 import { IS_ANDROID } from "./util/platform";
+import { HAS_LIGHTS, LIGHTS_INSET, TrafficLights } from "./components/WindowControls";
 import { FONT_FAMILY_KEY, FONT_SIZE_KEY, readFontFamily, readFontSize } from "./util/terminalFont";
 import { SCROLLBACK_KEY, readScrollback } from "./util/terminalScrollback";
 import {
@@ -263,20 +264,6 @@ function DesktopApp() {
     });
   }, []);
 
-  // Maximize state mirrored from the OS window so the title-bar button can
-  // swap its icon (single square = maximize, overlapping squares = restore)
-  // and so the double-click drag-region handler always knows the correct
-  // direction to toggle. Tauri's onResized event fires for every maximize /
-  // restore / OS-driven snap, so it's the authoritative signal.
-  const [isMaximized, setIsMaximized] = useState(false);
-  useEffect(() => {
-    let unlisten: (() => void) | null = null;
-    appWindow.isMaximized().then(setIsMaximized).catch(() => {});
-    appWindow.onResized(() => {
-      appWindow.isMaximized().then(setIsMaximized).catch(() => {});
-    }).then((fn) => { unlisten = fn; }).catch(() => {});
-    return () => { if (unlisten) unlisten(); };
-  }, []);
   const toggleMaximize = useCallback(() => {
     appWindow.toggleMaximize().catch(console.error);
   }, []);
@@ -1324,11 +1311,10 @@ function DesktopApp() {
         if (IS_ANDROID || target.closest('.no-drag')) return;
         toggleMaximize();
       }}
-      className={`bg-sidebar border-b border-white/[0.075] flex items-center justify-between pl-2 select-none shrink-0 z-50 drag ${isUnlocked && !isMobile ? 'relative h-11' : 'absolute top-0 left-0 right-0 h-10'}`}
+      className={`bg-sidebar border-b border-white/[0.075] flex items-center justify-between pr-2 select-none shrink-0 z-50 drag ${isUnlocked && !isMobile ? 'relative h-11 pl-2' : `absolute top-0 left-0 right-0 ${HAS_LIGHTS ? `h-11 ${LIGHTS_INSET}` : 'h-10 pl-2'}`}`}
     >
       {/* Logo + product name: hidden on phones to give the tab strip the
-          whole row. Desktop keeps the original 75 px left padding for
-          macOS traffic lights, plus the icon and brand. */}
+          whole row. */}
       <div className={`${isUnlocked && !isMobile ? 'hidden' : 'hidden sm:flex'} items-center gap-2 pr-4 pl-2`} data-tauri-drag-region>
         <BrandMark className="h-6 w-6 shrink-0" />
         <span className="text-[12px] font-bold text-white tracking-tight">Supermarine</span>
@@ -1853,30 +1839,15 @@ function DesktopApp() {
           )}
         </div>
       )}
-      {/* Window controls: desktop only, at any window width (the window has
-          no frame of its own, so a narrow one still needs them). Android has
-          its own gesture nav / system back button, and the WebView window has
-          no minimise or maximise affordance to surface — so the phone never
-          shows the cluster, not even turned sideways, when it is as wide as a
-          desktop window. */}
-      {!IS_ANDROID && (
-        <div className="flex items-center h-full gap-1 no-drag">
-          <button
-            onClick={() => appWindow.minimize()}
-            title="Minimize"
-            className="w-10 h-full flex items-center justify-center hover:bg-white/5 transition-colors"
-          ><div className="w-3.5 h-[1.5px] bg-zinc-600" /></button>
-          <button
-            onClick={toggleMaximize}
-            title={isMaximized ? "Restore" : "Maximize"}
-            className="w-10 h-full flex items-center justify-center hover:bg-white/5 transition-colors group"
-          >
-            {isMaximized
-              ? <Copy size={12} className="text-zinc-500 group-hover:text-zinc-300 scale-x-[-1]" />
-              : <Square size={11} className="text-zinc-500 group-hover:text-zinc-300" />}
-          </button>
-          <button title="Close" onClick={() => appWindow.close()} className="w-10 h-full flex items-center justify-center hover:bg-red-500 group transition-all"><X size={14} className="text-zinc-500 group-hover:text-snow" /></button>
-        </div>
+      {isMobile && isUnlocked && (
+        <button
+          type="button"
+          onClick={() => setPaletteOpen(true)}
+          aria-label="Search or run a command"
+          className="ml-auto shrink-0 w-9 h-9 flex items-center justify-center rounded-lg text-zinc-400 hover:bg-white/5 hover:text-white no-drag"
+        >
+          <Search size={17} aria-hidden />
+        </button>
       )}
       {tabMenu && (() => {
         const targetId = tabMenu.sessionId;
@@ -2079,6 +2050,7 @@ function DesktopApp() {
 
   return (
     <div className="h-full w-full bg-surface flex flex-col overflow-hidden text-zinc-200 select-none">
+      <TrafficLights />
       {/* Unlocked on desktop, the title bar sits beside the sidebar instead. */}
       {(!isUnlocked || isMobile) && TitleBar()}
       {!isUnlocked ? (
@@ -2089,7 +2061,7 @@ function DesktopApp() {
         // renders at the bottom while staying first in DOM order — keyboard
         // tab-order stays intuitive and <main> grabs the full screen width
         // (terminal gains the ~50px the vertical rail used to eat).
-        <div inert={overlayOpen ? "" : undefined} className={`flex-1 flex ${isMobile ? 'flex-col-reverse pt-10' : ''} overflow-hidden`}>
+        <div inert={overlayOpen ? "" : undefined} className={`flex-1 flex ${isMobile ? `flex-col-reverse ${HAS_LIGHTS ? 'pt-11' : 'pt-10'}` : ''} overflow-hidden`}>
           <Sidebar
             activeTab={isMobile && activeView.startsWith('session-') ? 'nodes' : activeView}
             setActiveTab={setActiveView}
@@ -2106,6 +2078,8 @@ function DesktopApp() {
               setIsPanelOpen(true);
             }}
             onSearch={() => setPaletteOpen(true)}
+            serverStatus={serverStatus}
+            onOpenServer={openServer}
             toggleRequest={sidebarToggle}
             sidebarShortcut={SHORTCUTS.sidebar}
             settingsShortcut={SHORTCUTS.settings}
