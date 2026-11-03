@@ -160,7 +160,7 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
 
   const logList = (
     <div
-      className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
+      className="flex-1 min-h-0 rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
       style={{ WebkitOverflowScrolling: "touch", lineHeight: 1.5 }}
     >
       {logs.map((l, i) => (
@@ -258,7 +258,7 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
         <div
           role="dialog"
           aria-label={`Connection prompt for ${session.serverName}`}
-          className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+          className="absolute inset-0 z-40 flex items-start justify-center bg-scrim p-4 sm:p-8 overflow-y-auto"
         >
           <div className="max-w-2xl w-full mt-6 sm:mt-12">
             <AuthPrompts

@@ -2448,7 +2448,7 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
 
       {/* Modal */}
       {modal && (
-        <div className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setModal(null)}>
+        <div className="fixed inset-0 z-[9998] bg-scrim flex items-center justify-center p-4" onClick={() => setModal(null)}>
           <div onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); setModal(null); } }}
             role="dialog" aria-modal="true" className="w-full max-w-[340px] bg-elevated rounded-xl shadow-sheet p-4 text-[13px] text-white">

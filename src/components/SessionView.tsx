@@ -1465,7 +1465,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
     <div
       role="dialog"
       aria-label={`Connection prompt for ${session.serverName}`}
-      className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+      className="absolute inset-0 z-40 flex items-start justify-center bg-scrim p-4 sm:p-8 overflow-y-auto"
     >
       <div className="max-w-2xl w-full mt-6 sm:mt-12">
         {authPrompts}
@@ -1578,7 +1578,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
               const el = e.currentTarget;
               logFollowRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < 32;
             }}
-            className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono overflow-y-auto overscroll-contain custom-scrollbar shadow-inner relative select-text cursor-text"
+            className="flex-1 min-h-0 rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 font-mono overflow-y-auto overscroll-contain custom-scrollbar shadow-inner relative select-text cursor-text"
             style={{ WebkitOverflowScrolling: 'touch', fontSize: logFontSize, fontFamily: logFontFamily, lineHeight: 1.5 }}
           >
             {logs.map((l, i) => (
@@ -2381,12 +2381,12 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                 closeShellSync();
               }
             }}
-            className="absolute inset-0 z-50 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+            className="absolute inset-0 z-50 flex items-start justify-center bg-scrim p-4 sm:p-8 overflow-y-auto"
           >
             <div
               ref={shellSyncPanelRef}
               tabIndex={-1}
-              className="max-w-xl w-full mt-6 sm:mt-12 bg-panel border border-white/10 rounded-2xl shadow-2xl overflow-hidden outline-none"
+              className="max-w-xl w-full mt-6 sm:mt-12 bg-elevated rounded-xl shadow-sheet overflow-hidden outline-none"
             >
               <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 min-w-0">

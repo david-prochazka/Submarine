@@ -1452,7 +1452,7 @@ const ModalShell = ({ title, onClose, actions, children }: { title: string; onCl
   // border — the modal IS the screen. From sm: up we revert to a centered
   // card with the soft-edge look. Saves the ~24 px of viewport that a
   // floating card eats on a 360 px screen.
-  <div className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex sm:items-center sm:justify-center sm:p-3 animate-in fade-in" onClick={onClose}>
+  <div className="fixed inset-0 z-[9999] bg-scrim flex sm:items-center sm:justify-center sm:p-3 animate-in fade-in" onClick={onClose}>
     <div onClick={(e) => e.stopPropagation()} className="bg-surface sm:border sm:border-white/10 sm:rounded-xl w-full sm:max-w-3xl h-full sm:h-[80vh] flex flex-col overflow-hidden shadow-2xl">
       <div className="shrink-0 h-11 sm:h-10 px-3 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
         <span className="text-[11px] font-semibold text-zinc-300 truncate select-text">{title}</span>

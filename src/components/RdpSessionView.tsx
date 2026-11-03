@@ -358,7 +358,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
     <div
       role="dialog"
       aria-label={`Connection prompt for ${session.serverName}`}
-      className="absolute inset-0 z-40 flex items-start justify-center bg-scrim backdrop-blur-sm p-4 sm:p-8 overflow-y-auto"
+      className="absolute inset-0 z-40 flex items-start justify-center bg-scrim p-4 sm:p-8 overflow-y-auto"
     >
       <div className="max-w-2xl w-full mt-6 sm:mt-12">
         <AuthPrompts
@@ -379,7 +379,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
 
   const logPanel = (
     <div
-      className="flex-1 min-h-0 bg-panel border border-white/5 rounded-2xl p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
+      className="flex-1 min-h-0 rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 font-mono text-[12px] overflow-y-auto overscroll-contain custom-scrollbar select-text cursor-text"
       style={{ WebkitOverflowScrolling: "touch", lineHeight: 1.5 }}
     >
       {logs.map((l, i) => (
@@ -646,7 +646,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
         </div>
 
         {status === "connected" && opened && (
-          <div className="mb-3 sm:mb-4 p-4 rounded-2xl border border-white/5 bg-panel text-[12.5px] leading-relaxed text-zinc-300 space-y-1.5">
+          <div className="mb-3 sm:mb-4 p-4 rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] text-[12.5px] leading-relaxed text-zinc-300 space-y-1.5">
             <p>
               {opened.app} connects to <span className="font-mono text-zinc-100">{opened.address}</span>
               {opened.via ? <> — a port of this computer that goes through the SSH server <span className="text-zinc-100">{opened.via}</span>.</> : "."}

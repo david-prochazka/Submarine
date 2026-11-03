@@ -3039,7 +3039,7 @@ function DesktopApp() {
 
       {/* The slide-overs stay mounted while closed (to slide out): inert
           then, so Tab can't reach their fields. */}
-      <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
+      <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-scrim' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
         <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
@@ -3106,7 +3106,7 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isNotePanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isNotePanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsNotePanelOpen(false)}>
+      <div inert={isNotePanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isNotePanelOpen ? 'bg-scrim' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsNotePanelOpen(false)}>
         <div ref={notePanelRef} tabIndex={-1} className={`w-full max-w-[480px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isNotePanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
@@ -3157,7 +3157,7 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isCredPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCredPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCredPanelOpen(false)}>
+      <div inert={isCredPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCredPanelOpen ? 'bg-scrim' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCredPanelOpen(false)}>
         <div ref={credPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isCredPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
@@ -3258,7 +3258,7 @@ function DesktopApp() {
         </div>
       </div>
 
-      <div inert={isKeyPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isKeyPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsKeyPanelOpen(false)}>
+      <div inert={isKeyPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isKeyPanelOpen ? 'bg-scrim' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsKeyPanelOpen(false)}>
         <div ref={keyPanelRef} tabIndex={-1} className={`w-full max-w-[450px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isKeyPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
           <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
             <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
