@@ -469,7 +469,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
                 const label = `${isDown ? "↓" : "↑"} ${isNew ? "new" : "mod"}`;
                 return (
                   <div key={i} className="flex items-center gap-2">
-                    <span className={`px-1 rounded font-sans text-[10.5px] font-medium shrink-0 ${tone}`}>{label}</span>
+                    <span className={`px-1 rounded font-sans text-[12px] font-medium shrink-0 ${tone}`}>{label}</span>
                     <span className="truncate flex-1 text-zinc-300">{e.path}</span>
                     <span className="text-zinc-500 shrink-0">{fmtBytes(e.size)}</span>
                   </div>
@@ -621,7 +621,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               return (
                 <div key={i} className="flex items-start gap-1.5">
                   <span className="text-zinc-600 shrink-0">{hh}:{mm}:{ss}</span>
-                  <span className={`px-1 rounded font-sans text-[10.5px] font-medium shrink-0 ${eventTone}`}>{l.event}</span>
+                  <span className={`px-1 rounded font-sans text-[12px] font-medium shrink-0 ${eventTone}`}>{l.event}</span>
                   <span className={`flex-1 break-all ${tone}`}>
                     {l.path && <span className="text-zinc-200">{l.path}</span>}
                     {l.message && (

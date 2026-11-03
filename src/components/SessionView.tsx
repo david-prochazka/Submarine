@@ -2000,12 +2000,12 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             isAttempting ? `Reconnecting · #${reconnectAttempt}` :
             isWaiting    ? `Retry in ${countdown}s · #${reconnectAttempt}` :
                            "Disconnected";
-          const btn = "h-8 min-w-8 sm:h-auto sm:min-h-6 px-2 sm:px-3 sm:py-1 rounded-md text-[10px] font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-1.5";
+          const btn = "h-8 min-w-8 sm:h-auto sm:min-h-6 px-2 sm:px-3 sm:py-1 rounded-md text-[11px] font-semibold transition-colors flex items-center justify-center gap-1.5";
           return (
             <div className={`shrink-0 px-3 sm:px-4 py-1.5 sm:py-2 border-b flex items-center gap-2 sm:gap-3 animate-in fade-in ${tone}`}>
               <AlertTriangle size={14} className="shrink-0" />
               <div
-                className="min-w-0 flex-1 truncate text-[11px] font-bold sm:uppercase sm:tracking-wider"
+                className="min-w-0 flex-1 truncate text-[12px] font-semibold"
                 title={disconnectReason ? `${heading} — ${disconnectReason}` : heading}
               >
                 <span className="sm:hidden">{shortHeading}</span>
@@ -2471,7 +2471,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                                   {e.remote}
                                 </span>
                                 {sends && <span className="shrink-0 text-zinc-500">{fmtBytes(e.size)}</span>}
-                                <span className={`shrink-0 text-[10px] font-bold uppercase tracking-wide ${tone}`}>{text}</span>
+                                <span className={`shrink-0 text-[11px] font-semibold ${tone}`}>{text}</span>
                               </div>
                               {e.crlf && (
                                 <p className="mt-0.5 text-[11px] text-amber-300">

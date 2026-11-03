@@ -60,21 +60,21 @@ export default function InvitesSection({ onLocalProfilesChanged }: Props) {
   if (shares.length === 0 && !err && !ok) return null;
 
   return (
-    <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
+    <div className="mt-4 pt-4 border-t border-white/[0.075] space-y-2">
       <div className="flex items-center gap-2 text-zinc-300">
-        <Users size={14} className="text-indigo-300" />
-        <span className="text-[12.5px] font-bold uppercase tracking-wider">Shared with you</span>
+        <Users size={14} className="text-info" />
+        <span className="text-[12.5px] font-semibold">Shared with you</span>
       </div>
 
       {err && (
-        <div className="px-3 py-2 rounded bg-rose-500/10 border border-rose-500/30 text-rose-200 text-[11.5px] flex items-start gap-2">
+        <div className="flex items-start gap-2 rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">
           <AlertTriangle size={12} className="mt-0.5 shrink-0" />
           <span className="flex-1 break-words">{err}</span>
-          <button aria-label="Dismiss" onClick={() => setErr(null)} className="text-rose-300/70 hover:text-white"><X size={11} /></button>
+          <button aria-label="Dismiss" onClick={() => setErr(null)} className="icon-btn -my-1 w-6 h-6"><X size={11} /></button>
         </div>
       )}
       {ok && !err && (
-        <div className="px-3 py-2 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-[11.5px]">{ok}</div>
+        <div className="rounded-lg bg-success/[0.12] px-3 py-2 text-[12.5px] text-white">{ok}</div>
       )}
 
       {shares.map((s) => (
@@ -124,24 +124,24 @@ function InviteRow({ share, ensureIdentity, onDone, onError, onOk }: {
   };
 
   return (
-    <div className="bg-zinc-900/40 border border-white/5 rounded-lg p-2.5">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-2.5">
       <div className="flex items-center gap-2">
-        <Users size={13} className="text-indigo-300 shrink-0" />
+        <Users size={13} className="text-info shrink-0" />
         <div className="min-w-0 flex-1">
-          <div className="text-[12.5px] text-zinc-100 font-semibold truncate">{share.name}</div>
-          <div className="text-[10.5px] text-zinc-500 truncate">from {share.owner_email}</div>
+          <div className="font-semibold text-white truncate">{share.name}</div>
+          <div className="text-[12px] text-zinc-500 truncate">from {share.owner_email}</div>
         </div>
         <RoleBadge role={share.role} />
         <button
           onClick={() => setOpen((o) => !o)}
-          className="h-7 px-2.5 rounded-lg bg-primary text-black text-[11px] font-bold flex items-center gap-1"
+          className="btn btn-primary"
         >
           {pending ? <><Check size={12} /> Accept</> : <><Download size={12} /> Set up here</>}
         </button>
       </div>
       {open && (
-        <div className="mt-2 pt-2 border-t border-white/5 space-y-2">
-          <p className="text-[10.5px] text-zinc-500 leading-relaxed">
+        <div className="mt-2 pt-2 border-t border-white/[0.075] space-y-2">
+          <p className="text-[12px] text-zinc-500 leading-relaxed">
             This makes a copy on this device. The password below is yours alone — it locks the copy on
             this machine and has nothing to do with {share.owner_email}'s password.
           </p>
@@ -149,7 +149,7 @@ function InviteRow({ share, ensureIdentity, onDone, onError, onOk }: {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Name it on this device"
-            className="w-full h-8 px-2.5 bg-black/40 border border-white/10 rounded-lg text-[12px] text-zinc-100 outline-none focus:border-primary/50"
+            className="field h-8"
           />
           <input
             type="password"
@@ -157,19 +157,19 @@ function InviteRow({ share, ensureIdentity, onDone, onError, onOk }: {
             onChange={(e) => setPw(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && take()}
             placeholder="Password for this copy (min 8)"
-            className="w-full h-8 px-2.5 bg-black/40 border border-white/10 rounded-lg text-[12px] text-zinc-100 outline-none focus:border-primary/50 placeholder:text-zinc-600"
+            className="field h-8"
           />
           <div className="flex gap-2">
             <button
               onClick={take}
               disabled={busy}
-              className="h-8 px-3 rounded-lg bg-primary text-black text-[11.5px] font-bold disabled:opacity-40 flex items-center gap-1.5"
+              className="btn btn-primary"
             >
               {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />} Set up
             </button>
             <button
               onClick={() => setOpen(false)}
-              className="h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-zinc-300 text-[11.5px] font-bold"
+              className="btn"
             >
               Cancel
             </button>

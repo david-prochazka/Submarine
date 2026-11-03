@@ -104,7 +104,7 @@ const SyncServerSetting = ({ view, signedIn, onChanged }: Props) => {
   const proxyLabel = proxy.mode === "manual" ? (proxy.url ? hostOf(proxy.url) : "Manual") : PROXY_MODES.find((m) => m.mode === proxy.mode)!.label;
 
   return (
-    <div className="mt-2 pt-3 border-t border-white/5 text-[11.5px] text-zinc-500 space-y-2">
+    <div className="mt-2 pt-3 border-t border-white/[0.075] text-[12px] text-zinc-500 space-y-2">
       {view.load_error && (
         <p className="text-amber-300/90 flex items-start gap-1.5">
           <AlertTriangle size={12} className="mt-0.5 shrink-0" />
@@ -190,14 +190,14 @@ const SyncServerSetting = ({ view, signedIn, onChanged }: Props) => {
             <button
               onClick={() => { setEditing(false); setError(null); }}
               disabled={busy}
-              className="h-7 px-3 rounded bg-white/5 border border-white/10 text-zinc-300 hover:bg-white/10 disabled:opacity-50"
+              className="btn"
             >
               Cancel
             </button>
             <button
               onClick={() => save(server)}
               disabled={busy}
-              className="h-7 px-3 rounded bg-primary text-black font-bold disabled:opacity-50"
+              className="btn btn-primary"
             >
               {busy ? "Checking…" : "Save"}
             </button>

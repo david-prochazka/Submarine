@@ -72,7 +72,7 @@ export default function CommandScopePicker({
         ))}
       </div>
       {someOnly && (
-        <div className="rounded-lg border border-white/10 bg-black/40">
+        <div className="rounded-lg bg-field shadow-[inset_0_0_0_0.5px_var(--border-strong)]">
           <input
             type="text"
             value={query}
@@ -96,7 +96,7 @@ export default function CommandScopePicker({
                   {box("servers", s.uuid)}
                   <Server size={12} className="text-zinc-400 shrink-0" />
                   <span className="truncate text-zinc-200">{s.name}</span>
-                  {f != null && <span className="ml-auto truncate text-[10.5px] text-zinc-500">{tree.label(f)}</span>}
+                  {f != null && <span className="ml-auto truncate text-[12px] text-zinc-500">{tree.label(f)}</span>}
                 </label>
               );
             })}

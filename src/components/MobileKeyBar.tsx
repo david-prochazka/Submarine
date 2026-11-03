@@ -45,7 +45,7 @@ export function MobileKeyBar({ modifiers, onToggleModifier, onSpecialKey }: Mobi
         onTouchStart={(e) => e.preventDefault()}
         aria-pressed={s !== "off"}
         title={s === "locked" ? `${label} locked — tap to release` : s === "armed" ? `${label} armed — next key combines, or tap to lock` : `Tap to arm ${label}`}
-        className={`shrink-0 h-9 min-w-[48px] px-2.5 rounded-md text-[10.5px] font-bold uppercase tracking-wider border transition-colors ${tone}`}
+        className={`btn h-9 shrink-0 min-w-[48px] ${tone}`}
       >
         {label}
       </button>
@@ -62,7 +62,7 @@ export function MobileKeyBar({ modifiers, onToggleModifier, onSpecialKey }: Mobi
       title={title}
       aria-label={title}
       className={`shrink-0 h-9 rounded-md font-bold border bg-white/[0.05] text-zinc-300 border-white/10 hover:bg-white/10 active:bg-white/15 transition-colors ${
-        symbol ? "min-w-[38px] px-2 text-[14px]" : "min-w-[48px] px-2.5 text-[10.5px] uppercase tracking-wider"
+        symbol ? "min-w-[38px] px-2 text-[14px]" : "min-w-[48px] px-2.5 text-[12px] font-medium"
       }`}
     >
       {label}

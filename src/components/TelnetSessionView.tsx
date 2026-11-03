@@ -183,7 +183,7 @@ export default function TelnetSessionView({ session, displayName, onClose, onSta
         </span>
         <span className="text-[12px] font-semibold text-zinc-100 truncate" title={session.serverName}>{name}</span>
         <span
-          className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-bold uppercase tracking-wider"
+          className="pill bg-warning/[0.12] text-warning shrink-0"
           title={NOT_ENCRYPTED}
         >
           <ShieldAlert size={10} aria-hidden="true" />

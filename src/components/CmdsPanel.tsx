@@ -327,7 +327,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               <button
                 onClick={() => copyToClipboard(nodeDraft || "")}
                 disabled={!nodeDraft}
-                className="h-7 px-2 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-7 px-2 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Copy current draft to clipboard"
               >
                 <ClipboardCopy size={11} /> Copy
@@ -340,13 +340,13 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                 if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); void saveNodeNotes(); }
               }}
               placeholder={`Notes for this node — paths, credentials hints, runbook steps…\nSaved on tab switch or Ctrl+Enter.`}
-              className="flex-1 w-full p-3 bg-black/40 border border-white/10 rounded-lg font-sans text-[12px] text-zinc-200 placeholder-zinc-600 leading-relaxed resize-none focus:outline-none focus:border-primary/50 custom-scrollbar"
+              className="field flex-1 h-auto py-2 resize-none"
             />
             <div className="flex gap-1.5 shrink-0">
               <button
                 onClick={() => setNodeDraft(nodeOriginal)}
                 disabled={nodeSaving || !isNodeDirty}
-                className="flex-1 h-8 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 h-8 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Revert to last saved version"
               >
                 <X size={11} /> Revert
@@ -354,7 +354,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               <button
                 onClick={() => void saveNodeNotes()}
                 disabled={nodeSaving || !isNodeDirty}
-                className="flex-1 h-8 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 h-8 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 title="Save (Ctrl+Enter, auto-saves on tab switch)"
               >
                 {nodeSaving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -369,7 +369,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               return (
                 <Fragment key={c.id}>
                 {heading && (
-                  <div className="px-1 pt-1 text-[9.5px] font-bold uppercase tracking-widest text-zinc-500" data-command-group>
+                  <div className="px-1 pt-1 text-[11px] font-semibold text-zinc-500" data-command-group>
                     {heading}
                   </div>
                 )}
@@ -386,7 +386,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                           if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
                         }}
                         placeholder="Title"
-                        className="w-full h-7 px-2 bg-black/40 border border-white/10 rounded text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50"
+                        className="field"
                         autoFocus
                       />
                       <textarea
@@ -398,20 +398,20 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                         }}
                         placeholder="Command body — runnable in shell"
                         rows={5}
-                        className="w-full p-2 bg-black/40 border border-white/10 rounded font-mono text-[11px] text-zinc-200 placeholder-zinc-600 leading-relaxed resize-y focus:outline-none focus:border-primary/50 custom-scrollbar"
+                        className="field h-auto py-2 font-mono text-[12px] resize-y"
                       />
                       <div className="flex gap-1.5">
                         <button
                           onClick={cancelEdit}
                           disabled={saving}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-50"
+                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-50"
                         >
                           <X size={11} /> Cancel
                         </button>
                         <button
                           onClick={saveEdit}
                           disabled={saving || !isDirty(edit)}
-                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                           title="Save (Ctrl+Enter)"
                         >
                           {saving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -426,7 +426,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                             {c.title}
                           </h4>
                           <pre
-                            className="mt-1.5 p-1.5 px-2 bg-black/40 rounded border border-white/5 font-mono text-[10px] text-zinc-400 truncate whitespace-nowrap overflow-hidden"
+                            className="mt-1.5 p-1.5 px-2 bg-terminal rounded-md font-mono text-[11.5px] text-zinc-400 truncate whitespace-nowrap overflow-hidden"
                             title={c.content}
                           >
                             {c.content.split('\n')[0] || ""}{c.content.split('\n').length > 1 ? " ..." : ""}
@@ -436,21 +436,21 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       <div className="flex gap-1.5 mt-2">
                         <button
                           onClick={() => writeToTerminal(c.content, true)}
-                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all"
+                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
                           title="Run in active terminal (writes + Enter)"
                         >
                           <Play size={11} fill="currentColor" /> Run
                         </button>
                         <button
                           onClick={() => writeToTerminal(c.content, false)}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all"
+                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
                           title="Paste into active terminal (no Enter)"
                         >
                           <ClipboardCopy size={11} /> Paste
                         </button>
                         <button
                           onClick={() => beginEditCommand(c)}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all"
+                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
                           title="Edit command inline"
                         >
                           <Pencil size={11} /> Edit
@@ -466,7 +466,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
             <div className="flex flex-col items-center justify-center py-16 text-zinc-600 text-center px-4">
               <Terminal size={32} className="opacity-20 mb-2" />
               <span className="text-xs font-bold text-zinc-500">No Commands Found</span>
-              <p className="text-[10px] mt-1 text-zinc-600 max-w-[200px]">
+              <p className="text-[11.5px] mt-1 text-zinc-600 max-w-[200px]">
                 {searchQuery ? "No matches for your search query." : "Save commands in the main app to surface them here."}
               </p>
             </div>
@@ -500,7 +500,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       {(expanded ? edit.title : n.title) || "Untitled"}
                     </h4>
                     {!expanded && (
-                      <p className="mt-1 text-[10px] text-zinc-500 truncate">
+                      <p className="mt-1 text-[11.5px] text-zinc-500 truncate">
                         {(n.body || "").split('\n')[0] || <span className="italic">(empty)</span>}
                       </p>
                     )}
@@ -514,7 +514,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       value={edit.title}
                       onChange={(e) => setEdit({ ...edit, title: e.target.value })}
                       placeholder="Title"
-                      className="w-full h-7 px-2 bg-black/40 border border-white/10 rounded text-[11px] text-white placeholder-zinc-600 focus:outline-none focus:border-primary/50"
+                      className="field"
                     />
                     <textarea
                       value={edit.body}
@@ -524,20 +524,20 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       }}
                       placeholder="Note body — markdown, paths, snippets…"
                       rows={6}
-                      className="w-full p-2 bg-black/40 border border-white/10 rounded font-sans text-[11px] text-zinc-200 placeholder-zinc-600 leading-relaxed resize-y focus:outline-none focus:border-primary/50 custom-scrollbar"
+                      className="field h-auto py-2 resize-y"
                       autoFocus
                     />
                     <div className="flex gap-1.5 flex-wrap">
                       <button
                         onClick={() => copyToClipboard(edit.body || "")}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all"
+                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
                         title="Copy current body to clipboard"
                       >
                         <ClipboardCopy size={11} /> Copy
                       </button>
                       <button
                         onClick={() => writeToTerminal(edit.body || "", false)}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all"
+                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
                         title="Paste body into active terminal (no Enter)"
                       >
                         <Play size={11} fill="currentColor" /> Paste
@@ -545,7 +545,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       <button
                         onClick={saveEdit}
                         disabled={saving || !isDirty(edit)}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[10px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         title={isDirty(edit) ? "Save changes (Ctrl+Enter)" : "No unsaved changes"}
                       >
                         {saving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -560,7 +560,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
           <div className="flex flex-col items-center justify-center py-16 text-zinc-600 text-center px-4">
             <StickyNote size={32} className="opacity-20 mb-2" />
             <span className="text-xs font-bold text-zinc-500">No Notes Found</span>
-            <p className="text-[10px] mt-1 text-zinc-600 max-w-[200px]">
+            <p className="text-[11.5px] mt-1 text-zinc-600 max-w-[200px]">
               {searchQuery ? "No matches for your search query." : "Add notes from the Notes tab to surface them here."}
             </p>
           </div>

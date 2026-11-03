@@ -76,10 +76,10 @@ export default function QuickUnlockCard({ profile, card, label }: { profile: str
       <div className={label}>On this device</div>
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[13px] font-semibold text-zinc-100">
+          <div className="flex items-center gap-1.5 font-medium text-white">
             <Fingerprint size={14} className="text-primary shrink-0" /> Unlock with {what}
           </div>
-          <p className="text-[11.5px] text-zinc-500 leading-relaxed mt-1">
+          <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             {support.ready
               ? `Open this profile without typing its password, on this ${hello ? "computer" : "phone"} only. The password still works, and is still needed on other devices.`
               : hello
@@ -93,12 +93,12 @@ export default function QuickUnlockCard({ profile, card, label }: { profile: str
           aria-label={`Unlock with ${what}`}
           disabled={busy || (!on && !support.ready)}
           onClick={() => void (on ? turnOff() : turnOn())}
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-40 ${on ? "bg-primary" : "bg-zinc-700"}`}
+          className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] disabled:opacity-40 ${on ? "bg-primary" : "bg-white/[0.08]"}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? "left-[22px]" : "left-0.5"}`} />
+          <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${on ? "translate-x-[14px]" : ""}`} />
         </button>
       </div>
-      {msg && <p role="status" className={`text-[11.5px] ${msg.tone === "err" ? "text-rose-300" : "text-emerald-300"}`}>{msg.text}</p>}
+      {msg && <p role="status" className={`text-[11.5px] ${msg.tone === "err" ? "text-danger" : "text-success"}`}>{msg.text}</p>}
     </section>
   );
 }

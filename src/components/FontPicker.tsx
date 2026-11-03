@@ -223,7 +223,7 @@ export default function FontPicker({
           )}
           {installedMono.map((r) => renderRow(r, index++))}
           {installedProp.length > 0 && (
-            <div className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-zinc-600">
+            <div className="px-3 pt-2.5 pb-1 text-[11.5px] font-semibold text-zinc-600">
               Proportional — columns may not line up in a terminal
             </div>
           )}

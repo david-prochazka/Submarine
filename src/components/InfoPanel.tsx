@@ -810,7 +810,7 @@ function freshTab<T>(): TabState<T> {
 // Compact + minimal: no uppercase / letter-spacing (both widen text ~30% and
 // were pushing the strip onto a second row on narrow panes), smaller height
 // and padding. Keeps the strip to a single line on far more widths.
-const subTabBase = "shrink-0 h-8 sm:h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-[11px] font-semibold tracking-tight transition-all";
+const subTabBase = "shrink-0 h-8 sm:h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-[11px] font-medium transition-all";
 const subTabIdle = "text-zinc-400 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white";
 const subTabActive = "bg-primary/10 text-primary border border-primary/20 shadow-inner";
 
@@ -945,13 +945,13 @@ const InfoPanel = ({ sessionId, disabled, visible = true }: InfoPanelProps) => {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <div className="shrink-0 h-9 px-3 flex items-center justify-between border-b border-white/5 bg-white/[0.02] gap-2">
-        <span className="text-[10px] text-zinc-500 truncate select-text">{fmtMeta}</span>
+        <span className="text-[11.5px] text-zinc-500 truncate select-text">{fmtMeta}</span>
         {tab !== "processes" && (
           <button
             onClick={() => fetchSection(tab)}
             disabled={activeState.loading || disabled}
             title="Refresh this tab"
-            className="h-9 sm:h-7 px-3 sm:px-2.5 rounded-md flex items-center gap-1.5 text-[10.5px] font-bold uppercase tracking-wider text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+            className="btn h-8 sm:h-7"
           >
             {activeState.loading ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
             <span>Refresh</span>
@@ -974,7 +974,7 @@ const InfoPanel = ({ sessionId, disabled, visible = true }: InfoPanelProps) => {
             <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-red-500/5 border border-red-500/20 text-red-300 text-[11px]">
               <AlertCircle size={14} className="mt-0.5 shrink-0" />
               <div className="min-w-0">
-                <div className="font-bold uppercase tracking-wider">{e.title}</div>
+                <div className="font-semibold">{e.title}</div>
                 {e.hint && <div className="text-red-200/80 mt-0.5">{e.hint}</div>}
                 <div className="opacity-70 mt-0.5 font-mono break-all">{activeState.error}</div>
               </div>
@@ -1063,7 +1063,7 @@ const OverviewTab = ({ data }: { data: OverviewData }) => {
                   {/* fsType may be empty on the no-type df fallback (busybox);
                       device can be very long (LVM paths) so it truncates too. */}
                   <span
-                    className="text-zinc-500 shrink text-[10px] font-mono truncate max-w-[45%]"
+                    className="text-zinc-500 shrink text-[11.5px] font-mono truncate max-w-[45%]"
                     title={`${d.fsType ? d.fsType + " · " : ""}${d.device}`}
                   >
                     {d.fsType ? `${d.fsType} · ` : ""}{d.device}
@@ -1108,24 +1108,24 @@ const NetworkTab = ({ sessionId, data }: { sessionId: string; data: NetworkData 
         ) : (
           <div className="grid grid-cols-1 [@media(min-width:560px)]:grid-cols-2 gap-2">
             {visible.map(n => (
-              <div key={n.name} className="bg-black/30 border border-white/5 rounded-lg p-2.5">
+              <div key={n.name} className="bg-white/[0.04] rounded-md-lg p-2.5">
                 <div className="flex items-center justify-between gap-2 mb-1.5">
                   <span className="text-[12px] font-mono font-bold text-white truncate">{n.name}</span>
                   <StatusBadge tone={n.state === "UP" ? "green" : "zinc"}>{n.state}</StatusBadge>
                 </div>
-                <div className="text-[10px] text-zinc-500 font-mono mb-1 flex items-center gap-1 min-w-0">
+                <div className="text-[11.5px] text-zinc-500 font-mono mb-1 flex items-center gap-1 min-w-0">
                   <span className="truncate min-w-0">{n.mac ? <CopyValue value={n.mac}>{n.mac}</CopyValue> : "—"}</span>
                   <span className="shrink-0">· MTU {n.mtu || "—"}</span>
                 </div>
                 {n.addrs.length === 0 ? (
-                  <div className="text-[10px] text-zinc-600 italic">no addresses</div>
+                  <div className="text-[11.5px] text-zinc-600 italic">no addresses</div>
                 ) : (
                   <div className="space-y-0.5">
                     {n.addrs.map((a, i) => (
                       // items-start + break-all: full IPv6 addresses WRAP and stay
                       // readable instead of truncating away half the address.
                       <div key={i} className="text-[11px] font-mono text-zinc-300 flex items-start gap-2">
-                        <span className="text-[9px] uppercase text-zinc-500 w-6 shrink-0 mt-0.5">
+                        <span className="text-[11px] text-zinc-500 w-6 shrink-0 mt-0.5">
                           {a.family === "inet" ? "v4" : a.family === "inet6" ? "v6" : a.family}
                         </span>
                         <span className="min-w-0 break-all">
@@ -1144,7 +1144,7 @@ const NetworkTab = ({ sessionId, data }: { sessionId: string; data: NetworkData 
         {filtered.length > NIC_INITIAL_CAP && (
           <button
             onClick={() => setShowAllNics(s => !s)}
-            className="mt-2 w-full h-8 rounded-lg border border-white/10 text-[10px] font-bold uppercase tracking-wider text-zinc-400 hover:bg-white/5 hover:text-white transition-all"
+            className="btn mt-2 w-full"
           >
             {showAllNics ? "Show fewer" : `Show all ${filtered.length}`}
           </button>
@@ -1155,14 +1155,14 @@ const NetworkTab = ({ sessionId, data }: { sessionId: string; data: NetworkData 
         <InfoCard title={`Routes (${data.routes.length})`} icon={<NetIcon size={12} />}>
           <div className="space-y-1">
             {data.routes.slice(0, 30).map((r, i) => (
-              <div key={i} className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded bg-black/30 border border-white/5">
+              <div key={i} className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded-md bg-white/[0.04]">
                 <span className="text-zinc-200 truncate min-w-0 flex-1">{r.dst}</span>
                 {r.via && <span className="text-zinc-500 shrink-0">via {r.via}</span>}
                 {r.dev && <span className="text-primary/80 shrink-0">{r.dev}</span>}
               </div>
             ))}
             {data.routes.length > 30 && (
-              <div className="text-[10px] text-zinc-500 italic px-2 pt-1">+{data.routes.length - 30} more</div>
+              <div className="text-[11.5px] text-zinc-500 italic px-2 pt-1">+{data.routes.length - 30} more</div>
             )}
           </div>
         </InfoCard>
@@ -1172,19 +1172,19 @@ const NetworkTab = ({ sessionId, data }: { sessionId: string; data: NetworkData 
         <InfoCard title={`DNS Servers (${data.dns.servers.length})`} icon={<Globe size={12} />}>
           <div className="space-y-1">
             {data.dns.servers.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded bg-black/30 border border-white/5">
+              <div key={i} className="flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded-md bg-white/[0.04]">
                 <Globe size={11} className="text-primary/70 shrink-0" />
                 <span className="text-zinc-200 truncate min-w-0 flex-1">
                   <CopyValue value={s}>{s}</CopyValue>
                 </span>
                 {data.dns.stub && s.startsWith("127.") && (
-                  <span className="text-[9px] uppercase tracking-wider text-amber-400/80 shrink-0">stub</span>
+                  <span className="text-[11px] text-amber-400/80 shrink-0">stub</span>
                 )}
               </div>
             ))}
           </div>
           {data.dns.stub && data.dns.servers.some(s => !s.startsWith("127.")) && (
-            <div className="text-[10px] text-zinc-500 italic mt-2 px-1">
+            <div className="text-[11.5px] text-zinc-500 italic mt-2 px-1">
               Resolved through the local systemd-resolved stub (127.0.0.53).
             </div>
           )}
@@ -1235,26 +1235,26 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
         ) : (
           <div className="space-y-1.5">
             {zones.map((z) => (
-              <div key={z.name} className="bg-black/30 border border-white/5 rounded-lg px-2.5 py-2">
+              <div key={z.name} className="bg-white/[0.04] rounded-md-lg px-2.5 py-2">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="text-[11px] font-mono font-bold text-white truncate">{z.name}</span>
                   {z.isDefault && <StatusBadge tone="green">default</StatusBadge>}
                   {z.interfaces.length > 0 && (
-                    <span className="text-[9.5px] text-zinc-500 font-mono truncate">{z.interfaces.join(", ")}</span>
+                    <span className="text-[11px] text-zinc-500 font-mono truncate">{z.interfaces.join(", ")}</span>
                   )}
                 </div>
                 <div className="space-y-1">
                   {([["services", z.services], ["ports", z.ports]] as const).map(([label, items]) => (
                     <div key={label} className="flex items-start gap-2">
-                      <span className="text-[9px] text-zinc-500 uppercase tracking-wide w-12 shrink-0 pt-1">{label}</span>
+                      <span className="text-[11px] text-zinc-500 w-12 shrink-0 pt-1">{label}</span>
                       {items.length ? (
                         <div className="flex flex-wrap gap-1">
                           {items.map((it) => (
-                            <span key={it} className="text-[10px] font-mono text-zinc-300 bg-white/[0.04] border border-white/5 rounded px-1.5 py-0.5">{it}</span>
+                            <span key={it} className="text-[11.5px] font-mono text-zinc-300 bg-white/[0.04] border border-white/5 rounded px-1.5 py-0.5">{it}</span>
                           ))}
                         </div>
                       ) : (
-                        <span className="text-[10px] text-zinc-600 italic pt-0.5">none</span>
+                        <span className="text-[11.5px] text-zinc-600 italic pt-0.5">none</span>
                       )}
                     </div>
                   ))}
@@ -1282,8 +1282,8 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
         }
       >
         {fw.ufwText ? (
-          <div className="max-h-[40vh] overflow-auto custom-scrollbar bg-black/30 border border-white/5 rounded-lg">
-            <pre className="text-[10.5px] font-mono text-zinc-300 px-2.5 py-1.5 select-text whitespace-pre">{fw.ufwText}</pre>
+          <div className="max-h-[40vh] overflow-auto custom-scrollbar bg-white/[0.04] rounded-md-lg">
+            <pre className="text-[12px] font-mono text-zinc-300 px-2.5 py-1.5 select-text whitespace-pre">{fw.ufwText}</pre>
           </div>
         ) : (
           <Empty>No rules reported.</Empty>
@@ -1372,7 +1372,7 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
             // Location suffix: for iptables it's `[table]`, for nft it's `[family/table]`.
             const loc = fw.engine === "iptables" ? c.table : `${c.family}/${c.table}`;
             return (
-              <div key={k} className="bg-black/30 border border-white/5 rounded-lg overflow-hidden">
+              <div key={k} className="bg-white/[0.04] rounded-md-lg overflow-hidden">
                 <button
                   onClick={() => {
                     const next = !open;
@@ -1383,24 +1383,24 @@ const FirewallCard = ({ sessionId, fw }: FirewallCardProps) => {
                 >
                   <ChevronRightIcon open={open} />
                   <span className="text-[11px] font-mono font-bold text-white truncate">{c.name}</span>
-                  <span className="text-[9.5px] text-zinc-500 shrink-0 font-mono">{loc}</span>
+                  <span className="text-[11px] text-zinc-500 shrink-0 font-mono">{loc}</span>
                   {c.policy && c.policy !== "-" && <StatusBadge tone={polTone as any}>{c.policy}</StatusBadge>}
-                  <span className="text-[9.5px] text-zinc-500 ml-auto shrink-0">
+                  <span className="text-[11px] text-zinc-500 ml-auto shrink-0">
                     {c.count} rule{c.count === 1 ? "" : "s"}
                   </span>
                 </button>
                 {open && (
                   c.count === 0 ? (
-                    <div className="px-3 py-2 text-[10px] text-zinc-600 italic border-t border-white/5">empty</div>
+                    <div className="px-3 py-2 text-[11.5px] text-zinc-600 italic border-t border-white/5">empty</div>
                   ) : detail?.loading ? (
-                    <div className="px-3 py-2 text-[10px] text-zinc-500 border-t border-white/5 flex items-center gap-2">
+                    <div className="px-3 py-2 text-[11.5px] text-zinc-500 border-t border-white/5 flex items-center gap-2">
                       <Loader2 size={11} className="animate-spin" /> Loading…
                     </div>
                   ) : detail?.error ? (
-                    <div className="px-3 py-2 text-[10px] text-red-300 border-t border-white/5 font-mono">{detail.error}</div>
+                    <div className="px-3 py-2 text-[11.5px] text-red-300 border-t border-white/5 font-mono">{detail.error}</div>
                   ) : detail?.text != null ? (
                     <div className="border-t border-white/5 max-h-[40vh] overflow-auto custom-scrollbar">
-                      <pre className="text-[10.5px] font-mono text-zinc-300 px-2.5 py-1.5 select-text whitespace-pre">
+                      <pre className="text-[12px] font-mono text-zinc-300 px-2.5 py-1.5 select-text whitespace-pre">
                         {detail.text.trim() || <span className="text-zinc-600 italic">empty</span>}
                       </pre>
                     </div>
@@ -1519,7 +1519,7 @@ const PortsTab = ({ data, sessionId, onRefresh }: { data: PortsData; sessionId: 
           <div className="overflow-x-auto custom-scrollbar -mx-1 px-1">
             <table className="w-full min-w-[460px] table-fixed border-collapse text-[11px] font-mono">
               <thead>
-                <tr className="text-left text-[9px] uppercase tracking-wider text-zinc-500 border-b border-white/10">
+                <tr className="text-left text-[11px] text-zinc-500 border-b border-white/10">
                   <th className="font-bold px-2 py-1.5 w-[46px]">Proto</th>
                   <th className="font-bold px-2 py-1.5 w-[54px]">Port</th>
                   <th className="font-bold px-2 py-1.5">Address</th>
@@ -1535,7 +1535,7 @@ const PortsTab = ({ data, sessionId, onRefresh }: { data: PortsData; sessionId: 
                   return (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/5">
                       <td className="px-2 py-1 align-middle">
-                        <span className={`text-[9px] px-1 py-0.5 rounded font-bold uppercase ${r.proto === "tcp" ? "bg-sky-500/15 text-sky-300 border border-sky-500/30" : "bg-amber-500/15 text-amber-300 border border-amber-500/30"}`}>{r.proto}</span>
+                        <span className={`text-[11px] px-1 py-0.5 rounded font-semibold ${r.proto === "tcp" ? "bg-sky-500/15 text-sky-300 border border-sky-500/30" : "bg-amber-500/15 text-amber-300 border border-amber-500/30"}`}>{r.proto}</span>
                       </td>
                       <td className="px-2 py-1 align-middle font-bold text-white whitespace-nowrap">
                         {r.localPort ? <CopyValue value={r.localPort}>{r.localPort}</CopyValue> : "—"}
@@ -1543,7 +1543,7 @@ const PortsTab = ({ data, sessionId, onRefresh }: { data: PortsData; sessionId: 
                       <td className="px-2 py-1 align-middle text-zinc-400 truncate" title={r.localAddr}>
                         {r.localAddr ? (anyBind ? <span className="text-zinc-600">{r.localAddr}</span> : <CopyValue value={r.localAddr}>{r.localAddr}</CopyValue>) : ""}
                       </td>
-                      <td className="px-2 py-1 align-middle text-[10px] uppercase tracking-wider text-zinc-500 truncate" title={r.state}>{r.state || ""}</td>
+                      <td className="px-2 py-1 align-middle text-[11px] text-zinc-500 truncate" title={r.state}>{r.state || ""}</td>
                       <td className="px-2 py-1 align-middle text-zinc-200 truncate" title={r.process}>
                         {r.process ? <CopyValue value={r.process}>{r.process}</CopyValue> : <span className="text-zinc-600 italic">hidden</span>}
                       </td>
@@ -1694,7 +1694,7 @@ const ProcessesTab = ({ sessionId, disabled, visible = true }: { sessionId: stri
               onClick={fetchNow}
               disabled={loading || disabled}
               title="Refresh now"
-              className="h-7 px-2 rounded-md flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-zinc-300 bg-white/[0.04] border border-white/10 hover:bg-white/[0.08] hover:text-white disabled:opacity-40 transition-all"
+              className="btn"
             >
               {loading ? <Loader2 size={11} className="animate-spin" /> : <RefreshCw size={11} />}
             </button>
@@ -1712,7 +1712,7 @@ const ProcessesTab = ({ sessionId, disabled, visible = true }: { sessionId: stri
           <div className="overflow-x-auto custom-scrollbar -mx-1 px-1">
             <table className="w-full border-collapse text-[11px] font-mono whitespace-nowrap">
               <thead>
-                <tr className="text-left text-[9px] uppercase tracking-wider text-zinc-500 border-b border-white/10">
+                <tr className="text-left text-[11px] text-zinc-500 border-b border-white/10">
                   <th className="font-bold px-2 py-1.5">PID</th>
                   <th className="font-bold px-2 py-1.5">User</th>
                   <th onClick={() => setSortKey("cpu")} className={`font-bold px-2 py-1.5 cursor-pointer hover:text-zinc-300 ${sortKey === "cpu" ? "text-primary" : ""}`}>CPU%</th>
@@ -1746,11 +1746,11 @@ const ProcessesTab = ({ sessionId, disabled, visible = true }: { sessionId: stri
               </tbody>
             </table>
             {filtered.length > CAP && (
-              <div className="text-[10px] text-zinc-500 italic px-2 pt-2">Showing top {CAP} of {filtered.length} by {sortKey.toUpperCase()}.</div>
+              <div className="text-[11.5px] text-zinc-500 italic px-2 pt-2">Showing top {CAP} of {filtered.length} by {sortKey.toUpperCase()}.</div>
             )}
           </div>
         )}
-        <div className="mt-2 text-[10px] text-zinc-600 flex items-center gap-2">
+        <div className="mt-2 text-[11.5px] text-zinc-600 flex items-center gap-2">
           {intervalMs
             ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> auto · every {intervalMs / 1000}s</span>
             : <span>manual refresh</span>}
@@ -1882,7 +1882,7 @@ const ServicesTab = ({ sessionId, data, onRefresh }: { sessionId: string; data: 
               const result = lastResult[s.unit];
               const isBusy = !!busy[s.unit];
               return (
-                <div key={`${s.unit}-${i}`} className="bg-black/30 border border-white/5 rounded-lg p-2">
+                <div key={`${s.unit}-${i}`} className="bg-white/[0.04] rounded-md-lg p-2">
                   <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -1896,10 +1896,10 @@ const ServicesTab = ({ sessionId, data, onRefresh }: { sessionId: string; data: 
                           : "zinc"
                         }>{s.active}</StatusBadge>
                         {s.sub && s.sub !== s.active && (
-                          <span className="text-[9px] text-zinc-500 uppercase">{s.sub}</span>
+                          <span className="text-[11px] text-zinc-500">{s.sub}</span>
                         )}
                       </div>
-                      {s.desc && <div className="text-[10px] text-zinc-500 mt-0.5 truncate" title={s.desc}>{s.desc}</div>}
+                      {s.desc && <div className="text-[11.5px] text-zinc-500 mt-0.5 truncate" title={s.desc}>{s.desc}</div>}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {!isActive && (
@@ -1918,8 +1918,8 @@ const ServicesTab = ({ sessionId, data, onRefresh }: { sessionId: string; data: 
                     </div>
                   </div>
                   {result && (
-                    <div className={`mt-1.5 text-[10px] px-2 py-1 rounded ${result.ok ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" : "bg-red-500/10 text-red-300 border border-red-500/20"}`}>
-                      <span className="font-bold uppercase tracking-wider mr-1">{result.ok ? "OK" : "Error"}</span>
+                    <div className={`mt-1.5 text-[11.5px] px-2 py-1 rounded ${result.ok ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/20" : "bg-red-500/10 text-red-300 border border-red-500/20"}`}>
+                      <span className="font-semibold mr-1">{result.ok ? "OK" : "Error"}</span>
                       <span className="font-mono whitespace-pre-wrap break-words">{result.msg}</span>
                     </div>
                   )}
@@ -1957,7 +1957,7 @@ const InfoCard = ({ title, icon, actions, toolbar, children, className = "", bod
       {/* Title row never wraps: the title truncates, small actions stay pinned. */}
       <div className="px-3 py-2 flex items-center gap-2 min-w-0">
         {icon && <span className="text-zinc-500 shrink-0">{icon}</span>}
-        <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 select-text truncate min-w-0 flex-1">{title}</span>
+        <span className="text-[11px] font-semibold text-zinc-400 select-text truncate min-w-0 flex-1">{title}</span>
         {actions && <div className="shrink-0 flex items-center gap-1.5">{actions}</div>}
       </div>
       {toolbar && <div className="px-3 pb-2">{toolbar}</div>}
@@ -1975,7 +1975,7 @@ interface KVProps { label: string; value: string; icon?: React.ReactNode; copyab
 // width.
 const KV = ({ label, value, icon, copyable }: KVProps) => (
   <div className="py-1 first:pt-0 last:pb-0 border-b border-white/[0.03] last:border-0">
-    <div className="text-[9.5px] font-semibold uppercase tracking-wider text-zinc-500 flex items-center gap-1 mb-0.5">
+    <div className="text-[11px] font-semibold text-zinc-500 flex items-center gap-1 mb-0.5">
       {icon}{label}
     </div>
     <div className="text-[11px] font-mono text-zinc-200 select-text break-words leading-snug">
@@ -1993,13 +1993,13 @@ const Meter = ({ label, used, total, compact }: MeterProps) => {
   return (
     <div className={compact ? "" : "py-1 first:pt-0 last:pb-0"}>
       {label && (
-        <div className="flex items-baseline justify-between text-[10px] mb-1">
-          <span className="font-bold uppercase tracking-wider text-zinc-500">{label}</span>
+        <div className="flex items-baseline justify-between text-[11.5px] mb-1">
+          <span className="font-semibold text-zinc-500">{label}</span>
           <span className="font-mono text-zinc-300 select-text">{formatBytes(used)} <span className="text-zinc-500">/ {formatBytes(total)}</span></span>
         </div>
       )}
       {!label && (
-        <div className="flex items-baseline justify-between text-[10px] mb-1">
+        <div className="flex items-baseline justify-between text-[11.5px] mb-1">
           <span className="font-mono text-zinc-400 select-text">{formatBytes(used)} used</span>
           <span className="font-mono text-zinc-500 select-text">{formatBytes(total)} total · {pct.toFixed(0)}%</span>
         </div>
@@ -2012,11 +2012,11 @@ const Meter = ({ label, used, total, compact }: MeterProps) => {
 };
 
 const StatusBadge = ({ tone, children }: { tone: "green" | "amber" | "red" | "zinc"; children: React.ReactNode }) => {
-  const cls = tone === "green" ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
-    : tone === "amber" ? "bg-amber-500/15 text-amber-300 border-amber-500/30"
-    : tone === "red"   ? "bg-red-500/15 text-red-300 border-red-500/30"
-    : "bg-zinc-500/10 text-zinc-400 border-zinc-500/20";
-  return <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border ${cls}`}>{children}</span>;
+  const cls = tone === "green" ? "bg-success/[0.14] text-success"
+    : tone === "amber" ? "bg-warning/[0.14] text-warning"
+    : tone === "red"   ? "bg-danger/[0.14] text-danger"
+    : "bg-white/[0.06] text-zinc-400";
+  return <span className={`pill shrink-0 ${cls}`}>{children}</span>;
 };
 
 // Fluid width — designed to live in an InfoCard `toolbar` row and fill it, so
@@ -2029,7 +2029,7 @@ const FilterInput = ({ value, onChange, placeholder }: { value: string; onChange
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="h-7 pl-7 pr-2 text-[10px] bg-black/40 border border-white/10 rounded-md text-zinc-200 placeholder:text-zinc-600 focus:border-primary/50 outline-none w-full"
+      className="field h-7 pl-7 text-[12px] w-full"
     />
   </div>
 );
@@ -2037,7 +2037,7 @@ const FilterInput = ({ value, onChange, placeholder }: { value: string; onChange
 const ProtoPill = ({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) => (
   <button
     onClick={onClick}
-    className={`h-9 sm:h-7 px-3 sm:px-2 rounded-md text-[10.5px] font-bold uppercase tracking-wider transition-all border ${active ? "bg-primary/15 text-primary border-primary/30" : "bg-white/[0.04] text-zinc-400 border-white/10 hover:bg-white/[0.08] hover:text-white"}`}
+    className={`btn h-8 sm:h-7 ${active ? "bg-primary/15 text-primary border-primary/30" : "bg-white/[0.04] text-zinc-400 border-white/10 hover:bg-white/[0.08] hover:text-white"}`}
   >
     {children}
   </button>
@@ -2052,10 +2052,10 @@ const CountPill = ({ active, onClick, tone, count, children }: { active: boolean
   return (
     <button
       onClick={onClick}
-      className={`h-9 sm:h-7 px-3 sm:px-2 rounded-md text-[10.5px] font-bold uppercase tracking-wider transition-all border flex items-center gap-1.5 ${baseTone} hover:brightness-110`}
+      className={`btn h-8 sm:h-7 ${baseTone} hover:brightness-110`}
     >
       <span>{children}</span>
-      <span className="text-[9.5px] opacity-70">{count}</span>
+      <span className="text-[11px] opacity-70 tabular-nums">{count}</span>
     </button>
   );
 };

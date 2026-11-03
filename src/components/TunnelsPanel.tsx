@@ -610,7 +610,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
                 return (
                   <div key={i} className="flex items-start gap-1.5">
                     <span className="text-zinc-600 shrink-0">{hh}:{mm}:{ss}</span>
-                    <span className={`px-1 rounded font-sans text-[10.5px] font-medium shrink-0 ${eventTone}`}>
+                    <span className={`px-1 rounded font-sans text-[12px] font-medium shrink-0 ${eventTone}`}>
                       {l.event}
                     </span>
                     <span className={`flex-1 break-all ${tone}`}>

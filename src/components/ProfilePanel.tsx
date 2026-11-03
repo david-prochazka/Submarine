@@ -314,20 +314,24 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
     } catch (e) { fail(e); } finally { setBusy(false); }
   };
 
-  const card = "bg-zinc-900/40 border border-white/5 rounded-xl p-4 space-y-3";
-  const label = "text-[11px] font-semibold text-zinc-500";
+  const card = "rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-3";
+  const label = "text-[13px] font-semibold text-white";
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-8 space-y-5 animate-in overflow-y-auto custom-scrollbar">
-      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-zinc-700 pb-5 sm:pb-6 shrink-0">
+    <div className="flex-1 flex flex-col overflow-hidden bg-surface">
+    <header className="h-[52px] shrink-0 flex items-center gap-2 pl-4 pr-3 border-b border-white/[0.075]">
+      <span className="flex-1 min-w-0 h-6 flex items-center font-semibold text-white truncate">Profile &amp; sharing</span>
+    </header>
+    <div className="flex-1 flex flex-col px-4 pt-5 pb-8 sm:px-8 sm:pt-7 sm:pb-10 space-y-5 overflow-y-auto custom-scrollbar">
+      <header className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-3 shrink-0">
         <div className="min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <h2 className="text-[18px] sm:text-[22px] font-bold text-white tracking-tight truncate">
+            <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em] text-white truncate">
               {st?.profile ?? "—"}
-            </h2>
+            </h1>
             {shared && <RoleBadge role={st?.role ?? "user"} />}
           </div>
-          <p className="hidden sm:block text-[13px] text-zinc-400">
+          <p className="mt-0.5 text-zinc-400">
             {shared
               ? isOwner ? "You share this profile. Manage who gets in, below." : "Shared with you by someone else."
               : "This profile lives only on your devices."}
@@ -336,14 +340,14 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
       </header>
 
       {err && (
-        <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-200 text-[12px] flex items-start gap-2">
+        <div className="flex items-start gap-2 rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">
           <AlertTriangle size={13} className="mt-0.5 shrink-0" />
           <span className="flex-1 break-words">{err}</span>
-          <button aria-label="Dismiss" onClick={() => setErr(null)} className="text-rose-300/70 hover:text-white"><X size={12} /></button>
+          <button aria-label="Dismiss" onClick={() => setErr(null)} className="icon-btn -my-1 w-6 h-6"><X size={12} /></button>
         </div>
       )}
       {ok && !err && (
-        <div className="px-3 py-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-200 text-[12px] flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg bg-success/[0.12] px-3 py-2 text-[12.5px] text-white">
           <CheckCircle2 size={13} /> <span className="flex-1 break-words">{ok}</span>
         </div>
       )}
@@ -375,7 +379,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
           </div>
         )}
         {otherServer && st && (
-          <div className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-100 text-[12px] space-y-2">
+          <div className="rounded-lg bg-warning/[0.12] px-3 py-2 text-[12.5px] text-white space-y-2">
             <div className="flex items-start gap-2">
               <AlertTriangle size={13} className="mt-0.5 shrink-0 text-amber-300" />
               <span className="flex-1 break-words">
@@ -390,7 +394,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
               <button
                 onClick={moveHere}
                 disabled={busy}
-                className="h-8 px-3 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-100 text-[12px] font-bold hover:bg-amber-500/30 disabled:opacity-40"
+                className="btn btn-primary"
               >
                 Sync with {hostOf(st.current_server)}
               </button>
@@ -403,7 +407,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
               <button
                 onClick={doSync}
                 disabled={syncing}
-                className="h-9 px-3 rounded-lg bg-primary text-black text-[12.5px] font-bold disabled:opacity-40 flex items-center gap-2"
+                className="btn btn-primary h-8"
               >
                 <RefreshCw size={13} className={syncing ? "animate-spin" : ""} />
                 {syncing ? "Syncing…" : "Sync now"}
@@ -413,8 +417,8 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             <div className="flex items-center gap-2 flex-wrap text-[11.5px]">
               {autoSync ? (
                 <>
-                  <span className="flex items-center gap-1.5 text-emerald-300/90">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="flex items-center gap-1.5 text-success">
+                    <span className="w-1.5 h-1.5 rounded-full bg-success" />
                     Auto-sync is on — your changes are saved to the cloud automatically.
                   </span>
                   <button onClick={onToggleAutoSync} className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2 shrink-0">Turn off</button>
@@ -433,20 +437,18 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                 anything next to the Sync-now button and the on/off state it
                 modifies, and it's the answer to "is this thing even running?" */}
             {autoSync && (
-              <div className="border-t border-white/5 pt-3 flex items-center gap-2 flex-wrap">
-                <span className="text-[11.5px] text-zinc-400">Check for others' changes every</span>
-                <div className="flex items-center gap-1">
+              <div className="border-t border-white/[0.075] pt-3 flex items-center gap-2 flex-wrap">
+                <span className="text-[12px] text-zinc-400">Check for others' changes every</span>
+                <div role="group" aria-label="Check interval" className="seg">
                   {[1, 2, 5, 10, 15, 30].map((m) => (
                     <button
                       key={m}
+                      type="button"
                       onClick={() => onSetInterval(m)}
-                      className={`h-7 px-2.5 rounded-md text-[11.5px] font-medium transition-colors ${
-                        syncIntervalMin === m
-                          ? "bg-primary text-black"
-                          : "bg-zinc-900/60 text-zinc-400 hover:text-zinc-200 border border-white/5"
-                      }`}
+                      aria-pressed={syncIntervalMin === m}
+                      className="seg-item"
                     >
-                      {m}m
+                      {m} min
                     </button>
                   ))}
                 </div>
@@ -457,13 +459,13 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
               const pending = d.needs_push + d.needs_pull;
               if (pending === 0) {
                 return (
-                  <div className="flex items-center gap-1.5 text-[11.5px] text-emerald-300/90">
+                  <div className="flex items-center gap-1.5 text-[11.5px] text-success">
                     <CheckCircle2 size={12} /> Everything is in sync with the cloud.
                   </div>
                 );
               }
               return (
-                <div className="text-[11.5px] text-amber-200/90 space-y-1">
+                <div className="text-[12px] text-zinc-300 space-y-1">
                   <div className="flex items-center gap-1.5">
                     <AlertTriangle size={12} />
                     {d.needs_push > 0 && <span>{d.needs_push} to send</span>}
@@ -472,7 +474,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                     <span className="text-zinc-500">— run Sync now.</span>
                   </div>
                   {d.out_of_sync_nodes.length > 0 && (
-                    <div className="text-[10.5px] text-zinc-500 pl-[18px]">
+                    <div className="text-[12px] text-zinc-500 pl-[18px]">
                       Nodes: {d.out_of_sync_nodes.slice(0, 8).join(", ")}
                       {d.out_of_sync_nodes.length > 8 ? ` +${d.out_of_sync_nodes.length - 8} more` : ""}
                     </div>
@@ -483,7 +485,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                       the vault), and no amount of syncing can ever clear them. */}
                   {stuck && (
                     <div className="pl-[18px] pt-1 space-y-1">
-                      <div className="text-[10.5px] text-zinc-500 leading-relaxed">
+                      <div className="text-[12px] text-zinc-500 leading-relaxed">
                         Still {d.needs_pull} to receive after syncing. These are almost certainly
                         items this device can't read — pushed by another copy of this profile that had its
                         own key. Syncing will never clear them.
@@ -491,7 +493,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                       <button
                         onClick={forcePush}
                         disabled={busy || syncing}
-                        className="text-[11px] text-amber-300 hover:text-amber-200 underline underline-offset-2 disabled:opacity-40"
+                        className="text-[12px] text-warning underline underline-offset-2 disabled:opacity-40"
                       >
                         Replace the cloud copy with this device
                       </button>
@@ -511,7 +513,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             <div className={`${label} flex items-center gap-1.5`}>
               <History size={12} /> Recent activity
             </div>
-            <div className="flex items-center gap-1.5 text-[10.5px] text-zinc-500" title="Encrypted vault size on this device">
+            <div className="flex items-center gap-1.5 text-[12px] text-zinc-500" title="Encrypted vault size on this device">
               <HardDrive size={11} />
               {fmtBytes(stats.vault_bytes)}
               <span className="text-zinc-600">·</span>
@@ -519,22 +521,22 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             </div>
           </div>
           {stats.recent_edits.length === 0 ? (
-            <p className="text-[11.5px] text-zinc-500 italic">No nodes yet.</p>
+            <p className="text-[12px] text-zinc-500">No nodes yet.</p>
           ) : (
             <div className="space-y-1">
               {stats.recent_edits.map((e, i) => (
                 <div key={i} className="flex items-center gap-2 py-1 text-[12px]">
                   <span className="text-zinc-200 truncate flex-1">{e.name}</span>
-                  <span className="text-[10.5px] text-zinc-500 font-mono truncate max-w-[45%]">
+                  <span className="text-[12px] text-zinc-500 font-mono truncate max-w-[45%]">
                     {e.edited_by || "unattributed"}
                   </span>
-                  <span className="text-[10.5px] text-zinc-600 shrink-0 w-16 text-right">{hlcAgo(e.updated_at)}</span>
+                  <span className="text-[12px] text-zinc-600 shrink-0 w-16 text-right">{hlcAgo(e.updated_at)}</span>
                 </div>
               ))}
             </div>
           )}
           {stats.vault_bytes > 5 * 1024 * 1024 && (
-            <div className="flex items-start gap-1.5 text-[10.5px] text-amber-300/80 pt-1 border-t border-white/5">
+            <div className="flex items-start gap-1.5 text-[12px] text-warning pt-1 border-t border-white/[0.075]">
               <AlertTriangle size={11} className="mt-0.5 shrink-0" />
               <span>This profile is getting large. Very heavy profiles sync and open more slowly — consider splitting rarely-used nodes into a separate profile.</span>
             </div>
@@ -546,7 +548,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
       <section className={card}>
         <div className="flex items-center justify-between gap-2">
           <div className={label}>Access</div>
-          <span className="text-[10px] text-zinc-500">end-to-end encrypted</span>
+          <span className="text-[11.5px] text-zinc-500">end-to-end encrypted</span>
         </div>
 
         {!signedIn ? (
@@ -561,7 +563,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             <button
               onClick={startSharing}
               disabled={busy}
-              className="h-9 px-3 rounded-lg bg-primary text-black text-[12.5px] font-bold disabled:opacity-40 flex items-center gap-2"
+              className="btn btn-primary h-8"
             >
               {busy ? <Loader2 size={13} className="animate-spin" /> : <Share2 size={13} />}
               Share this profile
@@ -578,31 +580,36 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                     onChange={(e) => setEmail(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && invite()}
                     placeholder="Invite by email…"
-                    className="flex-1 min-w-[160px] h-9 px-3 bg-black/40 border border-white/10 rounded-lg text-[12.5px] text-zinc-100 outline-none focus:border-primary/50 placeholder:text-zinc-600"
+                    aria-label="Email address to invite"
+                    className="field flex-1 min-w-[160px] h-8"
                   />
-                  <div className="flex bg-black/30 border border-white/10 rounded-lg p-0.5">
+                  <div className="seg">
                     <button
                       onClick={() => setRole("editor")}
-                      className={`h-8 px-2.5 rounded-md text-[11px] font-bold flex items-center gap-1 ${role === "editor" ? "bg-sky-500/20 text-sky-200" : "text-zinc-400"}`}
+                      type="button"
+                      aria-pressed={role === "editor"}
+                      className="seg-item"
                     >
-                      <Pencil size={10} /> Editor
+                      <Pencil size={12} aria-hidden /> Editor
                     </button>
                     <button
                       onClick={() => setRole("user")}
-                      className={`h-8 px-2.5 rounded-md text-[11px] font-bold flex items-center gap-1 ${role === "user" ? "bg-white/10 text-zinc-100" : "text-zinc-400"}`}
+                      type="button"
+                      aria-pressed={role === "user"}
+                      className="seg-item"
                     >
-                      <Eye size={10} /> Viewer
+                      <Eye size={12} aria-hidden /> Viewer
                     </button>
                   </div>
                   <button
                     onClick={invite}
                     disabled={busy}
-                    className="h-9 px-3 rounded-lg bg-primary text-black text-[12px] font-bold disabled:opacity-40 flex items-center gap-1.5"
+                    className="btn btn-primary h-8"
                   >
                     {busy ? <Loader2 size={12} className="animate-spin" /> : <UserPlus size={12} />} Invite
                   </button>
                 </div>
-                <p className="text-[10.5px] text-zinc-500">{roleBlurb[role]}</p>
+                <p className="text-[12px] text-zinc-500">{roleBlurb[role]}</p>
               </div>
             )}
 
@@ -613,7 +620,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                   <Loader2 size={11} className="animate-spin" /> Loading people…
                 </div>
               ) : members.length === 0 ? (
-                <div className="text-[11.5px] text-zinc-500 italic flex items-center gap-1.5">
+                <div className="text-[12px] text-zinc-500 flex items-center gap-1.5">
                   <Users size={12} /> Nobody else yet.
                 </div>
               ) : (
@@ -624,7 +631,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                       {m.email === st?.email && <span className="text-zinc-500 not-italic"> (you)</span>}
                     </span>
                     {m.status === "pending" && (
-                      <span className="text-[11px] font-semibold text-amber-300/80">invited</span>
+                      <span className="pill h-[18px] bg-warning/[0.12] text-warning">invited</span>
                     )}
                     <RoleBadge role={m.role} />
                     {isOwner && m.role !== "owner" && (
@@ -633,7 +640,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                           onClick={() => changeRole(m.user_id, m.role === "user" ? "editor" : "user")}
                           disabled={busy}
                           title={m.role === "user" ? "Let them make changes" : "Make read-only"}
-                          className="h-6 px-1.5 rounded bg-white/5 border border-white/10 text-zinc-400 hover:text-zinc-100 text-[10px] disabled:opacity-40"
+                          className="btn btn-sm"
                         >
                           {m.role === "user" ? "↑ Editor" : "↓ Viewer"}
                         </button>
@@ -641,7 +648,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                           onClick={() => revoke(m)}
                           disabled={busy}
                           title="Remove access"
-                          className="h-6 w-6 grid place-items-center rounded bg-white/5 border border-white/10 text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 disabled:opacity-40"
+                          className="icon-btn w-6 h-6 hover:text-danger"
                         >
                           <X size={11} />
                         </button>
@@ -653,7 +660,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
             </div>
 
             {keys?.current && (
-              <p className="text-[10.5px] text-zinc-500 leading-relaxed">
+              <p className="text-[12px] text-zinc-500 leading-relaxed">
                 Key fingerprint <span className="font-mono text-zinc-300">{keys.current}</span>.{" "}
                 {isOwner
                   ? "When you remove someone, the key is replaced, and members compare the new one with this."
@@ -661,29 +668,29 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
               </p>
             )}
             {keys?.pending && (
-              <p className="text-[11px] text-amber-200/90 leading-relaxed">
+              <p className="text-[12px] text-zinc-300 leading-[16px]">
                 A new key (<span className="font-mono">{keys.pending}</span>) is waiting for your OK in Servers. Until
                 you accept it, your changes aren't uploaded.
               </p>
             )}
             {isOwner && keyRetry && (
-              <div className="flex items-center gap-2 text-[11px] text-amber-200/90">
+              <div className="flex items-center gap-2 text-[12px] text-zinc-300">
                 <span className="flex-1">The key wasn't replaced, so whoever you removed still holds it.</span>
                 <button
                   onClick={replaceKey}
                   disabled={busy}
-                  className="h-7 px-2.5 rounded bg-amber-400/10 border border-amber-400/30 text-amber-200 hover:bg-amber-400/20 text-[11px] font-bold disabled:opacity-40 flex items-center gap-1.5"
+                  className="btn"
                 >
                   {busy ? <Loader2 size={11} className="animate-spin" /> : <KeyRound size={11} />} Replace the key
                 </button>
               </div>
             )}
 
-            <div className="pt-2 border-t border-white/5">
+            <div className="pt-2 border-t border-white/[0.075]">
               <button
                 onClick={stopSharing}
                 disabled={busy}
-                className="h-8 px-3 rounded-lg bg-white/5 border border-white/10 text-zinc-300 hover:text-rose-300 hover:bg-rose-500/10 text-[11.5px] font-bold flex items-center gap-1.5 disabled:opacity-40"
+                className="btn"
               >
                 <ShieldOff size={12} /> {isOwner ? "Stop sharing" : "Leave this profile"}
               </button>
@@ -691,6 +698,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
           </>
         )}
       </section>
+    </div>
     </div>
   );
 }

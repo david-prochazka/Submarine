@@ -397,7 +397,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
       role="note"
       title={RDP_BUILTIN_EXPERIMENTAL}
       aria-label={RDP_BUILTIN_EXPERIMENTAL}
-      className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-bold uppercase tracking-wider"
+      className="pill bg-warning/[0.12] text-warning shrink-0"
     >
       <FlaskConical size={10} aria-hidden="true" />
       <span className="hidden [@container(min-width:560px)]:inline">Experimental</span>

@@ -294,7 +294,7 @@ export default function VncSessionView({ session, displayName, onClose, onStatus
         <span className="min-w-0 truncate text-[12px] font-semibold text-zinc-200" title={session.serverName}>{name}</span>
         {connected && via === "" && (
           <span
-            className="shrink-0 inline-flex items-center gap-1 h-5 px-1.5 rounded border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[10px] font-bold uppercase tracking-wider"
+            className="pill bg-warning/[0.12] text-warning shrink-0"
             title={NOT_ENCRYPTED}
           >
             <ShieldAlert size={10} aria-hidden="true" />

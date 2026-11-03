@@ -67,8 +67,7 @@ const S: Record<string, CSSProperties> = {
   },
   card: { maxWidth: 640, width: "100%" },
   badge: {
-    fontFamily: "ui-monospace, 'Cascadia Code', monospace", fontSize: 11, letterSpacing: ".12em",
-    textTransform: "uppercase", color: "#ff8a8a", marginBottom: 14,
+    fontSize: 12, fontWeight: 600, color: "#ff8a8a", marginBottom: 14,
   },
   h1: { fontSize: 24, margin: "0 0 12px", letterSpacing: "-.01em", fontWeight: 700 },
   lede: { color: "#9fb2c7", fontSize: 14.5, lineHeight: 1.6, margin: "0 0 20px", maxWidth: "58ch" },
@@ -77,7 +76,7 @@ const S: Record<string, CSSProperties> = {
     fontSize: 13, fontWeight: 600, padding: "9px 16px", borderRadius: 10, cursor: "pointer",
     background: "rgba(255,255,255,.05)", color: "#e7eef6", border: "1px solid rgba(255,255,255,.12)",
   },
-  btnPrimary: { background: "#3b82f6", borderColor: "#3b82f6", color: "#fff" },
+  btnPrimary: { background: "#3ecfc4", borderColor: "#3ecfc4", color: "#0e1013" },
   pre: {
     fontFamily: "ui-monospace, 'Cascadia Code', monospace", fontSize: 11.5, lineHeight: 1.5,
     color: "#7f97ad", background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.08)",
