@@ -74,7 +74,7 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] Empty state, and the Add, Settings and Metrics dialogs restyled (sentence case, switches, grouped rows)
 - [ ] Network stays in bits per second (Mbps), not the design's MB/s: that's what links and plans are sold in
 - [ ] No macOS notification (no notification plugin yet), no folder breadcrumb (Monitor › Clients), rules aren't synced: would need backend storage
-- [ ] Closing a dialog opened from the card menu leaves focus on the page, not the card's More button: Phase 10 accessibility pass
+- [x] Closing a dialog opened from the card menu returns focus to the card's More button (Phase 10)
 
 ## Phase 8: Logins vault (artboard 7) ✅ done
 
@@ -101,8 +101,8 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 
 - [x] Panels not in the design restyled: confirm, prompt and replace-file dialogs as sheets (`btn-danger` added); Library and Activity pages with the page header; command and note sheets; Settings (grouped cards, design switches, steppers, Reset asks through the app's confirm); Quick connect, Cloud sync, host key and 2FA prompts, history search, held changes; Tunnels, Mirrors, Docker, Info, Commands, Profile and sharing, invites, sync server; Wall toolbar (segmented columns and rows) and the broadcast menu. Every uppercase label is sentence case, no backdrop blur or glow shadows, 9–10.5px text raised to 11–12px, black wells now `field` / `bg-terminal`, badges on `pill`
 - [x] Shortcuts from the design: ⌘N new server, ⌘E edit the server in front, ⌘T opens the palette to pick a server, ⌘⇧M Monitor, ⌘⇧L Logins, ⌘, Settings, ⌃⌘S hide the sidebar, ⌥⌘A light or dark. Off the Mac they're Ctrl+Shift+<key> and Ctrl+,; Logins and light or dark have none there (Ctrl+Shift+L locks, Ctrl+Shift+A is the terminal's select all). Shown in the palette and the sidebar tooltips. Not over a dialog, not on phones
-- [ ] Check in `npm run tauri dev` that the macOS menu doesn't take ⌘N, ⌘T or ⌘, before the webview sees them
-- [ ] Accessibility pass (focus rings, labels, contrast in both themes); known gaps: Cloud sync's inputs have placeholders only, focus after a dialog opened from a Monitor card menu
+- [x] The macOS menu doesn't take the new shortcuts: the app sets no menu, and Tauri 2.12's default one binds only ⌘W, ⌘M, ⌘H, ⌥⌘H, ⌘Q, ⌃⌘F and the edit keys
+- [ ] Accessibility pass (focus rings, labels, contrast in both themes). Done so far: Cloud sync's fields have visible labels and autofill hints; a Monitor card's More button gets focus back after its menu, Metrics… or a cancelled Stop monitoring closes
 - [ ] Screenshots in `docs/screenshots/` and README refreshed
 
 ## Phase 11: Rename to Supermarine

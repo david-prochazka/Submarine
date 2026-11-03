@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, type InputHTMLAttributes } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import {
   X, AlertTriangle, CheckCircle2, Cloud, ArrowRight, ArrowLeft,
@@ -380,19 +380,23 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
                 <span className="text-[15px] font-semibold text-white">Sign in</span>
               </div>
               {serverLine}
-              <input
+              <LabeledInput
+                label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
+                autoComplete="email"
+                type="email"
                 className={inputBase}
                 autoFocus
               />
-              <input
+              <LabeledInput
+                label="Password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-                placeholder="Password"
+                autoComplete="current-password"
                 className={inputBase}
               />
               <button
@@ -431,11 +435,14 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
                 Enter the email you signed up with. If it's registered, we'll send a reset token.
                 Your local vault and saved servers are not affected — only the cloud-sync password.
               </p>
-              <input
+              <LabeledInput
+                label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRequestReset()}
                 placeholder="you@example.com"
+                autoComplete="email"
+                type="email"
                 className={inputBase}
                 autoFocus
               />
@@ -466,26 +473,30 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
               <p className="text-[12px] text-zinc-300">
                 Paste the reset token from your email, then set a new password.
               </p>
-              <input
+              <LabeledInput
+                label="Reset token"
                 value={resetToken}
                 onChange={(e) => setResetToken(e.target.value)}
-                placeholder="reset token"
+                autoComplete="one-time-code"
                 className={inputBase + " font-mono"}
                 autoFocus
               />
-              <input
+              <LabeledInput
+                label="New password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="New password (min 8 chars)"
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
                 className={inputBase}
               />
-              <input
+              <LabeledInput
+                label="Confirm new password"
                 type="password"
                 value={confirmPw}
                 onChange={(e) => setConfirmPw(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleResetPassword()}
-                placeholder="Confirm new password"
+                autoComplete="new-password"
                 className={inputBase}
               />
               <button
@@ -513,11 +524,14 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
                 We'll email you a one-time sign-in code. No password needed this time —
                 your existing password stays as it is.
               </p>
-              <input
+              <LabeledInput
+                label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleRequestLoginLink()}
                 placeholder="you@example.com"
+                autoComplete="email"
+                type="email"
                 className={inputBase}
                 autoFocus
               />
@@ -548,11 +562,12 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
               <p className="text-[12px] text-zinc-300">
                 Paste the sign-in token from the email.
               </p>
-              <input
+              <LabeledInput
+                label="Sign-in token"
                 value={loginLinkToken}
                 onChange={(e) => setLoginLinkToken(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleLoginWithLink()}
-                placeholder="sign-in token"
+                autoComplete="one-time-code"
                 className={inputBase + " font-mono"}
                 autoFocus
               />
@@ -577,11 +592,14 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
               <p className="text-[12px] text-zinc-500 leading-[16px]">
                 We'll email you a verification link. You then set a password from inside the app.
               </p>
-              <input
+              <LabeledInput
+                label="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSignupEmail()}
                 placeholder="you@example.com"
+                autoComplete="email"
+                type="email"
                 className={inputBase}
                 autoFocus
               />
@@ -606,11 +624,12 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
               <p className="text-[12px] text-zinc-300">
                 Paste the token from the email{email ? <> sent to <span className="font-mono text-primary">{email}</span></> : null}.
               </p>
-              <input
+              <LabeledInput
+                label="Verification token"
                 value={verifyToken}
                 onChange={(e) => setVerifyToken(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleVerify()}
-                placeholder="verify token"
+                autoComplete="one-time-code"
                 className={inputBase + " font-mono"}
                 autoFocus
               />
@@ -632,20 +651,23 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
                 <KeyRound size={13} className="text-primary" /> Choose a password for{" "}
                 <span className="font-mono text-primary">{email}</span>.
               </p>
-              <input
+              <LabeledInput
+                label="Password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Password (min 8 chars)"
+                placeholder="At least 8 characters"
+                autoComplete="new-password"
                 className={inputBase}
                 autoFocus
               />
-              <input
+              <LabeledInput
+                label="Confirm password"
                 type="password"
                 value={confirmPw}
                 onChange={(e) => setConfirmPw(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSetPassword()}
-                placeholder="Confirm password"
+                autoComplete="new-password"
                 className={inputBase}
               />
               <button
@@ -749,5 +771,14 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
     </div>
   );
 };
+
+function LabeledInput({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[12px] text-zinc-400">{label}</span>
+      <input {...props} />
+    </label>
+  );
+}
 
 export default CloudPanel;

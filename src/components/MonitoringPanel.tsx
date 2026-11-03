@@ -417,13 +417,22 @@ const MonitoringPanel = ({ servers, addLog, onOpenServer, onAlertCount }: Props)
     levelRef.current.clear();
   };
 
+  // Focus goes back to a card's More button once its menu, or a dialog opened from it, closes.
+  const refocusMore = (nodeId: number) => {
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-card-more="${nodeId}"]`)?.focus());
+  };
+
   // A click outside a card's menu closes it.
   useEffect(() => {
     if (menuFor === null) return;
     const onDown = (e: PointerEvent) => {
       if (!(e.target as Element | null)?.closest?.("[data-card-menu]")) setMenuFor(null);
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMenuFor(null); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenuFor(null);
+      refocusMore(menuFor);
+    };
     window.addEventListener("pointerdown", onDown);
     window.addEventListener("keydown", onKey);
     return () => {
@@ -548,13 +557,16 @@ const MonitoringPanel = ({ servers, addLog, onOpenServer, onAlertCount }: Props)
                     busy={busy}
                     menuOpen={menuFor === row.node_id}
                     onMenu={(open) => setMenuFor(open ? row.node_id : null)}
-                    onPause={() => pauseNode(row.node_id)}
-                    onResume={() => resumeNode(row.node_id)}
+                    onPause={() => { pauseNode(row.node_id); refocusMore(row.node_id); }}
+                    onResume={() => { resumeNode(row.node_id); refocusMore(row.node_id); }}
                     onConfig={() => { setMenuFor(null); setConfigFor(row.node_id); }}
                     onOpen={onOpenServer && server ? () => { setMenuFor(null); onOpenServer(row.node_id); } : undefined}
                     onRemove={async () => {
                       setMenuFor(null);
-                      if (!(await confirm({ title: `Stop monitoring ${row.name}?`, message: "Its custom commands are removed with it.", destructive: true }))) return;
+                      if (!(await confirm({ title: `Stop monitoring ${row.name}?`, message: "Its custom commands are removed with it.", destructive: true }))) {
+                        refocusMore(row.node_id);
+                        return;
+                      }
                       removeNode(row.node_id);
                     }}
                   />
@@ -583,7 +595,7 @@ const MonitoringPanel = ({ servers, addLog, onOpenServer, onAlertCount }: Props)
         <MetricsDialog
           row={configRow}
           busy={busy}
-          onClose={() => setConfigFor(null)}
+          onClose={() => { setConfigFor(null); refocusMore(configRow.node_id); }}
           onSetMetrics={(m) => setMetrics(configRow.node_id, m)}
           onSetCustoms={(c) => setCustoms(configRow.node_id, c)}
         />
@@ -647,6 +659,7 @@ const ServerCard = ({
             type="button"
             onClick={() => onMenu(!menuOpen)}
             aria-label={`More for ${row.name}`}
+            data-card-more={row.node_id}
             aria-haspopup="menu"
             aria-expanded={menuOpen}
             className="icon-btn w-6 h-6"
