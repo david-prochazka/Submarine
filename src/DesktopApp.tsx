@@ -84,7 +84,8 @@ function DesktopApp() {
   const [loading, setLoading] = useState(true);
   const [isUnlocked, setIsUnlocked] = useState(false);
   // Set by Lock: the unlock screen then waits for a click before asking for
-  // Windows Hello, instead of asking the moment it opens as it does at start.
+  // Windows Hello or Touch ID, instead of asking the moment it opens as it
+  // does at start.
   const [lockedByUser, setLockedByUser] = useState(false);
   // Multi-exec broadcast state lives in a shared provider (see App.tsx) so
   // TerminalView instances across every tab can read `enabled` + `targets`

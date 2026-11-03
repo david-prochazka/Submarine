@@ -14,12 +14,16 @@
 //! - Android: an AES key in the Android Keystore that only works right after
 //!   a strong biometric check (BiometricPrompt) and is dropped when a new
 //!   fingerprint is enrolled (SubmarinePlugin.kt).
+//! - macOS: a P-256 key in the Secure Enclave that only agrees on a secret
+//!   right after Touch ID with the fingers enrolled now (macos/TouchID.swift).
+//!   The file keeps the enclave's opaque blob for it, an ephemeral public key,
+//!   and the vault key sealed with AES-GCM under the agreed secret.
 //! The file also holds the vault's salt: a vault replaced since (imported or
 //! restored again) doesn't match, and the file is dropped. A copy of the file
 //! on another machine (a portable folder moved) can't be opened there: the
 //! platform key it needs stays behind.
 //!
-//! The password itself is never kept. Linux and macOS aren't offered it.
+//! The password itself is never kept. Linux isn't offered it.
 
 use std::path::PathBuf;
 
@@ -58,6 +62,11 @@ struct SealedFile {
     /// Android: the GCM IV the Keystore chose.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     iv: Option<String>,
+    /// macOS: the Secure Enclave key's blob and the ephemeral public key.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    enclave_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    peer: Option<String>,
 }
 
 /// What the platform keeps of a sealed key (see `seal` / `open`).
@@ -66,6 +75,8 @@ struct Sealed {
     nonce: Option<Vec<u8>>,
     sealed: Vec<u8>,
     iv: Option<Vec<u8>>,
+    enclave_key: Option<Vec<u8>>,
+    peer: Option<Vec<u8>>,
 }
 
 fn quick_unlock_dir(app: &tauri::AppHandle) -> Result<PathBuf, String> {
@@ -149,7 +160,8 @@ fn wrapping_key(signature: &[u8], challenge: &[u8]) -> Result<Zeroizing<[u8; 32]
 
 #[derive(Serialize)]
 pub struct Support {
-    /// "windows-hello" / "android-biometric"; none where it isn't offered.
+    /// "windows-hello" / "android-biometric" / "macos-touch-id"; none where
+    /// it isn't offered.
     method: Option<&'static str>,
     /// The device can do it now: Windows Hello is set up, a fingerprint is
     /// enrolled. Else the UI says what to set up first.
@@ -218,7 +230,7 @@ pub async fn quick_unlock_enable(app: tauri::AppHandle, state: tauri::State<'_, 
     let mut raw = [0u8; 16];
     rand::rng().fill_bytes(&mut raw);
     let id = format!("submarine-quick-unlock-{}", hex::encode(raw));
-    let sealed = platform::seal(&app, &id, &key).await?;
+    let sealed = platform::seal(&app, &id, &name, &key).await?;
     let file = SealedFile {
         v: FILE_VERSION,
         method: METHOD.into(),
@@ -228,6 +240,8 @@ pub async fn quick_unlock_enable(app: tauri::AppHandle, state: tauri::State<'_, 
         nonce: sealed.nonce.map(|n| B64.encode(n)),
         sealed: B64.encode(&sealed.sealed),
         iv: sealed.iv.map(|v| B64.encode(v)),
+        enclave_key: sealed.enclave_key.map(|v| B64.encode(v)),
+        peer: sealed.peer.map(|v| B64.encode(v)),
     };
     // From here, a failure leaves the platform key just made with no file to
     // go with it: drop that key.
@@ -291,8 +305,10 @@ pub async fn quick_unlock(app: tauri::AppHandle, state: tauri::State<'_, DbState
         nonce: b64(&f.nonce)?,
         sealed: B64.decode(&f.sealed).map_err(|_| STALE.to_string())?,
         iv: b64(&f.iv)?,
+        enclave_key: b64(&f.enclave_key)?,
+        peer: b64(&f.peer)?,
     };
-    let key = match platform::open(&app, &f.id, &sealed).await {
+    let key = match platform::open(&app, &f.id, &name, &sealed).await {
         Ok(k) => k,
         Err(e) if e == STALE => {
             forget(&app, &name);
@@ -409,7 +425,7 @@ mod platform {
         rc == TBS_SUCCESS && info.tpmVersion != 0
     }
 
-    pub async fn seal(_app: &tauri::AppHandle, id: &str, key: &[u8; 32]) -> Result<Sealed, String> {
+    pub async fn seal(_app: &tauri::AppHandle, id: &str, _profile: &str, key: &[u8; 32]) -> Result<Sealed, String> {
         let id = id.to_string();
         let key = Zeroizing::new(*key);
         tokio::task::spawn_blocking(move || {
@@ -435,13 +451,13 @@ mod platform {
             };
             let wrap = wrapping_key(&sig, &challenge)?;
             let (sealed, nonce) = crate::encrypt_with_key(key.as_ref(), &wrap)?;
-            Ok(Sealed { challenge: Some(challenge), nonce: Some(nonce.to_vec()), sealed, iv: None })
+            Ok(Sealed { challenge: Some(challenge), nonce: Some(nonce.to_vec()), sealed, iv: None, enclave_key: None, peer: None })
         })
         .await
         .map_err(|e| format!("[QUICK_UNLOCK] JOIN: {e}"))?
     }
 
-    pub async fn open(_app: &tauri::AppHandle, id: &str, s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> {
+    pub async fn open(_app: &tauri::AppHandle, id: &str, _profile: &str, s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> {
         let id = id.to_string();
         let challenge = s.challenge.clone().ok_or(STALE)?;
         let nonce = s.nonce.clone().ok_or(STALE)?;
@@ -500,7 +516,7 @@ mod platform {
         crate::android_bridge::call::<Ready>(app, "quickUnlockReady", serde_json::json!({})).await.map(|r| r.ready).unwrap_or(false)
     }
 
-    pub async fn seal(app: &tauri::AppHandle, id: &str, key: &[u8; 32]) -> Result<Sealed, String> {
+    pub async fn seal(app: &tauri::AppHandle, id: &str, _profile: &str, key: &[u8; 32]) -> Result<Sealed, String> {
         let data = Zeroizing::new(B64.encode(key));
         let out: SealOut = crate::android_bridge::call(app, "quickUnlockSeal", serde_json::json!({ "alias": id, "data": data.as_str() }))
             .await
@@ -510,10 +526,12 @@ mod platform {
             nonce: None,
             sealed: B64.decode(out.sealed).map_err(|_| UNAVAILABLE.to_string())?,
             iv: Some(B64.decode(out.iv).map_err(|_| UNAVAILABLE.to_string())?),
+            enclave_key: None,
+            peer: None,
         })
     }
 
-    pub async fn open(app: &tauri::AppHandle, id: &str, s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> {
+    pub async fn open(app: &tauri::AppHandle, id: &str, _profile: &str, s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> {
         let iv = s.iv.as_ref().ok_or(STALE)?;
         let out: OpenOut = crate::android_bridge::call(
             app,
@@ -537,18 +555,133 @@ mod platform {
 }
 
 // ---------------------------------------------------------------------------
-// Elsewhere (Linux, macOS): not offered.
+// macOS: Touch ID and a Secure Enclave key (macos/TouchID.swift, built by
+// build.rs). Nothing goes into the keychain: the enclave key's blob is in the
+// file and opens only in this Mac's enclave, so forgetting is dropping the file.
 // ---------------------------------------------------------------------------
-#[cfg(not(any(windows, target_os = "android")))]
+#[cfg(target_os = "macos")]
+const METHOD: &str = "macos-touch-id";
+
+#[cfg(target_os = "macos")]
+mod platform {
+    use super::{Sealed, CANCELLED, STALE, UNAVAILABLE};
+    use std::ffi::{c_char, CString};
+    use zeroize::Zeroizing;
+
+    unsafe extern "C" {
+        fn sm_touchid_ready() -> i32;
+        #[allow(clippy::too_many_arguments)]
+        fn sm_touchid_seal(
+            reason: *const c_char,
+            key: *const u8,
+            blob_out: *mut u8, blob_cap: usize, blob_len: *mut usize,
+            peer_out: *mut u8, peer_cap: usize, peer_len: *mut usize,
+            box_out: *mut u8, box_cap: usize, box_len: *mut usize,
+            msg: *mut u8, msg_cap: usize,
+        ) -> i32;
+        #[allow(clippy::too_many_arguments)]
+        fn sm_touchid_open(
+            reason: *const c_char,
+            blob: *const u8, blob_len: usize,
+            peer: *const u8, peer_len: usize,
+            sealed: *const u8, sealed_len: usize,
+            key_out: *mut u8,
+            msg: *mut u8, msg_cap: usize,
+        ) -> i32;
+    }
+
+    const MSG_CAP: usize = 512;
+
+    fn outcome(code: i32, msg: &[u8]) -> Result<(), String> {
+        let text = std::ffi::CStr::from_bytes_until_nul(msg).map(|c| c.to_string_lossy().into_owned()).unwrap_or_default();
+        match code {
+            0 => Ok(()),
+            1 => Err(CANCELLED.into()),
+            2 => Err(STALE.into()),
+            _ if text.is_empty() => Err(UNAVAILABLE.into()),
+            _ => Err(format!("{UNAVAILABLE}: {text}")),
+        }
+    }
+
+    // What macOS shows under "Supermarine is trying to …".
+    fn reason(text: String) -> CString {
+        CString::new(text.replace('\0', "")).unwrap_or_default()
+    }
+
+    pub async fn ready(_app: &tauri::AppHandle) -> bool {
+        tokio::task::spawn_blocking(|| unsafe { sm_touchid_ready() } == 1).await.unwrap_or(false)
+    }
+
+    pub async fn seal(_app: &tauri::AppHandle, _id: &str, profile: &str, key: &[u8; 32]) -> Result<Sealed, String> {
+        let why = reason(format!("turn on Touch ID for the profile \u{201c}{profile}\u{201d}"));
+        let key = Zeroizing::new(*key);
+        tokio::task::spawn_blocking(move || {
+            let mut blob = vec![0u8; 4096];
+            let mut peer = vec![0u8; 256];
+            let mut sealed = vec![0u8; 256];
+            let (mut blob_len, mut peer_len, mut sealed_len) = (0usize, 0usize, 0usize);
+            let mut msg = [0u8; MSG_CAP];
+            let code = unsafe {
+                sm_touchid_seal(
+                    why.as_ptr(),
+                    key.as_ptr(),
+                    blob.as_mut_ptr(), blob.len(), &mut blob_len,
+                    peer.as_mut_ptr(), peer.len(), &mut peer_len,
+                    sealed.as_mut_ptr(), sealed.len(), &mut sealed_len,
+                    msg.as_mut_ptr(), MSG_CAP,
+                )
+            };
+            outcome(code, &msg)?;
+            blob.truncate(blob_len);
+            peer.truncate(peer_len);
+            sealed.truncate(sealed_len);
+            Ok(Sealed { challenge: None, nonce: None, sealed, iv: None, enclave_key: Some(blob), peer: Some(peer) })
+        })
+        .await
+        .map_err(|e| format!("[QUICK_UNLOCK] JOIN: {e}"))?
+    }
+
+    pub async fn open(_app: &tauri::AppHandle, _id: &str, profile: &str, s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> {
+        let why = reason(format!("open the profile \u{201c}{profile}\u{201d}"));
+        let blob = s.enclave_key.clone().ok_or(STALE)?;
+        let peer = s.peer.clone().ok_or(STALE)?;
+        let sealed = s.sealed.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut key = Zeroizing::new([0u8; 32]);
+            let mut msg = [0u8; MSG_CAP];
+            let code = unsafe {
+                sm_touchid_open(
+                    why.as_ptr(),
+                    blob.as_ptr(), blob.len(),
+                    peer.as_ptr(), peer.len(),
+                    sealed.as_ptr(), sealed.len(),
+                    key.as_mut_ptr(),
+                    msg.as_mut_ptr(), MSG_CAP,
+                )
+            };
+            outcome(code, &msg)?;
+            Ok(key)
+        })
+        .await
+        .map_err(|e| format!("[QUICK_UNLOCK] JOIN: {e}"))?
+    }
+
+    pub fn forget(_app: &tauri::AppHandle, _id: &str) {}
+}
+
+// ---------------------------------------------------------------------------
+// Elsewhere (Linux): not offered.
+// ---------------------------------------------------------------------------
+#[cfg(not(any(windows, target_os = "android", target_os = "macos")))]
 const METHOD: &str = "";
 
-#[cfg(not(any(windows, target_os = "android")))]
+#[cfg(not(any(windows, target_os = "android", target_os = "macos")))]
 mod platform {
     use super::{Sealed, UNAVAILABLE};
     use zeroize::Zeroizing;
     pub async fn ready(_app: &tauri::AppHandle) -> bool { false }
-    pub async fn seal(_app: &tauri::AppHandle, _id: &str, _key: &[u8; 32]) -> Result<Sealed, String> { Err(UNAVAILABLE.into()) }
-    pub async fn open(_app: &tauri::AppHandle, _id: &str, _s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> { Err(UNAVAILABLE.into()) }
+    pub async fn seal(_app: &tauri::AppHandle, _id: &str, _profile: &str, _key: &[u8; 32]) -> Result<Sealed, String> { Err(UNAVAILABLE.into()) }
+    pub async fn open(_app: &tauri::AppHandle, _id: &str, _profile: &str, _s: &Sealed) -> Result<Zeroizing<[u8; 32]>, String> { Err(UNAVAILABLE.into()) }
     pub fn forget(_app: &tauri::AppHandle, _id: &str) {}
 }
 
@@ -586,7 +719,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("qu-test-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let p = dir.join("x.json");
-        let good = SealedFile { v: FILE_VERSION, method: METHOD.into(), id: "i".into(), vault_salt: "00".into(), challenge: None, nonce: None, sealed: "AA==".into(), iv: None };
+        let good = SealedFile { v: FILE_VERSION, method: METHOD.into(), id: "i".into(), vault_salt: "00".into(), challenge: None, nonce: None, sealed: "AA==".into(), iv: None, enclave_key: None, peer: None };
         std::fs::write(&p, serde_json::to_vec(&good).unwrap()).unwrap();
         assert_eq!(read_file(&p).is_some(), true);
         let other = SealedFile { v: FILE_VERSION + 1, ..good };

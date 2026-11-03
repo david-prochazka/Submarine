@@ -91,10 +91,10 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 
 ## Phase 9: Unlock (artboard 8) ✅ done
 
-- [x] `ProfileSelectPage.tsx` opens on a focused unlock screen for the profile used last: "Submarine is locked", the profile's name, password with a square Unlock button, Switch profile, Caps Lock state (shown once a key or click tells it), the quick unlock button (Windows Hello, or the fingerprint on Android) and an encryption note. Sonar rings behind it and two pulses round the logo (none with reduced motion)
+- [x] `ProfileSelectPage.tsx` opens on a focused unlock screen for the profile used last: "Submarine is locked", the profile's name, password with a square Unlock button, Switch profile, Caps Lock state (shown once a key or click tells it), the quick unlock button (Windows Hello, Touch ID, or the fingerprint on Android) and an encryption note. Sonar rings behind it and two pulses round the logo (none with reduced motion)
 - [x] Switch profile opens the list (local and cloud in one, current one ticked, Back or Esc returns), with New profile, Import and the cloud bar. A cloud-only profile still opens to Get. The create form, import form, row menu, banners and footer restyled on the shared field, button and tile styles, sentence case
-- [x] Lock (sidebar, rail, phone dock, palette) returns here; ⌘L (Ctrl+Shift+L off the Mac) locks, not over a dialog. After a lock, Windows Hello waits for a click instead of prompting at once. The confirm says "Lock Submarine?"
-- [ ] Touch ID: quick unlock isn't built for macOS or Linux (`quick_unlock.rs`), so there the screen asks for the password only
+- [x] Lock (sidebar, rail, phone dock, palette) returns here; ⌘L (Ctrl+Shift+L off the Mac) locks, not over a dialog. After a lock, Windows Hello or Touch ID waits for a click instead of prompting at once. The confirm says "Lock Submarine?"
+- [x] Touch ID: on macOS, quick unlock seals the vault key to a Secure Enclave P-256 key that only works right after Touch ID with the fingers enrolled now (`src-tauri/macos/TouchID.swift`, built into a static library by `build.rs`; CryptoKit has no C API). The enclave key's blob lives in the quick-unlock file, not the keychain, so it needs no entitlement and works in the unsigned build. Adding or removing a finger makes it stale: turn it on again. Setting it up asks for Touch ID once and opens what it sealed before saving. macOS minimum is now 10.15 (CryptoKit). Linux still asks for the password only
 - [ ] Auto-lock (after N minutes idle or on sleep): the app has none, so the note says what's true instead: AES-256-GCM, password can't be recovered
 - [ ] The logo is still the old one: Phase 11
 

@@ -323,7 +323,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
   }, [selected]);
 
   // Quick unlock (#166, quick_unlock.rs): this profile opens with Windows
-  // Hello or the fingerprint on this device, if the user turned that on. The
+  // Hello, Touch ID or the fingerprint on this device, if the user turned that on. The
   // app starting on the profile used last asks for it right away, once;
   // closing that prompt leaves the password.
   const [quick, setQuick] = useState<{ name: string; method: string } | null>(null);
@@ -349,7 +349,9 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
     return () => { live = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected]);
-  const quickLabel = quick?.method === "android-biometric" ? "Unlock with fingerprint" : "Unlock with Windows Hello";
+  const quickMethodName = (method?: string) =>
+    method === "android-biometric" ? "fingerprint" : method === "macos-touch-id" ? "Touch ID" : "Windows Hello";
+  const quickLabel = `Unlock with ${quickMethodName(quick?.method)}`;
   const quickUnlock = async (name: string) => {
     if (busy) return;
     autoQuickTried.current = true;
@@ -729,7 +731,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
     requestAnimationFrame(() => passwordInputRef.current?.focus());
   };
 
-  const quickName = quick?.method === "android-biometric" ? "your fingerprint" : "Windows Hello";
+  const quickName = quick?.method === "android-biometric" ? "your fingerprint" : quickMethodName(quick?.method);
 
   return (
     // Scrolls when the content is taller than the screen (phones with the

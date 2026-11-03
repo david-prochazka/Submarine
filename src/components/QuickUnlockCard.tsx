@@ -3,8 +3,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { Fingerprint } from "lucide-react";
 import { useTextPrompt } from "../ui/confirm";
 
-// Quick unlock (#166, quick_unlock.rs): this profile opens with Windows Hello
-// or the fingerprint on this device. Off until turned on here, which takes
+// Quick unlock (#166, quick_unlock.rs): this profile opens with Windows Hello,
+// Touch ID or the fingerprint on this device. Off until turned on here, which takes
 // the profile's password once. Shown only where the platform offers it.
 export default function QuickUnlockCard({ profile, card, label }: { profile: string; card: string; label: string }) {
   const textPrompt = useTextPrompt();
@@ -28,14 +28,18 @@ export default function QuickUnlockCard({ profile, card, label }: { profile: str
 
   if (!support?.method) return null;
   const hello = support.method === "windows-hello";
-  const what = hello ? "Windows Hello" : "fingerprint";
+  const touchId = support.method === "macos-touch-id";
+  const what = hello ? "Windows Hello" : touchId ? "Touch ID" : "fingerprint";
+  const device = hello ? "computer" : touchId ? "Mac" : "phone";
 
   const turnOn = async () => {
     const password = await textPrompt({
       title: `Unlock with ${what}`,
       message: hello
         ? "Enter this profile's password once. Then it opens on this computer with your Windows Hello PIN, face or finger, and Windows asks you to confirm now."
-        : "Enter this profile's password once. Then it opens on this phone with a fingerprint, and the phone asks for one now.",
+        : touchId
+          ? "Enter this profile's password once. Then it opens on this Mac with Touch ID, and the Mac asks for your finger now."
+          : "Enter this profile's password once. Then it opens on this phone with a fingerprint, and the phone asks for one now.",
       placeholder: "Profile password",
       password: true,
       keepWhitespace: true,
@@ -81,10 +85,12 @@ export default function QuickUnlockCard({ profile, card, label }: { profile: str
           </div>
           <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             {support.ready
-              ? `Open this profile without typing its password, on this ${hello ? "computer" : "phone"} only. The password still works, and is still needed on other devices.`
+              ? `Open this profile without typing its password, on this ${device} only. The password still works, and is still needed on other devices.${touchId ? " Adding or removing a finger turns it off." : ""}`
               : hello
                 ? "Set up Windows Hello first (a PIN, face or fingerprint, in Windows Settings → Accounts → Sign-in options)."
-                : "Add a fingerprint in the phone's settings first."}
+                : touchId
+                  ? "Add a fingerprint first, in System Settings → Touch ID & Password."
+                  : "Add a fingerprint in the phone's settings first."}
           </p>
         </div>
         <button
