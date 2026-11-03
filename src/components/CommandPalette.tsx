@@ -167,7 +167,7 @@ export const CommandPalette = ({ items, onClose }: {
               <span key={k} className={s.hit ? "text-primary font-semibold" : undefined}>{s.text}</span>
             ))}
           </span>
-          {row.sub && <span className="min-w-0 truncate text-[12px] text-zinc-500">{row.sub}</span>}
+          {row.sub && <span className={`min-w-0 truncate text-[12px] ${on ? "text-zinc-400" : "text-zinc-500"}`}>{row.sub}</span>}
         </span>
         {dot && (
           <span className="shrink-0 flex items-center gap-1.5 text-[11.5px] text-zinc-400">

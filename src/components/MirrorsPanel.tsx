@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
@@ -116,6 +116,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
   const [logs, setLogs] = useState<MirrorLogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const conflictId = useId();
   const [draft, setDraft] = useState<MirrorSpec>({ local: "", remote: "", soft_delete: true, excludes: [], conflict_resolution: "local" });
   const [excludesText, setExcludesText] = useState("");
   // Mirrors saved into the profile *during this session* — kept here so the
@@ -347,15 +348,17 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               placeholder={IS_ANDROID
                 ? "/storage/emulated/0/… (type path)"
                 : "/local/path (or browse)"}
+              aria-label="Local folder"
               className="flex-1 min-w-0 field font-mono text-[12px]"
             />
           </div>
           <div className="flex items-center gap-2">
-            <ArrowRight size={12} className="text-zinc-500 shrink-0 ml-[58px]" />
+            <ArrowRight size={12} aria-hidden className="text-zinc-500 shrink-0 ml-[58px]" />
             <input
               value={draft.remote}
               onChange={(e) => setDraft({ ...draft, remote: e.target.value })}
               placeholder="/remote/path on server"
+              aria-label="Remote folder"
               className="flex-1 min-w-0 field font-mono text-[12px]"
             />
           </div>
@@ -363,12 +366,14 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             value={excludesText}
             onChange={(e) => setExcludesText(e.target.value)}
             placeholder="Excludes (one per line) — substring or *.ext"
+            aria-label="Excludes, one per line"
             rows={2}
             className="field h-auto py-1.5 font-mono text-[12px] resize-none"
           />
           <div className="flex items-center gap-2 text-[12px]">
-            <span className="shrink-0 text-zinc-400">On conflict</span>
+            <label htmlFor={conflictId} className="shrink-0 text-zinc-400">On conflict</label>
             <select
+              id={conflictId}
               value={draft.conflict_resolution}
               onChange={(e) => setDraft({ ...draft, conflict_resolution: e.target.value as ConflictMode })}
               className="field w-auto min-w-0 flex-1"

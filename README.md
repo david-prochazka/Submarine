@@ -15,7 +15,7 @@
 ---
 
 <div align="center">
-  <img src="docs/screenshots/hero.png" alt="Submarine main window — terminal session with dual-pane SFTP browser open on the right" width="900" />
+  <img src="docs/screenshots/hero.png" alt="Submarine main window: a terminal session with the Files tool docked beside it, local folder above and the server's folder below" width="900" />
 </div>
 
 > **TL;DR** — Submarine is a fast, free, open-source SSH and SFTP client for Windows, macOS, Linux, and Android. It replaces the typical PuTTY + WinSCP + tunnel-manager stack with one tabbed window per server: terminal, SFTP, port forwarding (SOCKS / HTTP / local / remote), folder mirror, and end-to-end encrypted profile sync. Built with Rust + Tauri. MIT licensed.
@@ -36,32 +36,42 @@
 <table>
   <tr>
     <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/tunnels.png"><img src="docs/screenshots/tunnels.png" alt="Port forwarding panel: local, remote, and dynamic SOCKS tunnels with live connection counters" /></a>
-      <br/><sub><b>Port forwarding</b> — local / remote / dynamic SOCKS tunnels, live active-connection counters, autostart with the app</sub>
+      <a href="docs/screenshots/servers.png"><img src="docs/screenshots/servers.png" alt="Servers page: folders as tiles above server cards showing address, connection status, tunnels and when each was last connected" /></a>
+      <br/><sub><b>Servers</b> — folders, server cards with live status, grid or list, filter and sort, drag to reorder or move</sub>
     </td>
     <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/mirror.png"><img src="docs/screenshots/mirror.png" alt="Folder Mirror setup with local/remote paths, excludes, and conflict resolution" /></a>
-      <br/><sub><b>Folder mirror</b> — two-way sync, excludes, per-mirror conflict resolution, soft delete to <code>.submarine-trash/</code></sub>
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/commands.png"><img src="docs/screenshots/commands.png" alt="Per-server command library with Run / Paste / Edit on each snippet, plus a Notes tab" /></a>
-      <br/><sub><b>Quick commands &amp; notes</b> — per-server snippet library and a Notes tab for runbook / contacts</sub>
-    </td>
-    <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/logins.png"><img src="docs/screenshots/logins.png" alt="Logins panel: saved passwords and SSH keys with Add Password / Add Key / Generate Key" /></a>
-      <br/><sub><b>Logins</b> — saved passwords and SSH keys, with built-in key generation; all credentials encrypted in the vault</sub>
+      <a href="docs/screenshots/palette.png"><img src="docs/screenshots/palette.png" alt="Command palette filtering servers by “web”, with the connected one first" /></a>
+      <br/><sub><b>Command palette</b> — <code>⌘K</code> (<code>Ctrl+Shift+K</code> on Windows and Linux) to jump to a server, open a tool, run a saved command or change a setting</sub>
     </td>
   </tr>
   <tr>
     <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/monitoring.png"><img src="docs/screenshots/monitoring.png" alt="Live monitoring grid: per-server CPU, memory, network-in and network-out sparklines" /></a>
-      <br/><sub><b>Monitoring</b> — per-node SSH polling for CPU, RAM, and live network in/out with sparklines</sub>
+      <a href="docs/screenshots/tunnels.png"><img src="docs/screenshots/tunnels.png" alt="Tunnels tool: a local, a remote and a dynamic SOCKS forward, each listening with active and total connection counts" /></a>
+      <br/><sub><b>Port forwarding</b> — local, remote and dynamic SOCKS forwards with live connection counts, started with the session</sub>
     </td>
     <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/server-edit.png"><img src="docs/screenshots/server-edit.png" alt="Server details form: folder, tag colour, host/port, login method, proxy, tunnels, mirrors, autostart" /></a>
-      <br/><sub><b>Server details</b> — folder, tag colour, host, auth, proxy, tunnels, mirrors, and autostart in one form</sub>
+      <a href="docs/screenshots/mirror.png"><img src="docs/screenshots/mirror.png" alt="Mirror tool: a new mirror form with local and remote folders, excludes, the conflict rule and soft delete, above a mirror that is watching" /></a>
+      <br/><sub><b>Folder mirror</b> — two-way sync with excludes, a conflict rule per mirror, and soft delete to <code>.submarine-trash/</code></sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+      <a href="docs/screenshots/commands.png"><img src="docs/screenshots/commands.png" alt="Commands tool: saved commands for this server and for all servers, each with Run, Paste and Edit" /></a>
+      <br/><sub><b>Saved commands</b> — per-server and shared snippets you run or paste into the terminal; Notes sit next door</sub>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <a href="docs/screenshots/logins.png"><img src="docs/screenshots/logins.png" alt="Logins: an SSH key with its fingerprint, public key and the servers that sign in with it" /></a>
+      <br/><sub><b>Logins</b> — passwords and SSH keys in the encrypted vault, with fingerprints, key generation and where each one is used</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top" align="center">
+      <a href="docs/screenshots/monitoring.png"><img src="docs/screenshots/monitoring.png" alt="Monitor: server cards sorted by severity with CPU, memory, disk and network trends and alert notes" /></a>
+      <br/><sub><b>Monitor</b> — CPU, memory, disk and network per server, alert rules, and the servers that need you first</sub>
+    </td>
+    <td width="50%" valign="top" align="center">
+      <a href="docs/screenshots/server-edit.png"><img src="docs/screenshots/server-edit.png" alt="Server editor on the Port forwarding section, listing a local, a remote and a dynamic forward" /></a>
+      <br/><sub><b>Server editor</b> — connection, login, folder, proxy, forwards, mirrors and startup in one sheet, with a connection test</sub>
     </td>
   </tr>
 </table>

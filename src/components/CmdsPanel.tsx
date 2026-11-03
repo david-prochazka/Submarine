@@ -311,7 +311,11 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
       )}
 
       {/* List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar">
+      <div className={`flex-1 overflow-y-auto p-3 no-scrollbar ${
+        !loading && tab === "commands" && filteredCommands.length > 0
+          ? "grid gap-2 content-start [grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr))]"
+          : "space-y-2"
+      }`}>
         {loading ? (
           <div className="flex flex-col items-center justify-center py-12 text-zinc-500 gap-2">
             <RefreshCw size={24} className="animate-spin text-primary opacity-60" />
@@ -322,12 +326,12 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
             <div className="flex items-center justify-between gap-2 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <Server size={12} className="text-primary shrink-0" />
-                <span className="text-[11px] font-bold text-zinc-200 truncate">{serverName || `Node #${serverId}`}</span>
+                <span className="text-[12px] font-semibold text-white truncate">{serverName || `Node #${serverId}`}</span>
               </div>
               <button
                 onClick={() => copyToClipboard(nodeDraft || "")}
                 disabled={!nodeDraft}
-                className="h-7 px-2 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn"
                 title="Copy current draft to clipboard"
               >
                 <ClipboardCopy size={11} /> Copy
@@ -346,7 +350,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               <button
                 onClick={() => setNodeDraft(nodeOriginal)}
                 disabled={nodeSaving || !isNodeDirty}
-                className="flex-1 h-8 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn flex-1"
                 title="Revert to last saved version"
               >
                 <X size={11} /> Revert
@@ -354,7 +358,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               <button
                 onClick={() => void saveNodeNotes()}
                 disabled={nodeSaving || !isNodeDirty}
-                className="flex-1 h-8 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                className="btn btn-primary flex-1"
                 title="Save (Ctrl+Enter, auto-saves on tab switch)"
               >
                 {nodeSaving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -369,12 +373,12 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
               return (
                 <Fragment key={c.id}>
                 {heading && (
-                  <div className="px-1 pt-1 text-[11px] font-semibold text-zinc-500" data-command-group>
+                  <div className="col-span-full px-1 pt-1 text-[11.5px] font-semibold text-zinc-500" data-command-group>
                     {heading}
                   </div>
                 )}
                 <div
-                  className="group relative rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all"
+                  className="group relative tile"
                 >
                   {editing ? (
                     <div className="p-3 space-y-2">
@@ -404,14 +408,14 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                         <button
                           onClick={cancelEdit}
                           disabled={saving}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-50"
+                          className="btn flex-1"
                         >
                           <X size={11} /> Cancel
                         </button>
                         <button
                           onClick={saveEdit}
                           disabled={saving || !isDirty(edit)}
-                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="btn btn-primary flex-1"
                           title="Save (Ctrl+Enter)"
                         >
                           {saving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -422,7 +426,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                     <div className="p-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <h2 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
+                          <h2 className="text-[13px] font-semibold text-white truncate">
                             {c.title}
                           </h2>
                           <pre
@@ -436,21 +440,21 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       <div className="flex gap-1.5 mt-2">
                         <button
                           onClick={() => writeToTerminal(c.content, true)}
-                          className="flex-1 h-7 rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
+                          className="btn flex-1 text-primary"
                           title="Run in active terminal (writes + Enter)"
                         >
                           <Play size={11} fill="currentColor" /> Run
                         </button>
                         <button
                           onClick={() => writeToTerminal(c.content, false)}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
+                          className="btn flex-1"
                           title="Paste into active terminal (no Enter)"
                         >
                           <ClipboardCopy size={11} /> Paste
                         </button>
                         <button
                           onClick={() => beginEditCommand(c)}
-                          className="flex-1 h-7 rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
+                          className="btn flex-1"
                           title="Edit command inline"
                         >
                           <Pencil size={11} /> Edit
@@ -465,7 +469,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
           ) : (
             <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-center px-4">
               <Terminal size={32} className="opacity-20 mb-2" />
-              <span className="text-xs font-bold text-zinc-500">No Commands Found</span>
+              <span className="font-medium text-zinc-400">No commands found</span>
               <p className="text-[11.5px] mt-1 text-zinc-500 max-w-[200px]">
                 {searchQuery ? "No matches for your search query." : "Save commands in the main app to surface them here."}
               </p>
@@ -477,7 +481,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
             return (
               <div
                 key={n.id}
-                className="group relative rounded-lg border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] hover:border-white/10 transition-all"
+                className="group relative tile"
               >
                 <button
                   onClick={() => {
@@ -496,7 +500,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                     {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h2 className="text-xs font-bold text-zinc-200 truncate group-hover:text-primary transition-colors">
+                    <h2 className="text-[13px] font-semibold text-white truncate">
                       {(expanded ? edit.title : n.title) || "Untitled"}
                     </h2>
                     {!expanded && (
@@ -530,14 +534,14 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                     <div className="flex gap-1.5 flex-wrap">
                       <button
                         onClick={() => copyToClipboard(edit.body || "")}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
+                        className="btn flex-1 min-w-[64px]"
                         title="Copy current body to clipboard"
                       >
                         <ClipboardCopy size={11} /> Copy
                       </button>
                       <button
                         onClick={() => writeToTerminal(edit.body || "", false)}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-white/[0.04] border border-white/10 hover:bg-white/10 hover:border-white/20 text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all"
+                        className="btn flex-1 min-w-[64px]"
                         title="Paste body into active terminal (no Enter)"
                       >
                         <Play size={11} fill="currentColor" /> Paste
@@ -545,7 +549,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
                       <button
                         onClick={saveEdit}
                         disabled={saving || !isDirty(edit)}
-                        className="flex-1 h-7 min-w-[64px] rounded-lg bg-primary/10 text-primary border border-primary/20 hover:bg-primary hover:text-zinc-950 hover:border-primary flex items-center justify-center gap-1.5 text-[11.5px] font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="btn btn-primary flex-1 min-w-[64px]"
                         title={isDirty(edit) ? "Save changes (Ctrl+Enter)" : "No unsaved changes"}
                       >
                         {saving ? <RefreshCw size={11} className="animate-spin" /> : <Check size={11} />} Save
@@ -559,7 +563,7 @@ export const CmdsPanel = ({ activeTab, tabs = ["commands", "notes", "node"], ser
         ) : (
           <div className="flex flex-col items-center justify-center py-16 text-zinc-500 text-center px-4">
             <StickyNote size={32} className="opacity-20 mb-2" />
-            <span className="text-xs font-bold text-zinc-500">No Notes Found</span>
+            <span className="font-medium text-zinc-400">No notes found</span>
             <p className="text-[11.5px] mt-1 text-zinc-500 max-w-[200px]">
               {searchQuery ? "No matches for your search query." : "Add notes from the Notes tab to surface them here."}
             </p>
