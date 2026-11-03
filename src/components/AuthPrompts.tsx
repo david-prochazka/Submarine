@@ -53,11 +53,11 @@ export function AuthPrompts({
       const isCert = fingerprintPrompt.keyType === "RDP certificate";
       const what = isCert ? "certificate" : "key";
       const tone = isMismatch
-        ? "bg-danger/[0.08] shadow-[inset_0_0_0_0.5px_rgb(var(--danger)/0.45)]"
-        : "bg-warning/[0.08] shadow-[inset_0_0_0_0.5px_rgb(var(--warning)/0.4)]";
+        ? "from-danger/[0.08] to-danger/[0.08] shadow-sheet ring-[0.5px] ring-inset ring-danger/45"
+        : "from-warning/[0.08] to-warning/[0.08] shadow-sheet ring-[0.5px] ring-inset ring-warning/40";
       const accent = isMismatch ? "text-danger" : "text-warning";
       return (
-      <div className={`mt-6 p-4 ${tone} rounded-[10px] text-[13px] animate-in fade-in slide-in-from-bottom-4`}>
+      <div className={`mt-6 p-4 bg-elevated bg-gradient-to-b ${tone} rounded-[10px] text-[13px] animate-in fade-in slide-in-from-bottom-4`}>
         <div className="flex items-start gap-3">
           <ShieldAlert className={`${accent} mt-0.5 shrink-0`} size={18} aria-hidden />
           <div className="flex-1 min-w-0">
@@ -110,7 +110,7 @@ export function AuthPrompts({
         the server set echo=true, e.g. a plain username). Enter on the
         last field submits. */}
     {kbiPrompt && (
-      <div className="mt-6 p-4 bg-primary/[0.06] shadow-[inset_0_0_0_0.5px_rgb(var(--primary)/0.4)] rounded-[10px] text-[13px] animate-in fade-in slide-in-from-bottom-4">
+      <div className="mt-6 p-4 bg-elevated bg-gradient-to-b from-primary/[0.06] to-primary/[0.06] shadow-sheet ring-[0.5px] ring-inset ring-primary/40 rounded-[10px] text-[13px] animate-in fade-in slide-in-from-bottom-4">
         <div className="flex items-start gap-3">
           <KeyRound className="text-primary mt-0.5 shrink-0" size={18} aria-hidden />
           <div className="flex-1 min-w-0">

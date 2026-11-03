@@ -488,11 +488,18 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     });
     lastPickedRef.current = id;
   };
+  // A double-click connects, so a stray click doesn't open a session. A tap
+  // on a phone and Enter on the name button (a click with no detail) still do.
   const onServerClick = (e: React.MouseEvent, s: any) => {
     if (draggedRef.current) return;
     if (canSelect && (selecting || (!isMobile && (e.metaKey || e.ctrlKey)))) pick(e, s.id);
-    else onOpenServer(s);
+    else if (isMobile || e.detail === 0) onOpenServer(s);
   };
+  const onServerDoubleClick = (e: React.MouseEvent, s: any) => {
+    if (draggedRef.current || selecting || isMobile || e.metaKey || e.ctrlKey) return;
+    onOpenServer(s);
+  };
+  const stop = (e: React.SyntheticEvent) => e.stopPropagation();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [band, setBand] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
@@ -679,7 +686,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     if (selecting) return null;
     const open = menuFor === s.id;
     return (
-      <div className={`flex items-center justify-end gap-1.5 transition duration-150 ${reveal(open)}`} onClick={(e) => e.stopPropagation()}>
+      <div className={`flex items-center justify-end gap-1.5 transition duration-150 ${reveal(open)}`} onClick={stop} onDoubleClick={stop}>
         <button type="button" onClick={() => onOpenServer(s)} className="btn btn-primary btn-sm">Connect</button>
         <button type="button" onClick={() => onEditServer(s)} aria-label={`Edit ${s.name}`} title="Edit" className="btn btn-sm px-1.5">
           <Pencil size={13} aria-hidden />
@@ -728,7 +735,8 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
       tabIndex={-1}
       aria-hidden
       onPointerDown={(e) => beginDrag(e, s.id)}
-      onClick={(e) => e.stopPropagation()}
+      onClick={stop}
+      onDoubleClick={stop}
       title={onMoveServer ? "Drag to reorder, or onto a folder" : "Drag to reorder"}
       className={`p-0.5 rounded text-zinc-500 hover:text-white cursor-grab active:cursor-grabbing transition-opacity [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 ${className}`}
       style={{ touchAction: "none" }}
@@ -774,6 +782,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         data-sid={s.id}
         aria-label={s.name}
         onClick={(e) => onServerClick(e, s)}
+        onDoubleClick={(e) => onServerDoubleClick(e, s)}
         className={`group tile p-4 cursor-pointer select-none ${isPicked ? "bg-primary/[0.06] shadow-[0_0_0_1.5px_rgb(var(--primary))]" : "tile-hover"}`}
       >
         {grip(s, "absolute left-0.5 top-[25px]")}
@@ -821,6 +830,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         key={`server-${s.id}`}
         data-sid={s.id}
         onClick={(e) => onServerClick(e, s)}
+        onDoubleClick={(e) => onServerDoubleClick(e, s)}
         className={`group h-11 cursor-pointer select-none ${isPicked ? "bg-primary/10" : "hover:bg-white/5 focus-within:bg-white/5"} ${i > 0 ? "border-t border-white/[0.075]" : ""}`}
       >
         <td className="pl-4 pr-3 relative">

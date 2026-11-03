@@ -517,7 +517,7 @@ async fn run_poller(
         // a slow or hung handshake tears the poller down at once, instead of
         // waiting out the connect/handshake budget (up to connect_timeout * 2).
         if handle.as_ref().map(|h| h.is_closed()).unwrap_or(true) {
-            let target = match with_ssh_config(&auth, &node_name).await {
+            let (target, trust) = match with_ssh_config(&auth, &node_name).await {
                 Ok(t) => t,
                 Err(why) => {
                     // Not a failure: no outage count, no alert. Looked at
@@ -533,7 +533,7 @@ async fn run_poller(
             let connected = tokio::select! {
                 _ = &mut stop_rx => break,
                 // The handshake has its own budget; the logins after it had none.
-                r = within(connect_timeout * 4, connect_for_monitor(&db, &target, connect_timeout)) => r,
+                r = within(connect_timeout * 4, connect_for_monitor(&db, &target, trust, connect_timeout)) => r,
             };
             match connected {
                 Ok(h) => {
@@ -650,13 +650,15 @@ async fn mark_disconnected(app: &AppHandle, entry: &MonitorEntry, err: Option<St
 // SSH connect (minimal, no proxy)
 // ---------------------------------------------------------------------------
 
-/// Tiny handler that only authorises hosts whose fingerprint is already in
-/// `known_hosts`. There's no UI plumbing here — for V1 the user must have
-/// connected interactively at least once so the fingerprint is approved.
+/// Tiny handler that only authorises hosts the terminal would trust without
+/// asking: a key the user's OpenSSH known_hosts files list (or a certificate
+/// from a CA they trust), or a fingerprint already approved in the app's own
+/// `known_hosts` table. It never prompts.
 pub struct MonitorHandler {
     db: Arc<std::sync::Mutex<Option<rusqlite::Connection>>>,
     host: String,
     port: u16,
+    trust: Option<crate::known_hosts::HostTrust>,
 }
 
 impl client::Handler for MonitorHandler {
@@ -666,11 +668,31 @@ impl client::Handler for MonitorHandler {
         &mut self,
         offered: &PublicKeyOrCertificate,
     ) -> Result<bool, Self::Error> {
-        // Host certificates are refused (no CA trust store) — same policy as
-        // the interactive ClientHandler; see ssh_manager::plain_host_key.
+        // The known_hosts files decide first, as for the interactive
+        // ClientHandler: a listed key or a certificate from a trusted CA
+        // passes, a revoked one is refused.
+        let verdict = match (offered, &self.trust) {
+            (PublicKeyOrCertificate::Certificate(cert), Some(trust)) => {
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                Some(trust.check_certificate(cert, now))
+            }
+            (PublicKeyOrCertificate::PublicKey { key, .. }, Some(trust)) => Some(trust.check_key(key)),
+            _ => None,
+        };
+        match verdict {
+            Some(crate::known_hosts::Verdict::Trusted(_)) => return Ok(true),
+            Some(crate::known_hosts::Verdict::Refused(why)) => {
+                eprintln!("[monitor] {}:{} host key refused: {why}", self.host, self.port);
+                return Ok(false);
+            }
+            _ => {}
+        }
         let Some(server_public_key) = crate::ssh_manager::plain_host_key(offered) else {
             eprintln!(
-                "[monitor] {}:{} presented a host certificate; certificates can't be verified (no trusted CA), refusing",
+                "[monitor] {}:{} presented a host certificate no known_hosts CA covers, refusing",
                 self.host, self.port
             );
             return Ok(false);
@@ -845,7 +867,7 @@ fn monitor_client_config() -> client::Config {
 /// never runs commands or asks for anything. A node the config sends through
 /// a ProxyCommand or ProxyJump (and that has no proxy of its own) isn't
 /// checked at all: `Err` says why.
-async fn with_ssh_config(auth: &NodeAuth, node_name: &str) -> Result<NodeAuth, String> {
+async fn with_ssh_config(auth: &NodeAuth, node_name: &str) -> Result<(NodeAuth, Option<crate::known_hosts::HostTrust>), String> {
     let mut t = crate::ConfigTarget::resolve(&auth.host, auth.port, &auth.username, Some(node_name.to_string())).await;
     let own_route = match auth.proxy_type.as_str() {
         "socks5" => Some("SOCKS5 proxy"),
@@ -855,7 +877,11 @@ async fn with_ssh_config(auth: &NodeAuth, node_name: &str) -> Result<NodeAuth, S
     match t.proxy(own_route) {
         Some(crate::ssh_config::Proxy::Command(_)) => Err(NOT_CHECKED_PROXY_COMMAND.into()),
         Some(crate::ssh_config::Proxy::Jump(_)) => Err(NOT_CHECKED_PROXY_JUMP.into()),
-        _ => Ok(NodeAuth { host: t.host, port: t.port, username: t.user, ..auth.clone() }),
+        _ => {
+            let known_files = t.known_hosts_files(&auth.username);
+            let trust = crate::known_hosts::for_host(known_files, &t.host, t.port).await;
+            Ok((NodeAuth { host: t.host, port: t.port, username: t.user, ..auth.clone() }, trust))
+        }
     }
 }
 
@@ -867,6 +893,7 @@ const NOT_CHECKED_PROXY_JUMP: &str =
 async fn connect_for_monitor(
     db: &Arc<std::sync::Mutex<Option<rusqlite::Connection>>>,
     auth: &NodeAuth,
+    trust: Option<crate::known_hosts::HostTrust>,
     connect_timeout: Duration,
 ) -> Result<russh::client::Handle<MonitorHandler>, String> {
     if auth.username.trim().is_empty() {
@@ -894,6 +921,7 @@ async fn connect_for_monitor(
         db: Arc::clone(db),
         host: auth.host.clone(),
         port: auth.port,
+        trust,
     };
 
     let transport = open_transport(auth, connect_timeout).await?;
