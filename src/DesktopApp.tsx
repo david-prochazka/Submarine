@@ -1236,8 +1236,8 @@ function DesktopApp() {
       const starred = favorites.has(favoriteKey(currentServer));
       action({
         id: "favorite-current", icon: Star,
-        title: starred ? `Remove ${currentServer.name} from favourites` : `Add ${currentServer.name} to favourites`,
-        sub: "Favourites sit at the top of the sidebar on this device", keywords: "favorite star pin", rank: 6,
+        title: starred ? "Remove from favourites" : "Add to favourites",
+        sub: `${currentServer.name}, at the top of the sidebar on this device`, keywords: "favorite star pin", rank: 6,
         run: () => toggleFavoriteServer(currentServer),
       });
     }

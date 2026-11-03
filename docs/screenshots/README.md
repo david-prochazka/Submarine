@@ -20,4 +20,6 @@ app window only.
 
 They were taken in the browser build (`npm run dev`) with a mocked Tauri
 backend serving sample servers, files, forwards and monitor samples, so no
-real hosts or credentials appear.
+real hosts or credentials appear. The browser build leaves the macOS traffic
+lights to the system, so they were drawn over the top-left corner to match the
+app.

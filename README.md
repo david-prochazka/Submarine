@@ -36,7 +36,7 @@
 <table>
   <tr>
     <td width="50%" valign="top" align="center">
-      <a href="docs/screenshots/servers.png"><img src="docs/screenshots/servers.png" alt="Servers page: folders as tiles above server cards showing address, connection status, tunnels and when each was last connected" /></a>
+      <a href="docs/screenshots/servers.png"><img src="docs/screenshots/servers.png" alt="Servers page: favourites at the top of the sidebar, folders as tiles above server cards showing address, connection status, tunnels and when each was last connected" /></a>
       <br/><sub><b>Servers</b> — folders, server cards with live status, grid or list, filter and sort, drag to reorder or move</sub>
     </td>
     <td width="50%" valign="top" align="center">

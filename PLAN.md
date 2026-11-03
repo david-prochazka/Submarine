@@ -117,7 +117,8 @@ The app is now called Supermarine, with a new logo: "Logo C Porthole (chosen)" o
 - [x] Kept, so nothing is lost and installs update in place: the identifier `com.submarine.app` (app data folders), the `.submarine` profile files and their lock/tmp/bak names, every `submarine-*` localStorage key and event, the `submarine` scheme id, `submarine-data` for portable mode, `.submarine-trash` / `.submarine-tmp` on servers, the crypto domain tags, the crate, binary, package and Kotlin class names, env vars, the cloud host and the GitHub repo
 - [x] README, `llms.txt`, `PRIVACY.md`, `docs/seo`, `index.html` meta, the website and its 12 languages, the portable readme: the name in prose, links unchanged
 - [ ] Windows: a new `productName` likely gives the NSIS installer a new folder and uninstall entry, and the MSI a new upgrade code, so "Submarine" may stay installed beside "Supermarine" (data is shared through the identifier). Check on Windows; pin `bundle.windows.wix.upgradeCode` or have the installer remove the old one. Linux .deb/.rpm package names follow `productName` too
-- [ ] The screenshots in `docs/screenshots/` and `website/img` still show the old logo and name; `website/img/og.png` and the store listings need the new artwork
+- [x] `docs/screenshots/` retaken with the new name, logo and the macOS traffic lights (drawn over the browser preview, where the app leaves them to the system); the servers shot shows Favourites
+- [ ] `website/img` (its webp shots and `og.png`) and the store listings still show the old logo and name
 - [ ] The repository name, the cloud host (`submarine.sinaxhpm.com`), the website path and the download links: last, with the upstream owner
 
 ## Phase 12: Traffic lights
