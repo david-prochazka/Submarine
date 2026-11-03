@@ -26,7 +26,7 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [x] List layout (table; narrow widths drop columns)
 - [x] Folders as compact tiles above the servers (open, drop into, rename, delete)
 - [x] Servers with status dots under their folders in the sidebar: an open folder (the one shown, and the folders above it) lists its servers after its subfolders; a click connects or switches, the session in front is highlighted. A folder holding only servers gets its chevron
-- [ ] Favorites section in the sidebar: needs a favourite flag on servers, synced
+- [x] Favourites section at the top of the sidebar (only when there are some): Add to / Remove from favourites in a card's More menu and in the palette for the server in front, a star by the name on cards and rows. Kept on this device by server uuid (`util/favorites.ts`), like the last-connected times, so the synced profile is unchanged
 - [x] Empty state: New server, Quick connect, import from `~/.ssh/config` (host count shown, highlighted when it has hosts) / PuTTY / MobaXterm / JSON (file picker, parsed straight into the import dialog)
 - [ ] The window title bar still sits above the page header; merging the two waits for Phase 3 (the tabs live there)
 

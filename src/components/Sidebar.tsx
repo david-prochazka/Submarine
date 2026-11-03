@@ -4,6 +4,7 @@ import {
   ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw, Search,
 } from "lucide-react";
 import { folderTree } from "../util/folderTree";
+import { favoriteKey } from "../util/favorites";
 import { HAS_LIGHTS, LIGHTS_INSET } from "./WindowControls";
 
 const COLLAPSED_KEY = "submarine-sidebar-collapsed";
@@ -48,7 +49,7 @@ export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
   loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, onSearch, searchShortcut, lockShortcut,
-  toggleRequest = 0, sidebarShortcut, settingsShortcut, serverStatus = {}, onOpenServer,
+  toggleRequest = 0, sidebarShortcut, settingsShortcut, serverStatus = {}, onOpenServer, favorites,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -92,6 +93,11 @@ export const Sidebar = ({
     }
     return by;
   }, [servers, tree, openPath]);
+
+  const favoriteServers = useMemo(
+    () => (favorites?.size ? servers.filter((s: any) => favorites.has(favoriteKey(s))) : []),
+    [servers, favorites],
+  );
 
   const tools = [
     { id: "vault", icon: KeyRound, label: "Logins", count: loginCount, alerts: 0 },
@@ -194,7 +200,7 @@ export const Sidebar = ({
     );
   }
 
-  const renderServer = (s: any, depth: number) => {
+  const renderServer = (s: any, depth: number, inset = 18) => {
     const active = activeTab === `session-${s.id}`;
     const status = serverStatus[s.id];
     return (
@@ -204,7 +210,7 @@ export const Sidebar = ({
           onClick={() => onOpenServer?.(s)}
           aria-current={active ? "page" : undefined}
           className={`${itemBase} ${itemTone(active)}`}
-          style={{ paddingLeft: 8 + depth * 14 + 18 }}
+          style={{ paddingLeft: 8 + depth * 14 + inset }}
         >
           <span
             role="img"
@@ -283,6 +289,12 @@ export const Sidebar = ({
         </div>
       )}
       <nav aria-label="Servers and tools" className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-2.5 pb-2.5">
+        {favoriteServers.length > 0 && (
+          <>
+            <SectionTitle>Favourites</SectionTitle>
+            <ul>{favoriteServers.map((s: any) => renderServer(s, 0, 4))}</ul>
+          </>
+        )}
         <SectionTitle
           action={onAddServer && (
             <button

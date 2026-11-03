@@ -1,4 +1,4 @@
-import { Search, Plus, Server, Monitor, TerminalSquare, Folder, FolderPlus, ChevronRight, ArrowLeft, ArrowRight, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound, ArrowUpDown, ListChecks, FolderInput } from "lucide-react";
+import { Search, Plus, Server, Monitor, TerminalSquare, Folder, FolderPlus, ChevronRight, ArrowLeft, ArrowRight, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound, ArrowUpDown, ListChecks, FolderInput, Star } from "lucide-react";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useConfirm } from "../ui/confirm";
@@ -6,6 +6,7 @@ import { HeldReview } from "./HeldReview";
 import { HeldDeletions } from "./HeldDeletions";
 import { folderTree } from "../util/folderTree";
 import { sinceLabel } from "../util/lastConnected";
+import { favoriteKey } from "../util/favorites";
 import { ServersEmpty, type ImportRequest } from "./ServersEmpty";
 
 export type ServerStatus = "connected" | "connecting" | "failed";
@@ -48,7 +49,7 @@ const writePref = (key: string, value: string) => {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveServers, onMoveServers, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, serverStatus = {}, lastConnected = {}, onImport, isMobile }: any) => {
+export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveServers, onMoveServers, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, serverStatus = {}, lastConnected = {}, favorites, onToggleFavorite, onImport, isMobile }: any) => {
   const [search, setSearch] = useState("");
   const [view, setViewState] = useState<ViewMode>(() => readPref(VIEW_KEY, ["grid", "list"] as const, "grid"));
   const setView = (v: ViewMode) => { setViewState(v); writePref(VIEW_KEY, v); };
@@ -669,6 +670,11 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     ? ""
     : "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:translate-y-[3px] [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-focus-within:translate-y-0";
 
+  const isFavorite = (s: any) => !!favorites?.has(favoriteKey(s));
+  const favoriteMark = (s: any) => isFavorite(s) && (
+    <Star size={12} role="img" aria-label="Favourite" className="shrink-0 fill-amber-400 text-amber-400" />
+  );
+
   const actions = (s: any, compact = false) => {
     if (selecting) return null;
     const open = menuFor === s.id;
@@ -678,7 +684,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         <button type="button" onClick={() => onEditServer(s)} aria-label={`Edit ${s.name}`} title="Edit" className="btn btn-sm px-1.5">
           <Pencil size={13} aria-hidden />
         </button>
-        {(onCloneServer || onRemoveServer) && (
+        {(onCloneServer || onRemoveServer || onToggleFavorite) && (
           <div data-card-menu className="relative">
             <button
               type="button"
@@ -692,6 +698,11 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             </button>
             {open && (
               <div role="menu" className={`absolute right-0 z-30 min-w-[150px] p-1 rounded-lg bg-elevated shadow-pop ${compact ? "bottom-full mb-1" : "top-full mt-1"}`}>
+                {onToggleFavorite && (
+                  <button type="button" role="menuitem" onClick={() => { setMenuFor(null); onToggleFavorite(s); }} className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-left text-white whitespace-nowrap hover:bg-white/[0.09]">
+                    <Star size={13} aria-hidden className="text-zinc-400" /> {isFavorite(s) ? "Remove from favourites" : "Add to favourites"}
+                  </button>
+                )}
                 {onCloneServer && (
                   <button type="button" role="menuitem" onClick={() => { setMenuFor(null); onCloneServer(s.id); }} className="w-full flex items-center gap-2 h-7 px-2 rounded-md text-left text-white hover:bg-white/[0.09]">
                     <Copy size={13} aria-hidden className="text-zinc-400" /> Duplicate
@@ -769,9 +780,10 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
         <div className="flex items-start gap-3">
           {iconTile(s)}
           <div className="flex-1 min-w-0">
-            <h2 className="text-[14px] leading-5 font-semibold text-white">
+            <h2 className="flex items-center gap-1.5 text-[14px] leading-5 font-semibold text-white">
               {/* A button so the keyboard can open it too: its click bubbles to the card. */}
-              <button type="button" aria-pressed={selecting ? isPicked : undefined} className="block max-w-full truncate text-left rounded-sm">{s.name}</button>
+              <button type="button" aria-pressed={selecting ? isPicked : undefined} className="block min-w-0 truncate text-left rounded-sm">{s.name}</button>
+              {favoriteMark(s)}
             </h2>
             <div className="mt-px font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</div>
           </div>
@@ -816,6 +828,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
           <span className="flex items-center gap-2.5 min-w-0 font-medium text-white">
             {selecting ? checkMark(isPicked) : <span aria-hidden className="w-2 h-2 shrink-0 rounded-full" style={{ background: s.color || "rgb(var(--subtle))" }} />}
             <button type="button" aria-pressed={selecting ? isPicked : undefined} className="truncate text-left rounded">{s.name}</button>
+            {favoriteMark(s)}
           </span>
         </td>
         <td className="hidden sm:table-cell px-3 font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</td>

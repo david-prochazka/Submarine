@@ -9,7 +9,7 @@ import {
   StickyNote, Search, ChevronLeft, MoreVertical, Radio,
   ChevronDown, Columns, LayoutGrid, Pin, PinOff, Server,
   Monitor, Folder, Zap, Download, PanelRight, Activity, KeyRound, Library,
-  Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare, LockKeyhole, Upload,
+  Settings, ScrollText, Lock, Sun, Moon, ChevronRightSquare, LockKeyhole, Upload, Star,
 } from "lucide-react";
 import { useBroadcast } from "./ui/broadcast";
 
@@ -39,6 +39,7 @@ import { Sidebar } from "./components/Sidebar";
 import { NodeGrid, type ServerStatus } from "./components/NodeGrid";
 import type { ImportRequest } from "./components/ServersEmpty";
 import { readLastConnected, recordConnected } from "./util/lastConnected";
+import { favoriteKey, readFavorites, toggleFavorite } from "./util/favorites";
 import { folderTree } from "./util/folderTree";
 import { CommandScope, describeScope, parseCommandScope, scopeMatches, scopeToJson, serverScopeIds } from "./util/commandScope";
 import CommandScopePicker from "./components/CommandScopePicker";
@@ -244,6 +245,8 @@ function DesktopApp() {
     return out;
   }, [sessions, sessionStatuses]);
   const [lastConnected, setLastConnected] = useState(readLastConnected);
+  const [favorites, setFavorites] = useState(readFavorites);
+  const toggleFavoriteServer = useCallback((s: any) => setFavorites((prev) => toggleFavorite(prev, favoriteKey(s))), []);
   // The import the servers home asked for; ServerEditor opens its import
   // dialog with it.
   const [importRequest, setImportRequest] = useState<(ImportRequest & { n: number }) | null>(null);
@@ -1230,6 +1233,13 @@ function DesktopApp() {
     }
     if (currentServer) {
       action({ id: "edit-current", icon: Edit2, title: `Edit ${currentServer.name}…`, sub: "Connection, keys, proxy, startup", shortcut: SHORTCUTS.edit, rank: 45, run: () => handleEditNode(currentServer) });
+      const starred = favorites.has(favoriteKey(currentServer));
+      action({
+        id: "favorite-current", icon: Star,
+        title: starred ? `Remove ${currentServer.name} from favourites` : `Add ${currentServer.name} to favourites`,
+        sub: "Favourites sit at the top of the sidebar on this device", keywords: "favorite star pin", rank: 6,
+        run: () => toggleFavoriteServer(currentServer),
+      });
     }
     if (sessions.length >= 2) {
       action({
@@ -2108,6 +2118,7 @@ function DesktopApp() {
             onSearch={() => setPaletteOpen(true)}
             serverStatus={serverStatus}
             onOpenServer={openServer}
+            favorites={favorites}
             toggleRequest={sidebarToggle}
             sidebarShortcut={SHORTCUTS.sidebar}
             settingsShortcut={SHORTCUTS.settings}
@@ -2171,6 +2182,8 @@ function DesktopApp() {
                 onResolveDeletions={resolveHeldDeletions}
                 serverStatus={serverStatus}
                 lastConnected={lastConnected}
+                favorites={favorites}
+                onToggleFavorite={toggleFavoriteServer}
                 onImport={(req: ImportRequest) => setImportRequest((prev) => ({ ...req, n: (prev?.n ?? 0) + 1 }))}
                 onRemoveServer={removeServer}
                 onRemoveServers={removeServers}
