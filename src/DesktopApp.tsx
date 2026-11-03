@@ -1367,7 +1367,7 @@ function DesktopApp() {
                           <span className={`w-2 h-2 rounded-full shrink-0 ${dot}`} />
                           <span className="text-[12px] font-semibold truncate flex-1">{tabLabel(s)}</span>
                           {isMerged && !isActive && (
-                            <span className="text-[9px] font-bold uppercase tracking-wider text-primary/60">Split-in</span>
+                            <span className="text-[11px] font-medium text-primary/70">In split</span>
                           )}
                         </button>
                         {/* Merge/unmerge toggle — mobile equivalent of
@@ -1443,7 +1443,7 @@ function DesktopApp() {
                     <LayoutGrid size={13} className="shrink-0" />
                     <span className="text-[12px] font-semibold flex-1">Wall</span>
                     {wallItems.length > 0 && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-primary/70">
+                      <span className="text-[11px] font-medium text-primary/80">
                         {wallItems.length} pinned
                       </span>
                     )}
@@ -1723,7 +1723,7 @@ function DesktopApp() {
                       checked={broadcast.enabled}
                       onChange={broadcast.toggleEnabled}
                     />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-200">
+                    <span className="text-[12px] font-semibold text-white">
                       Broadcast input
                     </span>
                   </label>
@@ -1738,26 +1738,26 @@ function DesktopApp() {
                 <div className="flex items-center gap-1.5 px-1 pb-2 border-b border-white/5">
                   <button
                     onClick={() => broadcast.selectAll(sessions.map(s => s.id))}
-                    className="px-2 py-0.5 rounded bg-white/[0.04] border border-white/10 text-[10px] uppercase tracking-wider text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                    className="btn btn-sm"
                   >
                     All
                   </button>
                   <button
                     onClick={() => broadcast.selectNone()}
-                    className="px-2 py-0.5 rounded bg-white/[0.04] border border-white/10 text-[10px] uppercase tracking-wider text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+                    className="btn btn-sm"
                   >
                     None
                   </button>
                   <div className="flex-1" />
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                  <span className={`text-[11.5px] font-medium ${
                     broadcast.enabled && broadcast.targetSessionIds.size >= 2
                       ? "text-orange-300"
                       : "text-zinc-500"
                   }`}>
                     {broadcast.enabled
                       ? (broadcast.targetSessionIds.size >= 2
-                          ? `Live · ${broadcast.targetSessionIds.size}`
-                          : "Pick 2+")
+                          ? `Live in ${broadcast.targetSessionIds.size}`
+                          : "Pick two or more")
                       : "Off"}
                   </span>
                 </div>
@@ -1924,13 +1924,13 @@ function DesktopApp() {
               <>
                 <div className="border-t border-white/5 my-1" />
                 <div className="px-3 pt-1 pb-1.5 flex items-center justify-between">
-                  <span className="text-[9.5px] font-bold uppercase tracking-widest text-zinc-500">
+                  <span className="text-[11px] font-semibold text-zinc-500">
                     Split view with
                   </span>
                   {targetIsActive && currentMerges.length > 0 && (
                     <button
                       onClick={() => { setMergedSessionIds([]); setTabMenu(null); }}
-                      className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-500 hover:text-white"
+                      className="text-[11px] font-medium text-zinc-500 hover:text-white"
                     >
                       Clear
                     </button>
@@ -2282,14 +2282,14 @@ function DesktopApp() {
                               merged tile drops from ~48 px (full chrome)
                               to ~28 px (slim header). */}
                           {isVisible && isTiled && !isFocused && (
-                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[10.5px]">
+                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[12px]">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                                 (sessionStatuses[sess.id] ?? 'connecting') === 'connected' ? 'bg-emerald-400' :
                                 (sessionStatuses[sess.id] ?? 'connecting') === 'connecting' ? 'bg-amber-400' :
                                 (sessionStatuses[sess.id] ?? 'connecting') === 'idle' ? 'bg-zinc-500' :
                                 'bg-rose-500'
                               }`} />
-                              <span className="font-bold text-zinc-200 uppercase tracking-wider truncate flex-1">
+                              <span className="font-semibold text-white truncate flex-1">
                                 {tabLabel(sess)}
                               </span>
                               <button
@@ -2384,61 +2384,58 @@ function DesktopApp() {
                     scroll sideways. */}
                 <div className="h-10 shrink-0 border-b border-white/5 bg-panel flex items-center gap-2 px-3">
                   <LayoutGrid size={12} className="text-primary/70 shrink-0" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 shrink-0">
-                    Wall {wallItems.length > 0 ? `· ${wallItems.length}` : ''}
+                  <span className="text-[13px] font-semibold text-white shrink-0">
+                    Wall {wallItems.length > 0 && <span className="font-normal text-zinc-500">{wallItems.length}</span>}
                   </span>
                   <div className="flex-1 min-w-0 flex items-center gap-3 ml-2 overflow-x-auto no-scrollbar">
                     <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Columns">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Cols</span>
+                      <span className="text-[12px] text-zinc-500">Columns</span>
+                      <div className="seg">
                       {[1, 2, 3, 4, 5, 6].map(n => (
                         <button
                           key={n}
                           onClick={() => setWallCols(n)}
                           title={`${n} column${n === 1 ? '' : 's'} per row`}
                           aria-pressed={wallCols === n}
-                          className={`h-6 w-6 rounded flex items-center justify-center text-[10px] font-bold transition-all ${
-                            wallCols === n
-                              ? 'bg-primary/20 text-primary border border-primary/40'
-                              : 'text-zinc-400 hover:bg-white/[0.06] border border-transparent'
-                          }`}
+                          className="seg-item"
                         >
                           {n}
                         </button>
                       ))}
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0" role="group" aria-label="Rows">
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-zinc-500">Rows</span>
+                      <span className="text-[12px] text-zinc-500">Rows</span>
+                      <div className="seg">
                       {[0, 1, 2, 3, 4].map(n => (
                         <button
                           key={n}
                           onClick={() => setWallRows(n)}
                           title={n === 0 ? 'As many rows as the tiles need' : `${n} row${n === 1 ? '' : 's'} on screen; more tiles scroll`}
                           aria-pressed={wallRows === n}
-                          className={`h-6 ${n === 0 ? 'px-1.5' : 'w-6'} rounded flex items-center justify-center text-[10px] font-bold transition-all ${
-                            wallRows === n
-                              ? 'bg-primary/20 text-primary border border-primary/40'
-                              : 'text-zinc-400 hover:bg-white/[0.06] border border-transparent'
-                          }`}
+                          className="seg-item"
                         >
                           {n === 0 ? 'Auto' : n}
                         </button>
                       ))}
+                      </div>
                     </div>
                   </div>
                   <button
                     onClick={() => setWallPickerOpen(v => !v)}
                     title="Pick terminals to pin"
-                    className="px-3 py-1 bg-primary/15 hover:bg-primary/25 text-primary border border-primary/30 rounded-md text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5"
+                    className="btn btn-primary"
                   >
-                    <Plus size={11} /> Add
+                    <Plus size={13} aria-hidden /> Add
                   </button>
                   {wallItems.length > 0 && (
                     <button
                       onClick={() => setWallItems([])}
                       title="Unpin everything (terminals stay open in their sessions)"
-                      className="px-3 py-1 bg-white/[0.04] hover:bg-rose-500/15 hover:text-rose-300 border border-white/10 rounded-md text-[10px] font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5"
+                      className="btn"
                     >
-                      <X size={11} /> Clear
+                      Clear
+
                     </button>
                   )}
                 </div>
@@ -2482,9 +2479,9 @@ function DesktopApp() {
                                 title, quick-jump into the session,
                                 unpin. Terminal body below owns focus
                                 so keystrokes go to xterm directly. */}
-                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[10.5px] select-none">
+                            <div className="h-7 shrink-0 flex items-center gap-2 px-2 border-b border-white/5 bg-panel text-[12px] select-none">
                               <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotTone}`} />
-                              <span className="font-bold text-zinc-200 uppercase tracking-wider truncate">
+                              <span className="font-semibold text-white truncate">
                                 {tabLabel(sess)}
                               </span>
                               <span className="text-zinc-600">·</span>
@@ -2524,8 +2521,8 @@ function DesktopApp() {
                                 />
                               </div>
                             ) : (
-                              <div className="flex-1 flex items-center justify-center text-zinc-500 text-[10.5px] font-medium uppercase tracking-wider">
-                                Session {st}
+                              <div className="flex-1 flex items-center justify-center text-zinc-500 text-[12px]">
+                                {st === 'connecting' ? 'Connecting…' : st === 'idle' ? 'Not connected' : st === 'failed' ? "Couldn't connect" : 'Disconnected'}
                               </div>
                             )}
                           </div>
@@ -2545,7 +2542,7 @@ function DesktopApp() {
                     <div className="fixed inset-0 z-[65]" onClick={() => setWallPickerOpen(false)} />
                     <div className="absolute top-12 right-3 z-[66] w-80 max-h-[70vh] bg-elevated border border-white/10 rounded-xl shadow-2xl p-2 flex flex-col">
                       <div className="px-2 pb-2 flex items-center justify-between shrink-0">
-                        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
+                        <span className="text-[13px] font-semibold text-white">
                           Pin terminals
                         </span>
                         <button aria-label="Close"
@@ -2575,8 +2572,8 @@ function DesktopApp() {
                                   <span className="text-[11px] font-bold text-zinc-200 truncate flex-1">
                                     {tabLabel(s)}
                                   </span>
-                                  <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                                    {terms.length} term{terms.length === 1 ? '' : 's'}
+                                  <span className="text-[11.5px] text-zinc-500">
+                                    {terms.length} terminal{terms.length === 1 ? '' : 's'}
                                   </span>
                                 </div>
                                 {terms.length === 0 ? (
@@ -2645,7 +2642,7 @@ function DesktopApp() {
                     (n.body || "").toLowerCase().includes(q))
                 : notes;
               const onCommandsTab = libraryTab === "commands";
-              const addLabel = onCommandsTab ? "Add Command" : "Add Note";
+              const addLabel = onCommandsTab ? "New command" : "New note";
               const openAdd = () => {
                 if (onCommandsTab) {
                   setEditCommandData({ id: null, title: "", content: "", scope: null });
@@ -2656,138 +2653,128 @@ function DesktopApp() {
                 }
               };
               return (
-                <div className="flex-1 flex flex-col p-4 sm:p-8 space-y-5 sm:space-y-6 animate-in overflow-y-auto custom-scrollbar">
-                  <header className="flex flex-col gap-3 border-b border-zinc-700 pb-5 sm:pb-6 shrink-0">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="flex-1 flex flex-col overflow-hidden bg-surface">
+                  <header className="h-[52px] shrink-0 flex items-center gap-2 pl-4 pr-3 border-b border-white/[0.075]">
+                    <span className="flex-1 min-w-0 h-6 flex items-center font-semibold text-white truncate">Library</span>
+                    <label className="relative hidden sm:block">
+                      <Search size={14} aria-hidden className="absolute left-[9px] top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                      <input
+                        type="search"
+                        value={libraryQuery}
+                        onChange={(e) => setLibraryQuery(e.target.value)}
+                        placeholder="Filter"
+                        aria-label="Filter commands and notes"
+                        className="field w-56 pl-7"
+                      />
+                    </label>
+                    <button type="button" onClick={openAdd} aria-label={addLabel} className="btn btn-primary">
+                      <Plus size={14} aria-hidden /><span className="hidden md:inline">{addLabel}</span>
+                    </button>
+                  </header>
+
+                  <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pt-5 pb-8 sm:px-8 sm:pt-7 sm:pb-10">
+                    <div className="flex flex-wrap items-end justify-between gap-4 mb-5">
                       <div className="min-w-0">
-                        <h2 className="text-[18px] sm:text-[22px] font-bold text-white tracking-tight flex items-center gap-2">
-                          Library
-                          <span
-                            title="All entries are AES-256-GCM encrypted inside the current profile vault."
-                            className="inline-flex items-center gap-1 h-5 px-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-[9px] font-bold uppercase tracking-wider text-emerald-300"
-                          >
-                            <Shield size={9} /> Vault-locked
-                          </span>
-                        </h2>
-                        <p className="hidden sm:block text-[13px] text-zinc-400">
-                          Reusable snippets and freeform notes — encrypted with your profile key.
+                        <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em] text-white">Library</h1>
+                        <p className="mt-0.5 text-zinc-400 flex items-center gap-1.5">
+                          <Shield size={13} aria-hidden className="text-zinc-500 shrink-0" />
+                          Snippets and notes, encrypted with your master password.
                         </p>
                       </div>
-                      <div className="flex gap-2 items-center">
-                        <div className="relative">
-                          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
-                          <input
-                            type="text"
-                            value={libraryQuery}
-                            onChange={(e) => setLibraryQuery(e.target.value)}
-                            placeholder="Search title or content…"
-                            className="h-9 pl-7 pr-3 w-44 sm:w-56 bg-black/40 border border-white/10 rounded-xl text-[12px] text-zinc-200 placeholder:text-zinc-600 outline-none focus:border-primary/40"
-                          />
-                        </div>
-                        <button
-                          onClick={openAdd}
-                          title={addLabel}
-                          className="h-9 px-3 sm:px-4 bg-primary text-black text-[12px] sm:text-[13px] font-bold rounded-xl shadow-lg shadow-primary/20 flex items-center gap-1.5 transition-all hover:brightness-110 self-start sm:self-auto"
-                        >
-                          <Plus size={14} /> {addLabel}
+                      <div role="group" aria-label="Show" className="seg">
+                        <button type="button" onClick={() => setLibraryTab("commands")} aria-pressed={onCommandsTab} className="seg-item px-2.5">
+                          <TerminalSquare size={13} aria-hidden /> Commands
+                          <span className="text-zinc-500 tabular-nums">{filteredCommands.length}</span>
+                        </button>
+                        <button type="button" onClick={() => setLibraryTab("notes")} aria-pressed={!onCommandsTab} className="seg-item px-2.5">
+                          <StickyNote size={13} aria-hidden /> Notes
+                          <span className="text-zinc-500 tabular-nums">{filteredNotes.length}</span>
                         </button>
                       </div>
                     </div>
-                    {/* Segmented control — Commands vs Notes. Counts sit
-                        inside each pill so switching contexts is a single
-                        glance. */}
-                    <div className="flex items-center gap-1 self-start bg-black/30 border border-white/5 rounded-xl p-0.5">
-                      <button
-                        onClick={() => setLibraryTab("commands")}
-                        className={`h-8 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                          onCommandsTab
-                            ? "bg-primary/15 text-primary shadow-inner"
-                            : "text-zinc-400 hover:text-zinc-100"
-                        }`}
-                      >
-                        <TerminalSquare size={12} /> Commands
-                        <span className={`text-[9px] font-bold ${onCommandsTab ? "text-primary/70" : "text-zinc-600"}`}>
-                          {filteredCommands.length}
-                        </span>
-                      </button>
-                      <button
-                        onClick={() => setLibraryTab("notes")}
-                        className={`h-8 px-3 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                          !onCommandsTab
-                            ? "bg-primary/15 text-primary shadow-inner"
-                            : "text-zinc-400 hover:text-zinc-100"
-                        }`}
-                      >
-                        <StickyNote size={12} /> Notes
-                        <span className={`text-[9px] font-bold ${!onCommandsTab ? "text-primary/70" : "text-zinc-600"}`}>
-                          {filteredNotes.length}
-                        </span>
-                      </button>
-                    </div>
-                  </header>
+                    <label className="relative block mb-4 sm:hidden">
+                      <Search size={14} aria-hidden className="absolute left-[9px] top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                      <input
+                        type="search"
+                        value={libraryQuery}
+                        onChange={(e) => setLibraryQuery(e.target.value)}
+                        placeholder="Filter"
+                        aria-label="Filter commands and notes"
+                        className="field pl-7"
+                      />
+                    </label>
 
-                  {onCommandsTab ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                      {filteredCommands.length === 0 ? (
-                        <div className="col-span-full py-12 text-center text-zinc-500 text-[14px] italic border border-dashed border-white/10 rounded-2xl">
-                          {q ? `No commands match "${libraryQuery}".` : "No commands yet."}
-                        </div>
-                      ) : (
-                        filteredCommands.map(cmd => (
-                          <div key={cmd.id} className="bg-elevated border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[150px]">
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="text-[16px] font-bold text-primary tracking-tight truncate flex-1">{cmd.title}</h3>
-                              <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity">
-                                <button aria-label={`Edit ${cmd.title}`} onClick={() => { setEditCommandData({ id: cmd.id, title: cmd.title, content: cmd.content, scope: parseCommandScope(cmd.scope) }); setIsCommandPanelOpen(true); }} className="text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>
-                                <button aria-label={`Delete ${cmd.title}`} onClick={async () => {
+                    {(onCommandsTab ? filteredCommands.length : filteredNotes.length) === 0 ? (
+                      <div className="min-h-[40vh] flex flex-col items-center justify-center text-center px-4">
+                        <span aria-hidden className="w-12 h-12 rounded-xl flex items-center justify-center bg-primary/[0.12] text-primary">
+                          {onCommandsTab ? <TerminalSquare size={22} /> : <StickyNote size={22} />}
+                        </span>
+                        <h2 className="mt-4 text-[17px] font-semibold text-white">
+                          {q ? `Nothing matches “${libraryQuery.trim()}”` : onCommandsTab ? "No saved commands yet" : "No notes yet"}
+                        </h2>
+                        <p className="mt-1 max-w-[380px] text-zinc-400">
+                          {q ? "Try another word, or clear the filter."
+                            : onCommandsTab ? "Save a command once, then run it from a session's Commands tool or with ⌘K."
+                            : "Keep runbooks, addresses and anything else you look up while you work."}
+                        </p>
+                        {!q && (
+                          <button type="button" onClick={openAdd} className="btn btn-primary mt-5">
+                            <Plus size={14} aria-hidden /> {addLabel}
+                          </button>
+                        )}
+                      </div>
+                    ) : onCommandsTab ? (
+                      <ul className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                        {filteredCommands.map(cmd => {
+                          const scope = parseCommandScope(cmd.scope);
+                          const edit = () => { setEditCommandData({ id: cmd.id, title: cmd.title, content: cmd.content, scope }); setIsCommandPanelOpen(true); };
+                          return (
+                            <li key={cmd.id} className="tile tile-hover group flex flex-col p-3.5 min-h-[132px]">
+                              <div className="flex items-start gap-2 mb-2">
+                                <h3 className="flex-1 min-w-0 font-semibold text-white truncate">
+                                  <button type="button" onClick={edit} className="max-w-full truncate text-left after:absolute after:inset-0 after:rounded-[10px]">{cmd.title}</button>
+                                </h3>
+                                <button type="button" aria-label={`Delete ${cmd.title}`} onClick={async () => {
                                   const ok = await confirm({ title: "Delete command?", message: `“${cmd.title}” will be removed.`, destructive: true });
                                   if (!ok) return;
                                   invoke("delete_command", { id: cmd.id }).then(() => { refreshCommands(); bumpSync(); });
-                                }} className="text-zinc-500 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                                }} className="icon-btn z-[1] -mr-1.5 -mt-1 w-6 h-6 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 hover:text-danger"><Trash2 size={13} aria-hidden /></button>
                               </div>
-                            </div>
-                            <div className="bg-black/30 rounded-xl p-3 border border-white/5 flex-1 relative group-hover:border-primary/20 transition-colors overflow-hidden">
-                              <pre className="text-[12px] text-zinc-400 font-mono whitespace-pre-wrap leading-relaxed line-clamp-3">{cmd.content}</pre>
-                            </div>
-                            {parseCommandScope(cmd.scope) && (
-                              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-zinc-400 min-w-0" data-command-scope>
-                                <Server size={11} className="shrink-0 text-zinc-500" />
-                                <span className="truncate">For {describeScope(parseCommandScope(cmd.scope), servers, folders)}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                      {filteredNotes.length === 0 ? (
-                        <div className="col-span-full py-12 text-center text-zinc-500 text-[14px] italic border border-dashed border-white/10 rounded-2xl">
-                          {q ? `No notes match "${libraryQuery}".` : "No notes yet."}
-                        </div>
-                      ) : (
-                        filteredNotes.map(n => (
-                          <div key={n.id} className="bg-elevated border border-white/5 rounded-2xl p-4 flex flex-col group relative overflow-hidden shadow-inner h-[170px]">
-                            <div className="flex justify-between items-start mb-2 gap-2">
-                              <h3 className="text-[15px] font-bold text-primary tracking-tight truncate flex-1">{n.title || "Untitled"}</h3>
-                              <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-has-[:focus-visible]:opacity-100 transition-opacity shrink-0">
-                                <button aria-label={`Edit ${n.title || "Untitled"}`} onClick={() => { setEditNoteData({ id: n.id, title: n.title || "", body: n.body || "" }); setIsNotePanelOpen(true); }} className="text-zinc-500 hover:text-white transition-colors"><Edit2 size={14} /></button>
-                                <button aria-label={`Delete ${n.title || "Untitled"}`} onClick={async () => {
-                                  const ok = await confirm({ title: "Delete note?", message: `“${n.title || "Untitled"}” will be removed.`, destructive: true });
+                              <pre className="flex-1 rounded-md bg-terminal px-2.5 py-2 text-[12px] leading-[17px] text-zinc-300 font-mono whitespace-pre-wrap break-all line-clamp-3">{cmd.content}</pre>
+                              {scope && (
+                                <div className="mt-2 flex items-center gap-1.5 text-[12px] text-zinc-400 min-w-0" data-command-scope>
+                                  <Server size={12} aria-hidden className="shrink-0 text-zinc-500" />
+                                  <span className="truncate">For {describeScope(scope, servers, folders)}</span>
+                                </div>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <ul className="grid gap-3 grid-cols-1 md:grid-cols-2 xl:grid-cols-3">
+                        {filteredNotes.map(n => {
+                          const title = n.title || "Untitled";
+                          return (
+                            <li key={n.id} className="tile tile-hover group flex flex-col p-3.5 min-h-[148px]">
+                              <div className="flex items-start gap-2 mb-1.5">
+                                <h3 className="flex-1 min-w-0 font-semibold text-white truncate">
+                                  <button type="button" onClick={() => { setEditNoteData({ id: n.id, title: n.title || "", body: n.body || "" }); setIsNotePanelOpen(true); }}
+                                    className="max-w-full truncate text-left after:absolute after:inset-0 after:rounded-[10px]">{title}</button>
+                                </h3>
+                                <button type="button" aria-label={`Delete ${title}`} onClick={async () => {
+                                  const ok = await confirm({ title: "Delete note?", message: `“${title}” will be removed.`, destructive: true });
                                   if (!ok) return;
                                   invoke("delete_note", { id: n.id }).then(() => { refreshNotes(); bumpSync(); });
-                                }} className="text-zinc-500 hover:text-red-500 transition-colors"><Trash2 size={14} /></button>
+                                }} className="icon-btn z-[1] -mr-1.5 -mt-1 w-6 h-6 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 hover:text-danger"><Trash2 size={13} aria-hidden /></button>
                               </div>
-                            </div>
-                            <div className="bg-black/30 rounded-xl p-3 border border-white/5 flex-1 relative group-hover:border-primary/20 transition-colors overflow-hidden cursor-pointer"
-                                 onClick={() => { setEditNoteData({ id: n.id, title: n.title || "", body: n.body || "" }); setIsNotePanelOpen(true); }}>
-                              <pre className="text-[12px] text-zinc-400 whitespace-pre-wrap leading-relaxed line-clamp-4 font-sans">{n.body}</pre>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  )}
+                              <p className="text-zinc-400 leading-[18px] whitespace-pre-wrap break-words line-clamp-5">{n.body}</p>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               );
             })()}
@@ -2825,58 +2812,43 @@ function DesktopApp() {
                 lengths — the whole point of compare mode is uniform
                 side-by-side. */}
             {activeView === "logs" && (
-              <div className="flex-1 flex flex-col p-3 sm:p-8 space-y-3 sm:space-y-6 animate-in overflow-hidden">
-                <header className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-3 border-b border-zinc-700 pb-3 sm:pb-6 shrink-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <button
-                      onClick={() => setActiveView("settings")}
-                      className="h-8 w-8 sm:hidden flex items-center justify-center rounded-lg text-zinc-400 hover:text-white hover:bg-white/5 transition-all shrink-0"
-                      title="Back to Settings"
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <div className="min-w-0">
-                      <h2 className="text-[16px] sm:text-[22px] font-bold text-white tracking-tight">Activity</h2>
-                      <p className="hidden sm:block text-[13px] text-zinc-400">What the app has been doing.</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button
-                      onClick={() => setActiveView("settings")}
-                      className="hidden sm:flex h-9 px-3 bg-white/[0.04] text-zinc-300 text-[12px] font-bold rounded-xl border border-white/5 hover:bg-white/10 hover:text-white transition-all items-center gap-1.5"
-                    >
-                      <ChevronLeft size={14} /> Settings
-                    </button>
-                    <button onClick={async () => {
-                      const ok = await confirm({ title: "Clear activity log?", message: "All entries will be discarded.", destructive: true });
-                      if (!ok) return;
-                      setLogs([]);
-                    }} className="h-8 sm:h-9 px-2.5 sm:px-4 bg-zinc-900 text-zinc-200 text-[11px] sm:text-[13px] font-bold rounded-xl border border-white/5 hover:bg-red-500/20 hover:text-red-400 hover:border-primary/50 transition-all flex items-center gap-1.5">
-                      <Trash2 size={13} /> Clear
-                    </button>
-                  </div>
+              <div className="flex-1 flex flex-col overflow-hidden bg-surface">
+                <header className="h-[52px] shrink-0 flex items-center gap-2 pl-2 pr-3 border-b border-white/[0.075]">
+                  <button type="button" onClick={() => setActiveView("settings")} aria-label="Back to Settings" title="Back to Settings" className="icon-btn">
+                    <ChevronLeft size={16} aria-hidden />
+                  </button>
+                  <span className="flex-1 min-w-0 h-6 flex items-center font-semibold text-white truncate">Activity</span>
+                  <button type="button" disabled={logs.length === 0} onClick={async () => {
+                    const ok = await confirm({ title: "Clear activity log?", message: "All entries will be discarded.", okLabel: "Clear", destructive: true });
+                    if (!ok) return;
+                    setLogs([]);
+                  }} className="btn">
+                    <Trash2 size={13} aria-hidden /> Clear
+                  </button>
                 </header>
 
-                <div className="flex-1 overflow-y-auto custom-scrollbar bg-black/50 rounded-xl sm:rounded-2xl border border-white/5 p-2 sm:p-4 space-y-0.5 sm:space-y-1 shadow-inner select-text cursor-text">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-2 py-2 sm:px-6 sm:py-4 select-text cursor-text">
                   {logs.length === 0 ? (
-                    <div className="h-full flex items-center justify-center text-zinc-600 text-[12px] sm:text-[14px] font-mono italic">
+                    <div className="h-full flex items-center justify-center text-zinc-500">
                       Nothing yet.
                     </div>
                   ) : (
-                    [...logs].reverse().map((log) => (
-                      <div
+                    <ol className="font-mono text-[12px] leading-[18px]">
+                    {[...logs].reverse().map((log) => (
+                      <li
                         key={(log as any).id ?? `${log.time}-${log.msg}`}
-                        className="flex flex-col sm:flex-row sm:items-start sm:gap-3 text-[10px] sm:text-[12px] font-mono group hover:bg-white/5 p-1 rounded-md transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-start sm:gap-3 px-2 py-1 rounded-md hover:bg-white/[0.04]"
                       >
                         <div className="flex items-baseline gap-2 sm:gap-3 sm:shrink-0">
-                          <span className="text-zinc-600 sm:w-20 shrink-0">{log.time}</span>
-                          <span className={`sm:w-24 shrink-0 font-bold uppercase ${log.type === 'error' ? 'text-red-500' : log.type === 'success' ? 'text-primary' : log.type === 'warn' ? 'text-amber-500' : 'text-sky-300'}`}>
-                            [{log.type}]
+                          <span className="text-zinc-500 sm:w-20 shrink-0 tabular-nums">{log.time}</span>
+                          <span className={`sm:w-16 shrink-0 font-sans text-[11.5px] font-medium ${log.type === 'error' ? 'text-danger' : log.type === 'success' ? 'text-success' : log.type === 'warn' ? 'text-warning' : 'text-zinc-400'}`}>
+                            {log.type === 'error' ? 'Error' : log.type === 'success' ? 'Done' : log.type === 'warn' ? 'Warning' : 'Info'}
                           </span>
                         </div>
-                        <span className="text-zinc-300 break-all sm:flex-1">{log.msg}</span>
-                      </div>
-                    ))
+                        <span className="text-zinc-200 break-all sm:flex-1">{log.msg}</span>
+                      </li>
+                    ))}
+                    </ol>
                   )}
                 </div>
               </div>
@@ -3069,24 +3041,24 @@ function DesktopApp() {
           then, so Tab can't reach their fields. */}
       <div inert={isCommandPanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isCommandPanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsCommandPanelOpen(false)}>
         <div ref={commandPanelRef} tabIndex={-1} className={`w-full max-w-[400px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isCommandPanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
-            <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
-              <TerminalSquare size={18} className="text-primary" />
+          <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
+            <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
+              <TerminalSquare size={16} aria-hidden className="text-primary" />
               {editCommandData.id ? "Edit command" : "New command"}
             </h2>
-            <button aria-label="Close" onClick={() => { setIsCommandPanelOpen(false); setFormError(""); }} className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white bg-black border border-white/5 hover:bg-white/10 rounded-full transition-all">
+            <button aria-label="Close" onClick={() => { setIsCommandPanelOpen(false); setFormError(""); }} className="icon-btn">
               <X size={16} />
             </button>
           </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6">
-            {formError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[12px] font-bold">{formError}</div>}
+          <div className="p-4 sm:p-5 flex-1 overflow-y-auto custom-scrollbar space-y-4">
+            {formError && <div role="alert" className="rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">{formError}</div>}
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Title</label>
-              <input type="text" className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner" placeholder="e.g. Update packages" value={editCommandData.title} onChange={e => setEditCommandData({ ...editCommandData, title: e.target.value })} />
+              <label htmlFor="cmd-title" className="text-[12px] text-zinc-400">Title</label>
+              <input id="cmd-title" type="text" className="field h-8" placeholder="e.g. Update packages" value={editCommandData.title} onChange={e => setEditCommandData({ ...editCommandData, title: e.target.value })} />
             </div>
-            <div className="space-y-1.5 flex-1 flex flex-col h-64">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Command</label>
-              <textarea className="w-full flex-1 bg-black rounded-lg p-3 text-[13px] text-zinc-300 font-mono border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner custom-scrollbar resize-none" placeholder="sudo apt update && sudo apt upgrade -y" value={editCommandData.content} onChange={e => setEditCommandData({ ...editCommandData, content: e.target.value })} />
+            <div className="space-y-1.5 flex flex-col h-64">
+              <label htmlFor="cmd-content" className="text-[12px] text-zinc-400">Command</label>
+              <textarea id="cmd-content" spellCheck={false} className="field h-auto flex-1 py-2 font-mono text-[12.5px] leading-[18px] custom-scrollbar resize-none" placeholder="sudo apt update && sudo apt upgrade -y" value={editCommandData.content} onChange={e => setEditCommandData({ ...editCommandData, content: e.target.value })} />
             </div>
             {/* Remounted per command opened, so it starts from that command's choice. */}
             <CommandScopePicker
@@ -3097,11 +3069,11 @@ function DesktopApp() {
               folders={folders}
             />
           </div>
-          <div className="p-6 border-t border-white/5 shrink-0">
+          <div className="p-4 border-t border-white/[0.075] shrink-0">
             <button 
               onClick={async () => {
-                if (!editCommandData.title || !editCommandData.content) {
-                  addLog("Title and Content are required.", "error");
+                if (!editCommandData.title.trim() || !editCommandData.content.trim()) {
+                  setFormError("Give the command a title and the command itself.");
                   return;
                 }
                 const scope = editCommandData.scope;
@@ -3126,7 +3098,7 @@ function DesktopApp() {
                   addLog(`COMMAND_SAVE_ERROR: ${e}`, "error");
                 }
               }} 
-              className="w-full h-10 bg-primary text-black font-bold rounded-lg text-[13px] tracking-tight hover:brightness-110 transition-all active:scale-[0.98] shadow-[0_0_15px_rgba(var(--primary),0.2)] flex items-center justify-center gap-2"
+              className="btn btn-primary w-full h-8"
             >
               Save
             </button>
@@ -3135,28 +3107,28 @@ function DesktopApp() {
       </div>
 
       <div inert={isNotePanelOpen ? undefined : ""} className={`fixed inset-0 z-50 transition-all duration-500 flex justify-end ${isNotePanelOpen ? 'bg-scrim backdrop-blur-sm' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsNotePanelOpen(false)}>
-        <div ref={notePanelRef} tabIndex={-1} className={`w-full max-w-[480px] bg-surface border-l border-white/5 shadow-2xl transition-all duration-500 h-full flex flex-col outline-none ${isNotePanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex justify-between items-center p-6 border-b border-white/5 shrink-0">
-            <h2 className="text-[15px] font-bold text-white tracking-tight flex items-center gap-2">
-              <StickyNote size={18} className="text-primary" />
+        <div ref={notePanelRef} tabIndex={-1} className={`w-full max-w-[480px] bg-surface border-l border-white/[0.075] shadow-sheet transition-all duration-500 h-full flex flex-col outline-none ${isNotePanelOpen ? 'translate-x-0' : 'translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+          <div className="flex justify-between items-center h-[52px] px-4 border-b border-white/[0.075] shrink-0">
+            <h2 className="text-[15px] font-semibold text-white flex items-center gap-2">
+              <StickyNote size={16} aria-hidden className="text-primary" />
               {editNoteData.id ? "Edit note" : "New note"}
             </h2>
-            <button aria-label="Close" onClick={() => { setIsNotePanelOpen(false); setFormError(""); }} className="w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white bg-black border border-white/5 hover:bg-white/10 rounded-full transition-all">
+            <button aria-label="Close" onClick={() => { setIsNotePanelOpen(false); setFormError(""); }} className="icon-btn">
               <X size={16} />
             </button>
           </div>
-          <div className="p-6 flex-1 overflow-y-auto space-y-6 flex flex-col">
-            {formError && <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-500 text-[12px] font-bold">{formError}</div>}
+          <div className="p-4 sm:p-5 flex-1 overflow-y-auto custom-scrollbar space-y-4 flex flex-col">
+            {formError && <div role="alert" className="rounded-lg bg-danger/[0.12] px-3 py-2 text-[12.5px] text-white">{formError}</div>}
             <div className="space-y-1.5">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Title</label>
-              <input type="text" className="w-full h-10 bg-black rounded-lg px-3 text-[13px] text-white border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner" placeholder="e.g. Production credentials reminder" value={editNoteData.title} onChange={e => setEditNoteData({ ...editNoteData, title: e.target.value })} />
+              <label htmlFor="note-title" className="text-[12px] text-zinc-400">Title</label>
+              <input id="note-title" type="text" className="field h-8" placeholder="e.g. Where the backups live" value={editNoteData.title} onChange={e => setEditNoteData({ ...editNoteData, title: e.target.value })} />
             </div>
             <div className="space-y-1.5 flex-1 flex flex-col min-h-[240px]">
-              <label className="text-[12px] font-bold text-zinc-400 ml-1">Content</label>
-              <textarea className="w-full flex-1 bg-black rounded-lg p-3 text-[13px] text-zinc-300 border border-white/10 outline-none focus:border-primary/50 focus:bg-zinc-900/50 transition-all shadow-inner custom-scrollbar resize-none leading-relaxed" placeholder="Write anything — markdown, paths, secrets you'd otherwise forget…" value={editNoteData.body} onChange={e => setEditNoteData({ ...editNoteData, body: e.target.value })} />
+              <label htmlFor="note-body" className="text-[12px] text-zinc-400">Note</label>
+              <textarea id="note-body" className="field h-auto flex-1 py-2 leading-[19px] custom-scrollbar resize-none" placeholder="Paths, addresses, steps you'd otherwise look up again…" value={editNoteData.body} onChange={e => setEditNoteData({ ...editNoteData, body: e.target.value })} />
             </div>
           </div>
-          <div className="p-6 border-t border-white/5 shrink-0">
+          <div className="p-4 border-t border-white/[0.075] shrink-0">
             <button
               onClick={async () => {
                 if (!editNoteData.title.trim() && !editNoteData.body.trim()) {
@@ -3177,7 +3149,7 @@ function DesktopApp() {
                   addLog(`NOTE_SAVE_ERROR: ${e}`, "error");
                 }
               }}
-              className="w-full h-10 bg-primary text-black font-bold rounded-lg text-[13px] tracking-tight hover:brightness-110 transition-all active:scale-[0.98] shadow-[0_0_15px_rgba(var(--primary),0.2)] flex items-center justify-center gap-2"
+              className="btn btn-primary w-full h-8"
             >
               Save
             </button>

@@ -108,6 +108,10 @@ select optgroup {
     @apply bg-primary text-black border-transparent hover:bg-primary hover:brightness-110;
   }
 
+  .btn-danger {
+    @apply bg-danger text-black border-transparent hover:bg-danger hover:brightness-110;
+  }
+
   .btn-ghost {
     @apply bg-transparent border-transparent shadow-none text-zinc-400 hover:text-white;
   }

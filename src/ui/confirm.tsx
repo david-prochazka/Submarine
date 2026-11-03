@@ -304,157 +304,83 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
           the same kind is a new dialog (it animates in and its default
           control takes focus) and not the old one with the text swapped. */}
       {owState && createPortal(
-        <div key={owState.id}
-             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
-             onClick={() => closeOverwrite("cancel")}>
-          <div ref={owPanelRef}
-               role="dialog"
-               aria-modal="true"
-               aria-labelledby="overwrite-modal-title"
-               onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[420px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <AlertTriangle size={14} className="text-amber-400" />
-                <span id="overwrite-modal-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
-                  {owState.opts.direction === "download" ? "Local file exists" : "Remote file exists"}
-                </span>
-              </div>
-              <button aria-label="Close" onClick={() => closeOverwrite("cancel")} className="text-zinc-500 hover:text-white shrink-0">
-                <X size={12} />
-              </button>
-            </div>
-            <p className="text-[12px] text-zinc-300 leading-relaxed mb-1 whitespace-pre-wrap break-words">
-              {owState.opts.direction === "download"
-                ? "A file with this name already exists at the destination:"
-                : "A file with this name already exists on the remote:"}
-            </p>
-            <p className="text-[12px] text-amber-300 leading-relaxed mb-4 break-all">
-              {owState.opts.name}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => closeOverwrite("overwrite")} data-default-focus
-                      className="h-9 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/15 border border-primary/40 text-primary hover:bg-primary/25">
-                Overwrite
-              </button>
-              <button onClick={() => closeOverwrite("skip")}
-                      className="h-9 rounded text-[11px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/[0.08] hover:text-white">
-                Skip
-              </button>
-              {owState.opts.batchSize > 1 && (
-                <>
-                  <button onClick={() => closeOverwrite("overwrite-all")}
-                          className="h-9 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20">
-                    Overwrite all
-                  </button>
-                  <button onClick={() => closeOverwrite("skip-all")}
-                          className="h-9 rounded text-[11px] font-bold uppercase tracking-wider bg-white/[0.03] border border-white/10 text-zinc-400 hover:bg-white/[0.06] hover:text-zinc-200">
-                    Skip all
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="mt-3 flex justify-end">
-              <button onClick={() => closeOverwrite("cancel")}
-                      className="px-3 h-7 rounded text-[10px] font-bold uppercase tracking-wider bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20">
-                Cancel batch
-              </button>
-            </div>
-          </div>
-        </div>,
+        <PromptShell key={owState.id} panelRef={owPanelRef} titleId="overwrite-modal-title" onDismiss={() => closeOverwrite("cancel")}
+          title={owState.opts.direction === "download" ? "Replace the local file?" : "Replace the file on the server?"}
+          icon={<AlertTriangle size={16} className="text-warning" aria-hidden />}
+          footer={<>
+            <button onClick={() => closeOverwrite("cancel")} className="btn btn-ghost mr-auto">
+              {owState.opts.batchSize > 1 ? "Stop transfer" : "Cancel"}
+            </button>
+            {owState.opts.batchSize > 1 && (
+              <button onClick={() => closeOverwrite("skip-all")} className="btn">Skip all</button>
+            )}
+            <button onClick={() => closeOverwrite("skip")} className="btn">Skip</button>
+            {owState.opts.batchSize > 1 && (
+              <button onClick={() => closeOverwrite("overwrite-all")} className="btn">Replace all</button>
+            )}
+            <button onClick={() => closeOverwrite("overwrite")} data-default-focus className="btn btn-primary">Replace</button>
+          </>}
+        >
+          <p className="text-zinc-300 leading-[18px]">
+            {owState.opts.direction === "download"
+              ? "A file with this name is already in the destination folder:"
+              : "A file with this name is already on the server:"}
+          </p>
+          <p className="mt-1.5 font-mono text-[12px] text-white break-all">{owState.opts.name}</p>
+        </PromptShell>,
         document.body
       )}
       {state && createPortal(
-        <div key={state.id}
-             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
-             onClick={() => close(false)}>
-          <div ref={confirmPanelRef}
-               role="dialog"
-               aria-modal="true"
-               aria-labelledby="confirm-modal-title"
-               onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[380px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex items-center gap-2">
-                <AlertTriangle size={14} className={state.opts.destructive ? "text-rose-400" : "text-amber-400"} />
-                <span id="confirm-modal-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
-                  {state.opts.title || (state.opts.destructive ? "Confirm action" : "Are you sure?")}
-                </span>
-              </div>
-              <button aria-label="Close" onClick={() => close(false)} className="text-zinc-500 hover:text-white shrink-0">
-                <X size={12} />
-              </button>
-            </div>
-            <p className="text-[12px] text-zinc-300 leading-relaxed mb-4 whitespace-pre-wrap break-words">
-              {state.opts.message}
-            </p>
-            <div className="flex justify-end gap-2">
-              <button onClick={() => close(false)}
-                      data-default-focus={state.opts.safeDefault ? true : undefined}
-                      className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/[0.08] hover:text-white">
-                {state.opts.cancelLabel || "Cancel"}
-              </button>
-              <button onClick={() => close(true)} ref={confirmOkRef}
-                      data-default-focus={state.opts.safeDefault ? undefined : true}
-                      className={`px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider border ${
-                        state.opts.destructive
-                          ? "bg-rose-500/15 border-rose-500/40 text-rose-300 hover:bg-rose-500/25"
-                          : "bg-primary/15 border-primary/40 text-primary hover:bg-primary/25"
-                      }`}>
-                {state.opts.okLabel || (state.opts.destructive ? "Delete" : "OK")}
-              </button>
-            </div>
-          </div>
-        </div>,
+        <PromptShell key={state.id} panelRef={confirmPanelRef} titleId="confirm-modal-title" onDismiss={() => close(false)}
+          title={state.opts.title || (state.opts.destructive ? "Confirm action" : "Are you sure?")}
+          icon={state.opts.destructive ? <AlertTriangle size={16} className="text-danger" aria-hidden /> : null}
+          footer={<>
+            <button onClick={() => close(false)}
+                    data-default-focus={state.opts.safeDefault ? true : undefined}
+                    className="btn">
+              {state.opts.cancelLabel || "Cancel"}
+            </button>
+            <button onClick={() => close(true)} ref={confirmOkRef}
+                    data-default-focus={state.opts.safeDefault ? undefined : true}
+                    className={`btn ${state.opts.destructive ? "btn-danger" : "btn-primary"}`}>
+              {state.opts.okLabel || (state.opts.destructive ? "Delete" : "OK")}
+            </button>
+          </>}
+        >
+          <p className="text-zinc-300 leading-[18px] whitespace-pre-wrap break-words">{state.opts.message}</p>
+        </PromptShell>,
         document.body
       )}
       {tpState && createPortal(
-        <div key={tpState.id}
-             className="fixed inset-0 z-[9999] bg-scrim backdrop-blur-sm flex items-center justify-center p-4"
-             onClick={() => closeTextPrompt(null)}>
-          <div ref={tpPanelRef}
-               role="dialog"
-               aria-modal="true"
-               aria-labelledby="text-prompt-modal-title"
-               onClick={(e) => e.stopPropagation()}
-               className="w-full max-w-[400px] bg-panel border border-white/10 rounded-xl shadow-2xl p-4 font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150">
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <span id="text-prompt-modal-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
-                {tpState.opts.title || "Enter value"}
-              </span>
-              <button aria-label="Close" onClick={() => closeTextPrompt(null)} className="text-zinc-500 hover:text-white shrink-0">
-                <X size={12} />
-              </button>
-            </div>
-            {tpState.opts.message && (
-              <p className="text-[12px] text-zinc-300 leading-relaxed mb-3 whitespace-pre-wrap break-words">
-                {tpState.opts.message}
-              </p>
-            )}
-            <input
-              data-default-focus
-              type={tpState.opts.password ? "password" : "text"}
-              value={tpValue}
-              onChange={(e) => { setTpValue(e.target.value); setTpError(null); }}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!e.repeat) submitTextPrompt(); } }}
-              placeholder={tpState.opts.placeholder}
-              className="w-full h-10 px-3 mb-2 bg-black/40 border border-white/10 rounded-lg text-[13px] text-zinc-100 outline-none focus:border-primary/50 placeholder:text-zinc-600"
-            />
-            {tpError && (
-              <p className="text-[11px] text-rose-300 mb-2">{tpError}</p>
-            )}
-            <div className="flex justify-end gap-2 mt-2">
-              <button onClick={() => closeTextPrompt(null)}
-                      className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/[0.08] hover:text-white">
-                {tpState.opts.cancelLabel || "Cancel"}
-              </button>
-              <button onClick={submitTextPrompt}
-                      className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/15 border border-primary/40 text-primary hover:bg-primary/25">
-                {tpState.opts.okLabel || "OK"}
-              </button>
-            </div>
-          </div>
-        </div>,
+        <PromptShell key={tpState.id} panelRef={tpPanelRef} titleId="text-prompt-modal-title" onDismiss={() => closeTextPrompt(null)}
+          title={tpState.opts.title || "Enter value"}
+          footer={<>
+            <button onClick={() => closeTextPrompt(null)} className="btn">{tpState.opts.cancelLabel || "Cancel"}</button>
+            <button onClick={submitTextPrompt} className="btn btn-primary">{tpState.opts.okLabel || "OK"}</button>
+          </>}
+        >
+          {tpState.opts.message && (
+            <p id="text-prompt-modal-message" className="mb-3 text-zinc-300 leading-[18px] whitespace-pre-wrap break-words">
+              {tpState.opts.message}
+            </p>
+          )}
+          <input
+            data-default-focus
+            type={tpState.opts.password ? "password" : "text"}
+            value={tpValue}
+            onChange={(e) => { setTpValue(e.target.value); setTpError(null); }}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (!e.repeat) submitTextPrompt(); } }}
+            placeholder={tpState.opts.placeholder}
+            aria-label={tpState.opts.title || "Value"}
+            aria-describedby={tpState.opts.message ? "text-prompt-modal-message" : undefined}
+            aria-invalid={tpError ? true : undefined}
+            aria-errormessage={tpError ? "text-prompt-modal-error" : undefined}
+            className="field"
+          />
+          {tpError && (
+            <p id="text-prompt-modal-error" role="alert" className="mt-1.5 text-[12px] text-danger">{tpError}</p>
+          )}
+        </PromptShell>,
         document.body
       )}
       </TextPromptContext.Provider>
@@ -462,6 +388,34 @@ export const ConfirmProvider = ({ children }: { children: React.ReactNode }) => 
     </ConfirmContext.Provider>
   );
 };
+
+// The sheet every prompt sits in: scrim, title row, body, buttons on the right.
+const PromptShell = ({ panelRef, titleId, title, icon, onDismiss, footer, children }: {
+  panelRef: React.MutableRefObject<HTMLDivElement | null>;
+  titleId: string;
+  title: string;
+  icon?: React.ReactNode;
+  onDismiss: () => void;
+  footer: React.ReactNode;
+  children: React.ReactNode;
+}) => (
+  <div className="fixed inset-0 z-[9999] bg-scrim flex items-center justify-center p-4" onClick={onDismiss}>
+    <div ref={panelRef}
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby={titleId}
+         onClick={(e) => e.stopPropagation()}
+         className="w-full max-w-[400px] bg-elevated rounded-xl shadow-sheet text-[13px] animate-in zoom-in-95 fade-in duration-150">
+      <div className="flex items-start gap-2.5 px-4 pt-4 pb-2">
+        {icon && <span className="mt-px shrink-0">{icon}</span>}
+        <h2 id={titleId} className="flex-1 min-w-0 text-[15px] font-semibold text-white">{title}</h2>
+        <button type="button" aria-label="Close" onClick={onDismiss} className="icon-btn -mr-1 -mt-0.5"><X size={14} /></button>
+      </div>
+      <div className="px-4 pb-4">{children}</div>
+      <div className="flex flex-wrap items-center justify-end gap-2 px-4 py-3 border-t border-white/[0.075]">{footer}</div>
+    </div>
+  </div>
+);
 
 export const useTextPrompt = () => {
   const ctx = useContext(TextPromptContext);
