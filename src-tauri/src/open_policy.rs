@@ -71,12 +71,14 @@ fn kind(file_name: &str) -> (Kind, String) {
 
 /// Programs that run a file given to them, as the system's association for a
 /// script type, and the placeholder for "the file itself".
+#[cfg(any(windows, test))]
 const RUNNERS: &[&str] = &[
     "wscript.exe", "cscript.exe", "cmd.exe", "mshta.exe", "regedit.exe", "powershell.exe", "pwsh.exe", "msiexec.exe", "rundll32.exe",
     "java.exe", "javaw.exe", "py.exe", "pyw.exe", "python.exe", "pythonw.exe", "python3.exe", "bash.exe", "wsl.exe", "sh.exe", "node.exe",
 ];
 
 /// Whether this program, named by a system association, runs the file.
+#[cfg(any(windows, test))]
 fn is_a_runner(exe: &str) -> bool {
     let name = exe
         .trim()

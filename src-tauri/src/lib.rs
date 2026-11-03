@@ -2007,7 +2007,7 @@ async fn sync_round(
     let pulled = exchange.records.len();
     // The server couldn't answer from the cursor: start over (`sync_with`).
     let reset = exchange.full && pull_from.is_some();
-    let mut removed = 0usize;
+    let removed;
     let mut backup: Option<String> = None;
 
     {
