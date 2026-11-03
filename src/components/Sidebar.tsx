@@ -4,7 +4,6 @@ import {
   ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw, Search,
 } from "lucide-react";
 import { folderTree } from "../util/folderTree";
-import BrandMark from "./BrandMark";
 import { HAS_LIGHTS, LIGHTS_INSET } from "./WindowControls";
 
 const COLLAPSED_KEY = "submarine-sidebar-collapsed";
@@ -157,9 +156,6 @@ export const Sidebar = ({
     return (
       <aside aria-label="Sidebar" className={`${HAS_LIGHTS ? "w-[88px]" : "w-14"} h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col items-center pb-2 gap-1 overflow-y-auto no-scrollbar`}>
         {HAS_LIGHTS ? <div data-tauri-drag-region className="h-11 w-full shrink-0 border-b border-white/[0.075] mb-1" /> : <div className="h-1 shrink-0" />}
-        <div data-tauri-drag-region className="h-9 shrink-0 flex items-center justify-center">
-          <BrandMark className="h-6 w-6" title="Supermarine" />
-        </div>
         <button type="button" onClick={toggleCollapsed} aria-label="Show sidebar" title={sidebarShortcut ? `Show sidebar (${sidebarShortcut})` : "Show sidebar"} aria-keyshortcuts={sidebarShortcut} className={railBtn(false)}>
           <PanelLeftOpen size={17} aria-hidden />
         </button>
@@ -259,8 +255,7 @@ export const Sidebar = ({
   return (
     <aside aria-label="Sidebar" className="w-[232px] h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col relative z-10">
       <div data-tauri-drag-region className={`h-11 shrink-0 flex items-center gap-2 pr-2 ${HAS_LIGHTS ? LIGHTS_INSET : "pl-4"}`}>
-        <BrandMark className="h-5 w-5 shrink-0" />
-        <span data-tauri-drag-region className="flex-1 text-[13px] font-semibold text-white tracking-tight">Supermarine</span>
+        <span data-tauri-drag-region className="flex-1" />
         <button
           type="button"
           onClick={toggleCollapsed}

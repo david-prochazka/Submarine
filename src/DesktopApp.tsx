@@ -1342,8 +1342,8 @@ function DesktopApp() {
       className={`bg-sidebar border-b border-white/[0.075] flex items-center justify-between pr-2 select-none shrink-0 z-50 drag ${isUnlocked && !isMobile ? 'relative h-11 pl-2' : `absolute top-0 left-0 right-0 ${HAS_LIGHTS ? `h-11 ${LIGHTS_INSET}` : 'h-10 pl-2'}`}`}
     >
       {/* Logo + product name: hidden on phones to give the tab strip the
-          whole row. */}
-      <div className={`${isUnlocked && !isMobile ? 'hidden' : 'hidden sm:flex'} items-center gap-2 pr-4 pl-2`} data-tauri-drag-region>
+          whole row. On desktop it stays here when the sidebar collapses. */}
+      <div className={`${isUnlocked && !isMobile ? 'flex' : 'hidden sm:flex'} shrink-0 items-center gap-2 pr-4 pl-2`} data-tauri-drag-region>
         <BrandMark className="h-6 w-6 shrink-0" />
         <span className="text-[12px] font-bold text-white tracking-tight">Supermarine</span>
         {appVersion && (
