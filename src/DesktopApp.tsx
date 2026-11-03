@@ -46,7 +46,7 @@ import ServerEditor from "./components/ServerEditor";
 import TerminalView from "./components/TerminalView";
 import SettingsPanel from "./components/SettingsPanel";
 import ProfilePanel from "./components/ProfilePanel";
-import { SessionView, SESSION_VIEWS, MOD_LABEL, isSessionShortcut, type SessionRequest } from "./components/SessionView";
+import { SessionView, SESSION_VIEWS, MOD_LABEL, IS_MAC_UI, isSessionShortcut, type SessionRequest } from "./components/SessionView";
 import { CommandPalette, type PaletteItem } from "./components/CommandPalette";
 import RdpSessionView from "./components/RdpSessionView";
 import TelnetSessionView from "./components/TelnetSessionView";
@@ -58,6 +58,18 @@ import { parseObjectList } from "./util/serverJson";
 import { readAccent, readAppearance, useAppearance } from "./util/appearance";
 
 const appWindow = getCurrentWindow();
+
+// What the app's shortcuts are called on this system (handled in DesktopApp).
+const SHORTCUTS = {
+  newServer: `${MOD_LABEL}N`,
+  edit: `${MOD_LABEL}E`,
+  newTab: `${MOD_LABEL}T`,
+  monitor: IS_MAC_UI ? "⌘⇧M" : "Ctrl+Shift+M",
+  logins: IS_MAC_UI ? "⌘⇧L" : undefined,
+  settings: IS_MAC_UI ? "⌘," : "Ctrl+,",
+  sidebar: IS_MAC_UI ? "⌃⌘S" : "Ctrl+Shift+S",
+  appearance: IS_MAC_UI ? "⌥⌘A" : undefined,
+};
 
 // Sessions can be either DB-backed (saved node, `serverId > 0`) or quick
 // connect (one-shot, `serverId === 0` and `quickAuth` populated). SessionView
@@ -1093,6 +1105,50 @@ function DesktopApp() {
     return () => window.removeEventListener("keydown", onKey, true);
   }, []);
 
+  // The app's other shortcuts. Off the Mac each is Ctrl+Shift+<key>, like ⌘K
+  // and ⌘L, and Settings is Ctrl+,. Two have none there: Ctrl+Shift+L locks
+  // and Ctrl+Shift+A selects all in the terminal, so Logins and Light or dark
+  // are left to the palette. Not over another dialog, nor on a phone.
+  const [sidebarToggle, setSidebarToggle] = useState(0);
+  const newServer = () => {
+    setNewNode({ ...defaultNode, folderId: activeFolderId != null ? String(activeFolderId) : "" });
+    setIsPanelOpen(true);
+  };
+  const flipAppearance = () => {
+    const shown = document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    setAppSettings((s: any) => ({ ...s, appearance: shown === "light" ? "dark" : "light" }));
+  };
+  const appKeyRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  appKeyRef.current = (e: KeyboardEvent) => {
+    if (!isUnlocked || e.repeat || overlayOpen || isMobile) return;
+    const current = activeView.startsWith("session-") ? sessions.find((x) => x.id === activeView) : null;
+    const editCurrent = () => {
+      const server = current?.serverId ? servers.find((v: any) => v.id === current.serverId) : null;
+      if (server) handleEditNode(server);
+    };
+    const plain = isSessionShortcut(e);
+    const shifted = IS_MAC_UI ? e.metaKey && e.shiftKey && !e.ctrlKey && !e.altKey : plain;
+    const run =
+      plain && e.code === "KeyN" ? newServer
+      : plain && e.code === "KeyE" ? (current ? editCurrent : null)
+      : plain && e.code === "KeyT" ? () => setPaletteOpen(true)
+      : shifted && e.code === "KeyM" ? () => setActiveView("monitor")
+      : IS_MAC_UI && shifted && e.code === "KeyL" ? () => setActiveView("vault")
+      : (IS_MAC_UI ? e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey : e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) && e.code === "Comma" ? () => setActiveView("settings")
+      : (IS_MAC_UI ? e.metaKey && e.ctrlKey && !e.altKey && !e.shiftKey : plain) && e.code === "KeyS" ? () => setSidebarToggle((n) => n + 1)
+      : IS_MAC_UI && e.metaKey && e.altKey && !e.ctrlKey && !e.shiftKey && e.code === "KeyA" ? flipAppearance
+      : null;
+    if (!run) return;
+    e.preventDefault();
+    e.stopPropagation();
+    run();
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => appKeyRef.current(e);
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, []);
+
   const askSession = (sid: string, req: Omit<SessionRequest, "n">) =>
     setSessionRequest((prev) => ({ ...req, sid, n: (prev?.n ?? 0) + 1 }));
 
@@ -1158,7 +1214,7 @@ function DesktopApp() {
       }
     }
     if (currentServer) {
-      action({ id: "edit-current", icon: Edit2, title: `Edit ${currentServer.name}…`, sub: "Connection, keys, proxy, startup", rank: 45, run: () => handleEditNode(currentServer) });
+      action({ id: "edit-current", icon: Edit2, title: `Edit ${currentServer.name}…`, sub: "Connection, keys, proxy, startup", shortcut: SHORTCUTS.edit, rank: 45, run: () => handleEditNode(currentServer) });
     }
     if (sessions.length >= 2) {
       action({
@@ -1175,26 +1231,26 @@ function DesktopApp() {
     action({
       id: "new-server", icon: Plus, title: "New server…",
       sub: activeFolderId != null && tree.has(activeFolderId) ? `In ${folderPath(activeFolderId)}` : "Add a server",
-      keywords: "add create host", rank: current ? 5 : 48,
-      run: () => { setNewNode({ ...defaultNode, folderId: activeFolderId != null ? String(activeFolderId) : "" }); setIsPanelOpen(true); },
+      keywords: "add create host", shortcut: SHORTCUTS.newServer, rank: current ? 5 : 48,
+      run: newServer,
     });
     action({ id: "quick-connect", icon: Zap, title: "Quick connect…", sub: "Connect to a host without saving it first", keywords: "ssh host", rank: current ? 4 : 47, run: () => setIsQuickConnectOpen(true) });
     if (!IS_ANDROID) {
       action({ id: "import-ssh", icon: Download, title: "Import from ~/.ssh/config…", sub: "Pick hosts to add as servers", keywords: "import ssh config", run: () => setImportRequest((prev) => ({ source: "ssh", n: (prev?.n ?? 0) + 1 })) });
     }
-    const go = (id: string, view: string, icon: PaletteItem["icon"], title: string, sub: string, keywords = "") =>
-      action({ id, icon, title, sub, keywords, verb: "open it", rank: 3, run: () => { if (view === "nodes") setActiveFolderId(null); setActiveView(view); } });
+    const go = (id: string, view: string, icon: PaletteItem["icon"], title: string, sub: string, keywords = "", shortcut?: string) =>
+      action({ id, icon, title, sub, keywords, shortcut, verb: "open it", rank: 3, run: () => { if (view === "nodes") setActiveFolderId(null); setActiveView(view); } });
     go("go-servers", "nodes", Server, "Servers", "Every server and folder");
-    go("go-logins", "vault", KeyRound, "Logins", "Passwords and SSH keys", "vault keys credentials");
+    go("go-logins", "vault", KeyRound, "Logins", "Passwords and SSH keys", "vault keys credentials", SHORTCUTS.logins);
     go("go-library", "library", Library, "Library", "Saved commands and notes", "snippets");
-    go("go-monitor", "monitor", Activity, "Monitor", "CPU, memory and network for your servers", "stats");
+    go("go-monitor", "monitor", Activity, "Monitor", "CPU, memory and network for your servers", "stats", SHORTCUTS.monitor);
     if (sessions.length >= 1) go("go-wall", "wall", LayoutGrid, "Wall", "Terminals pinned side by side");
-    go("go-settings", "settings", Settings, "Settings", "Appearance, terminal, sync", "preferences");
+    go("go-settings", "settings", Settings, "Settings", "Appearance, terminal, sync", "preferences", SHORTCUTS.settings);
     go("go-logs", "logs", ScrollText, "Activity log", "What the app did, errors included", "logs");
     const appearance = appSettings.appearance;
     ([["light", Sun, "Use light appearance"], ["dark", Moon, "Use dark appearance"], ["system", Monitor, "Match the system appearance"]] as const)
       .filter(([v]) => v !== appearance)
-      .forEach(([v, icon, title]) => action({ id: `appearance-${v}`, icon, title, keywords: "theme mode appearance", run: () => setAppSettings((s: any) => ({ ...s, appearance: v })) }));
+      .forEach(([v, icon, title]) => action({ id: `appearance-${v}`, icon, title, keywords: "theme mode appearance", shortcut: v !== "system" ? SHORTCUTS.appearance : undefined, run: () => setAppSettings((s: any) => ({ ...s, appearance: v })) }));
     action({ id: "lock", icon: Lock, title: "Lock", sub: sessions.length ? "Disconnects every open session" : "Back to the unlock screen", shortcut: `${MOD_LABEL}L`, keywords: "logout lock switch profile", run: handleLogout });
 
     for (const f of folders) {
@@ -2049,6 +2105,9 @@ function DesktopApp() {
               setIsPanelOpen(true);
             }}
             onSearch={() => setPaletteOpen(true)}
+            toggleRequest={sidebarToggle}
+            sidebarShortcut={SHORTCUTS.sidebar}
+            settingsShortcut={SHORTCUTS.settings}
             searchShortcut={`${MOD_LABEL}K`}
             lockShortcut={`${MOD_LABEL}L`}
             loginCount={credentials.length + sshKeys.length}

@@ -86,7 +86,7 @@ const MIN_TERMINAL_WIDTH = 200;
 
 // The session shortcuts: ⌘ on a Mac. Elsewhere Ctrl+Shift, since Ctrl alone
 // belongs to the shell (Ctrl+D is end of input).
-const IS_MAC_UI = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent) && !/Android/i.test(navigator.userAgent);
+export const IS_MAC_UI = typeof navigator !== "undefined" && /Mac/i.test(navigator.platform || navigator.userAgent) && !/Android/i.test(navigator.userAgent);
 export const MOD_LABEL = IS_MAC_UI ? "⌘" : "Ctrl+Shift+";
 export const isSessionShortcut = (e: KeyboardEvent) =>
   IS_MAC_UI ? e.metaKey && !e.ctrlKey && !e.altKey && !e.shiftKey : e.ctrlKey && e.shiftKey && !e.metaKey && !e.altKey;

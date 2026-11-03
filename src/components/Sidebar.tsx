@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Server, KeyRound, Library, Activity, Settings, Lock, UserCircle, Folder, FolderOpen,
   ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw, Search,
@@ -44,6 +44,7 @@ export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
   loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, logoUrl, onSearch, searchShortcut, lockShortcut,
+  toggleRequest = 0, sidebarShortcut, settingsShortcut,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const toggleCollapsed = () => {
@@ -52,6 +53,13 @@ export const Sidebar = ({
       return !c;
     });
   };
+  // ⌃⌘S from DesktopApp: each new request flips the sidebar.
+  const seenToggle = useRef(toggleRequest);
+  useEffect(() => {
+    if (toggleRequest === seenToggle.current) return;
+    seenToggle.current = toggleRequest;
+    toggleCollapsed();
+  }, [toggleRequest]);
 
   const tree = useMemo(() => folderTree(folders), [folders]);
   const countIn = useMemo(() => {
@@ -133,7 +141,7 @@ export const Sidebar = ({
       }`;
     return (
       <aside aria-label="Sidebar" className="w-14 h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col items-center py-2 gap-1 overflow-y-auto no-scrollbar">
-        <button type="button" onClick={toggleCollapsed} aria-label="Show sidebar" title="Show sidebar" className={railBtn(false)}>
+        <button type="button" onClick={toggleCollapsed} aria-label="Show sidebar" title={sidebarShortcut ? `Show sidebar (${sidebarShortcut})` : "Show sidebar"} aria-keyshortcuts={sidebarShortcut} className={railBtn(false)}>
           <PanelLeftOpen size={17} aria-hidden />
         </button>
         {onSearch && (
@@ -163,7 +171,7 @@ export const Sidebar = ({
               <Lock size={17} aria-hidden />
             </button>
           )}
-          <button type="button" onClick={() => setActiveTab("settings")} aria-label="Settings" title="Settings" className={railBtn(activeTab === "settings")}>
+          <button type="button" onClick={() => setActiveTab("settings")} aria-label="Settings" title={settingsShortcut ? `Settings (${settingsShortcut})` : "Settings"} aria-keyshortcuts={settingsShortcut} className={railBtn(activeTab === "settings")}>
             <Settings size={17} aria-hidden />
           </button>
         </div>
@@ -210,7 +218,8 @@ export const Sidebar = ({
           type="button"
           onClick={toggleCollapsed}
           aria-label="Hide sidebar"
-          title="Hide sidebar"
+          title={sidebarShortcut ? `Hide sidebar (${sidebarShortcut})` : "Hide sidebar"}
+          aria-keyshortcuts={sidebarShortcut}
           className="w-7 h-7 flex items-center justify-center rounded-md text-zinc-400 hover:bg-white/[0.09] hover:text-white"
         >
           <PanelLeftClose size={16} aria-hidden />
@@ -318,7 +327,8 @@ export const Sidebar = ({
           type="button"
           onClick={() => setActiveTab("settings")}
           aria-label="Settings"
-          title="Settings"
+          title={settingsShortcut ? `Settings (${settingsShortcut})` : "Settings"}
+          aria-keyshortcuts={settingsShortcut}
           className={`w-7 h-7 shrink-0 flex items-center justify-center rounded-md transition-colors ${
             activeTab === "settings" ? "bg-primary/15 text-primary" : "text-zinc-400 hover:bg-white/[0.09] hover:text-white"
           }`}

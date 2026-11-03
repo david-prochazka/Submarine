@@ -97,11 +97,12 @@ Approach: phased. Each phase is one or more commits on `DP-redesign`, checked in
 - [ ] Auto-lock (after N minutes idle or on sleep): the app has none, so the note says what's true instead: AES-256-GCM, password can't be recovered
 - [ ] The logo is still the old one: Phase 11
 
-## Phase 10: Sweep
+## Phase 10: Sweep (in progress)
 
-- [ ] Remaining panels not in the design (Settings, Cloud, Docker, Tunnels, Mirrors, RDP/VNC, dialogs): spacing, type sizes, uppercase labels → sentence case, remove glow shadows
-- [ ] Keyboard shortcuts from the design wired up (⌘N, ⌘,, ⌃⌘S, ⌥⌘A; ⌘K and ⌘L are done)
-- [ ] Accessibility pass (focus rings, labels, contrast in both themes)
+- [x] Panels not in the design restyled: confirm, prompt and replace-file dialogs as sheets (`btn-danger` added); Library and Activity pages with the page header; command and note sheets; Settings (grouped cards, design switches, steppers, Reset asks through the app's confirm); Quick connect, Cloud sync, host key and 2FA prompts, history search, held changes; Tunnels, Mirrors, Docker, Info, Commands, Profile and sharing, invites, sync server; Wall toolbar (segmented columns and rows) and the broadcast menu. Every uppercase label is sentence case, no backdrop blur or glow shadows, 9–10.5px text raised to 11–12px, black wells now `field` / `bg-terminal`, badges on `pill`
+- [x] Shortcuts from the design: ⌘N new server, ⌘E edit the server in front, ⌘T opens the palette to pick a server, ⌘⇧M Monitor, ⌘⇧L Logins, ⌘, Settings, ⌃⌘S hide the sidebar, ⌥⌘A light or dark. Off the Mac they're Ctrl+Shift+<key> and Ctrl+,; Logins and light or dark have none there (Ctrl+Shift+L locks, Ctrl+Shift+A is the terminal's select all). Shown in the palette and the sidebar tooltips. Not over a dialog, not on phones
+- [ ] Check in `npm run tauri dev` that the macOS menu doesn't take ⌘N, ⌘T or ⌘, before the webview sees them
+- [ ] Accessibility pass (focus rings, labels, contrast in both themes); known gaps: Cloud sync's inputs have placeholders only, focus after a dialog opened from a Monitor card menu
 - [ ] Screenshots in `docs/screenshots/` and README refreshed
 
 ## Phase 11: Rename to Supermarine
