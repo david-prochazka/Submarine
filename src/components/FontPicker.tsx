@@ -174,7 +174,7 @@ export default function FontPicker({
           spellCheck={false}
           autoCapitalize="off"
           autoCorrect="off"
-          className="w-full h-9 bg-black border border-white/10 rounded-lg pl-3 pr-9 text-[12.5px] text-white placeholder:text-zinc-600 focus:border-primary/50 outline-none"
+          className="field h-8 pr-9"
         />
         <button
           type="button"
@@ -182,7 +182,7 @@ export default function FontPicker({
           aria-label={open ? "Close font list" : "Open font list"}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => (open ? close(true) : setOpen(true))}
-          className="absolute right-1 top-1 w-7 h-7 flex items-center justify-center text-zinc-500 hover:text-white"
+          className="absolute right-0.5 top-0.5 w-7 h-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-white"
         >
           <ChevronDown size={14} className={`transition-transform ${open ? "rotate-180" : ""}`} />
         </button>
@@ -193,18 +193,18 @@ export default function FontPicker({
           id="term-font-list"
           ref={listRef}
           role="listbox"
-          className="max-h-72 overflow-y-auto custom-scrollbar rounded-lg border border-white/10 bg-surface py-1"
+          className="max-h-72 overflow-y-auto custom-scrollbar rounded-lg bg-elevated shadow-pop py-1"
         >
           {defaultRow && renderRow(defaultRow, index++)}
 
-          <div className="px-3 pt-2 pb-1 text-[10px] font-black text-zinc-500 uppercase tracking-wider">Built-in</div>
+          <div className="px-3 pt-2 pb-1 text-[11px] font-semibold text-zinc-500">Built-in</div>
           {builtInRows.length ? builtInRows.map((r) => renderRow(r, index++)) : (
             <div className="px-3 py-1.5 text-[11.5px] text-zinc-600">No match</div>
           )}
 
-          <div className="my-1.5 border-t border-white/10" role="separator" />
+          <div className="my-1.5 border-t border-white/[0.075]" role="separator" />
 
-          <div className="px-3 pt-1 pb-1 text-[10px] font-black text-zinc-500 uppercase tracking-wider">
+          <div className="px-3 pt-1 pb-1 text-[11px] font-semibold text-zinc-500">
             Installed on this device{installedOnly.length ? ` · ${installedOnly.length}` : ""}
           </div>
           {installed === null && !loadError && (

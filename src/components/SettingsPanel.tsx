@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Settings, Palette, RefreshCw, List, Cloud, Minus, Plus, ArrowRight, X, KeyRound, EyeOff, Monitor, Moon, Sun } from "lucide-react";
+import { TerminalSquare, Palette, RefreshCw, List, Cloud, Minus, Plus, ArrowRight, X, KeyRound, EyeOff, Monitor, Moon, Sun } from "lucide-react";
 import {
   MAX_FONT_SIZE, MIN_FONT_SIZE, clampFontSize, fontFamilyCss,
   isFontAvailable, primaryFontName, sanitizeFontFamily,
@@ -18,6 +18,7 @@ import {
   parseWindowsTerminalScheme, schemeToWindowsTerminalJson,
 } from "../util/terminalTheme";
 import { IS_ANDROID } from "../util/platform";
+import { useConfirm } from "../ui/confirm";
 
 // Where this install keeps its data (see src-tauri/src/portable.rs). `portable`
 // means a `submarine-data` folder next to the executable is in use; `warning`
@@ -42,11 +43,11 @@ function DefaultShellSetting({ settings, setSettings }: any) {
   if (!shell) return null;
   const name = shell.split("/").pop();
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-zinc-100">Use my default shell</div>
-          <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+          <div className="font-medium text-white">Use my default shell</div>
+          <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             New terminals start {name}, the shell this computer uses, as a login shell on the
             server in place of the account's own. {name} reads the server's own startup files;
             nothing is copied from here. The server's welcome message isn't shown in these
@@ -59,9 +60,9 @@ function DefaultShellSetting({ settings, setSettings }: any) {
           aria-checked={!!settings.useLocalShell}
           aria-label="Use my default shell"
           onClick={() => setSettings((s: any) => ({ ...s, useLocalShell: !s.useLocalShell }))}
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings.useLocalShell ? 'bg-primary' : 'bg-zinc-700'}`}
+          className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${settings.useLocalShell ? 'bg-primary' : 'bg-white/[0.08]'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings.useLocalShell ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${settings.useLocalShell ? 'translate-x-[14px]' : ''}`} />
         </button>
       </div>
     </div>
@@ -72,11 +73,11 @@ function DefaultShellSetting({ settings, setSettings }: any) {
 function SshAgentSetting({ settings, setSettings }: any) {
   const on = settings.useSshAgent !== false;
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-zinc-100">Use keys from an ssh-agent</div>
-          <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+          <div className="font-medium text-white">Use keys from an ssh-agent</div>
+          <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             Log in with keys held by an ssh-agent on this computer: Pageant, the Windows OpenSSH
             agent and agents that use its pipe (such as 1Password), the agent in SSH_AUTH_SOCK, or
             the one IdentityAgent names in ~/.ssh/config.
@@ -90,9 +91,9 @@ function SshAgentSetting({ settings, setSettings }: any) {
           aria-checked={on}
           aria-label="Use keys from an ssh-agent"
           onClick={() => setSettings((s: any) => ({ ...s, useSshAgent: !(s.useSshAgent !== false) }))}
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${on ? 'bg-primary' : 'bg-zinc-700'}`}
+          className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${on ? 'bg-primary' : 'bg-white/[0.08]'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${on ? 'translate-x-[14px]' : ''}`} />
         </button>
       </div>
     </div>
@@ -103,11 +104,11 @@ function SshAgentSetting({ settings, setSettings }: any) {
 function SshConfigSetting({ settings, setSettings }: any) {
   const on = settings.useSshConfig !== false;
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-zinc-100">Use settings from ~/.ssh/config</div>
-          <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+          <div className="font-medium text-white">Use settings from ~/.ssh/config</div>
+          <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             Connect the way the OpenSSH client would: a server whose address is an alias in
             ~/.ssh/config connects to its HostName and Port, takes its User when no username is
             saved, uses the ssh-agent IdentityAgent names, and goes through its ProxyCommand (such
@@ -125,9 +126,9 @@ function SshConfigSetting({ settings, setSettings }: any) {
           aria-checked={on}
           aria-label="Use settings from ~/.ssh/config"
           onClick={() => setSettings((s: any) => ({ ...s, useSshConfig: !(s.useSshConfig !== false) }))}
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${on ? 'bg-primary' : 'bg-zinc-700'}`}
+          className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${on ? 'bg-primary' : 'bg-white/[0.08]'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${on ? 'translate-x-[14px]' : ''}`} />
         </button>
       </div>
     </div>
@@ -149,11 +150,11 @@ function SecureScreenSetting() {
     invoke<boolean>("set_secure_screen", { enabled: !on }).then(setOn, (e) => setError(String(e)));
   };
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4">
       <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-zinc-100">Block screenshots</div>
-          <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+          <div className="font-medium text-white">Block screenshots</div>
+          <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
             Keep Submarine out of screenshots, screen recordings and screen sharing, so passwords and
             terminal output can't be captured, not even by an app that records the screen. You
             can't take screenshots of it yourself while this is on. The preview in the recent
@@ -167,9 +168,9 @@ function SecureScreenSetting() {
           aria-label="Block screenshots"
           disabled={on === null}
           onClick={toggle}
-          className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${on ? 'bg-primary' : 'bg-zinc-700'}`}
+          className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] disabled:opacity-50 ${on ? 'bg-primary' : 'bg-white/[0.08]'}`}
         >
-          <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${on ? 'left-[22px]' : 'left-0.5'}`} />
+          <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${on ? 'translate-x-[14px]' : ''}`} />
         </button>
       </div>
     </div>
@@ -227,16 +228,16 @@ function TerminalFontSettings({ settings, setSettings }: any) {
   const previewFamily = fontFamilyCss(familyDraft);
 
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-6 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-5">
       {/* Font face */}
       <div className="space-y-2">
         <div className="flex justify-between items-center gap-2">
-          <label htmlFor="term-font-family" className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Font</label>
+          <label htmlFor="term-font-family" className="font-medium text-white">Font</label>
           {familyDraft && (
             <button
               type="button"
               onClick={() => { setFamilyDraft(""); commitFamily(""); }}
-              className="text-[11px] font-semibold text-zinc-400 hover:text-white transition-colors"
+              className="btn btn-ghost btn-sm -mr-2"
             >
               Use default
             </button>
@@ -253,24 +254,24 @@ function TerminalFontSettings({ settings, setSettings }: any) {
             "{primaryFontName(familyDraft)}" doesn't seem to be installed on this device, so the default font is used instead.
           </p>
         )}
-        <p className="text-[11.5px] text-zinc-500 leading-relaxed">
+        <p className="text-[12px] text-zinc-500 leading-[16px]">
           Built-in fonts ship with the app and work on every device. Any font installed on this device works too, including Nerd Fonts for starship / powerline prompts.
         </p>
       </div>
 
       {/* Font size */}
-      <div className="space-y-3 pt-5 border-t border-white/5">
+      <div className="space-y-3 pt-5 border-t border-white/[0.075]">
         <div className="flex justify-between items-center gap-3">
-          <label htmlFor="term-font-size" className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Font Size (px)</label>
+          <label htmlFor="term-font-size" className="font-medium text-white">Font size</label>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
               aria-label="Smaller font"
               onClick={() => setSize(size - 1)}
               disabled={size <= MIN_FONT_SIZE}
-              className="w-8 h-8 flex items-center justify-center bg-black border border-white/10 rounded-lg text-zinc-300 hover:text-white hover:border-primary/40 disabled:opacity-30 transition-colors"
+              className="btn w-7 px-0"
             >
-              <Minus size={14} />
+              <Minus size={13} aria-hidden />
             </button>
             <input
               id="term-font-size"
@@ -285,16 +286,16 @@ function TerminalFontSettings({ settings, setSettings }: any) {
                 if (n >= MIN_FONT_SIZE) setSize(n);
               }}
               onBlur={() => setSizeDraft(String(size))}
-              className="w-14 h-8 bg-black border border-white/10 rounded-lg px-2 text-[12px] font-bold text-white focus:border-primary/50 outline-none text-center"
+              className="field w-12 px-1 text-center tabular-nums"
             />
             <button
               type="button"
               aria-label="Larger font"
               onClick={() => setSize(size + 1)}
               disabled={size >= MAX_FONT_SIZE}
-              className="w-8 h-8 flex items-center justify-center bg-black border border-white/10 rounded-lg text-zinc-300 hover:text-white hover:border-primary/40 disabled:opacity-30 transition-colors"
+              className="btn w-7 px-0"
             >
-              <Plus size={14} />
+              <Plus size={13} aria-hidden />
             </button>
           </div>
         </div>
@@ -307,11 +308,11 @@ function TerminalFontSettings({ settings, setSettings }: any) {
           onChange={(e) => setSize(parseInt(e.target.value, 10))}
           className="w-full accent-primary"
         />
-        <p className="text-[11.5px] text-zinc-500">Any size from {MIN_FONT_SIZE} to {MAX_FONT_SIZE} — type it in or use the − / + buttons.</p>
+        <p className="text-[12px] text-zinc-500 leading-[16px]">Any size from {MIN_FONT_SIZE} to {MAX_FONT_SIZE} — type it in or use the − / + buttons.</p>
       </div>
 
       {/* Live preview */}
-      <div className="rounded-xl bg-surface border border-white/5 px-3 py-2.5 overflow-x-auto custom-scrollbar">
+      <div className="rounded-lg bg-terminal px-3 py-2.5 overflow-x-auto custom-scrollbar">
         <pre
           className="m-0 whitespace-pre text-zinc-100 leading-snug"
           style={{ fontFamily: previewFamily, fontSize: Math.min(size, 28) }}
@@ -407,23 +408,23 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
   const toggle = (key: "terminalBoldBright" | "terminalMinContrast", label: string, text: string) => (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <div className="text-[12.5px] font-semibold text-zinc-100">{label}</div>
-        <p className="text-[11.5px] text-zinc-500 leading-relaxed mt-0.5">{text}</p>
+        <div className="font-medium text-white">{label}</div>
+        <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">{text}</p>
       </div>
       <button
         role="switch"
         aria-checked={!!settings[key]}
         aria-label={label}
         onClick={() => setSettings((s: any) => ({ ...s, [key]: !s[key] }))}
-        className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings[key] ? "bg-primary" : "bg-zinc-700"}`}
+        className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${settings[key] ? "bg-primary" : "bg-white/[0.08]"}`}
       >
-        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings[key] ? "left-[22px]" : "left-0.5"}`} />
+        <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${settings[key] ? "translate-x-[14px]" : ""}`} />
       </button>
     </div>
   );
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
-      <div className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Colours</div>
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-4">
+      <div className="font-medium text-white">Colours</div>
       <div role="radiogroup" aria-label="Colour scheme" className="grid grid-cols-2 gap-2">
         {schemes.map(swatch)}
       </div>
@@ -438,7 +439,7 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
             type="button"
             onClick={() => { setImporting((v) => !v); setImportError(null); }}
             aria-expanded={importing}
-            className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-zinc-200 hover:border-primary/40 hover:text-white"
+            className="btn"
           >
             {custom ? "Replace my scheme…" : "Use my own scheme…"}
           </button>
@@ -446,7 +447,7 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
             <button
               type="button"
               onClick={removeCustom}
-              className="px-3 py-1.5 rounded-lg border border-white/10 text-[12px] text-zinc-400 hover:border-rose-400/40 hover:text-rose-300"
+              className="btn btn-ghost text-danger hover:text-danger"
             >
               Remove {custom.name}
             </button>
@@ -454,7 +455,7 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
         </div>
         {importing && (
           <div className="space-y-2">
-            <p className="text-[11.5px] text-zinc-500 leading-relaxed">
+            <p className="text-[12px] text-zinc-500 leading-[16px]">
               Paste a Windows Terminal colour scheme (JSON with name, background, foreground and the
               16 colours from black to brightWhite). Sites that collect terminal schemes offer this format.
             </p>
@@ -465,14 +466,14 @@ function TerminalColoursSetting({ settings, setSettings }: any) {
               spellCheck={false}
               aria-label="Windows Terminal colour scheme"
               placeholder={'{\n  "name": "My scheme",\n  "background": "#1e1e2e",\n  "foreground": "#cdd6f4",\n  …\n}'}
-              className="w-full bg-black border border-white/10 rounded-lg px-2 py-1.5 text-[11px] font-mono text-zinc-200 focus:border-primary/50 outline-none"
+              className="field h-auto py-1.5 text-[11.5px] font-mono"
             />
             {importError && <p role="alert" className="text-[11.5px] text-rose-300">{importError}</p>}
             <button
               type="button"
               onClick={useImported}
               disabled={!pasted.trim()}
-              className="px-3 py-1.5 rounded-lg bg-primary/20 border border-primary/40 text-[12px] text-white disabled:opacity-40"
+              className="btn btn-primary"
             >
               Use it
             </button>
@@ -502,18 +503,18 @@ function TerminalScrollbackSetting({ settings, setSettings }: any) {
     if (next !== lines) set(next);
   };
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-3 shadow-xl">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-3">
       <div className="flex justify-between items-center gap-3">
-        <label htmlFor="term-scrollback" className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Scrollback (lines)</label>
+        <label htmlFor="term-scrollback" className="font-medium text-white">Scrollback lines</label>
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             aria-label="Fewer scrollback lines"
             onClick={() => set(lines - SCROLLBACK_STEP)}
             disabled={lines <= MIN_SCROLLBACK}
-            className="w-8 h-8 flex items-center justify-center bg-black border border-white/10 rounded-lg text-zinc-300 hover:text-white hover:border-primary/40 disabled:opacity-30 transition-colors"
+            className="btn w-7 px-0"
           >
-            <Minus size={14} />
+            <Minus size={13} aria-hidden />
           </button>
           <input
             id="term-scrollback"
@@ -524,20 +525,20 @@ function TerminalScrollbackSetting({ settings, setSettings }: any) {
             onChange={(e) => setDraft(e.target.value.replace(/[^0-9]/g, "").slice(0, 5))}
             onBlur={commit}
             onKeyDown={(e) => { if (e.key === "Enter") commit(); }}
-            className="w-20 h-8 bg-black border border-white/10 rounded-lg px-2 text-[12px] font-bold text-white focus:border-primary/50 outline-none text-center"
+            className="field w-[72px] px-1 text-center tabular-nums"
           />
           <button
             type="button"
             aria-label="More scrollback lines"
             onClick={() => set(lines + SCROLLBACK_STEP)}
             disabled={lines >= MAX_SCROLLBACK}
-            className="w-8 h-8 flex items-center justify-center bg-black border border-white/10 rounded-lg text-zinc-300 hover:text-white hover:border-primary/40 disabled:opacity-30 transition-colors"
+            className="btn w-7 px-0"
           >
             <Plus size={14} />
           </button>
         </div>
       </div>
-      <p className="text-[11.5px] text-zinc-500 leading-relaxed">
+      <p className="text-[12px] text-zinc-500 leading-[16px]">
         How many lines each terminal keeps to scroll back through, from {groupDigits(MIN_SCROLLBACK)} to{" "}
         {groupDigits(MAX_SCROLLBACK)}. More lines take more memory in every open terminal. A change applies to open
         terminals too; a smaller number drops their oldest lines.
@@ -568,10 +569,10 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
     .sort((a, b) => String(a.name).localeCompare(String(b.name)));
 
   return (
-    <div className="bg-panel border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
+    <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-4">
       <div>
-        <div className="text-sm font-semibold text-zinc-100">Shell config sync</div>
-        <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+        <div className="font-medium text-white">Shell config sync</div>
+        <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
           Files and folders from this computer for the Shell button in a session's toolbar to push
           to that server: your shell config, theme, plugins. The place on the server is below its
           home folder, so one list works whatever the user name. You see what would change before
@@ -593,7 +594,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
                   placeholder="~/.zshrc"
                   aria-label="File or folder on this computer"
                   spellCheck={false}
-                  className="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
+                  className="field flex-1 min-w-0 font-mono text-[12px]"
                 />
                 <ArrowRight size={14} className="text-zinc-600 shrink-0" />
                 <input
@@ -603,44 +604,44 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
                   placeholder=".zshrc"
                   aria-label="Place on the server, below its home folder"
                   spellCheck={false}
-                  className="flex-1 min-w-0 bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:border-primary/50"
+                  className="field flex-1 min-w-0 font-mono text-[12px]"
                 />
                 <button
                   onClick={() => persist(pairs.filter((_, idx) => idx !== i))}
                   aria-label="Remove pair"
                   title="Remove pair"
-                  className="shrink-0 p-2 rounded-lg text-zinc-500 hover:bg-white/10 hover:text-rose-400 transition-colors"
+                  className="icon-btn hover:text-danger"
                 >
                   <X size={14} />
                 </button>
               </div>
-              {problem && <p className="text-[11px] text-amber-300 pl-1">{problem}</p>}
+              {problem && <p className="text-[12px] text-warning">{problem}</p>}
             </div>
           );
         })}
         {pairs.length === 0 && (
-          <p className="text-[12px] text-zinc-500 italic">Nothing to push yet.</p>
+          <p className="text-[12px] text-zinc-500">Nothing to push yet.</p>
         )}
       </div>
 
       <button
         onClick={() => persist([...pairs, { local: "", remote: "" }])}
-        className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+        className="btn btn-sm"
       >
         <Plus size={14} /> Add pair
       </button>
 
-      <div className="pt-4 border-t border-white/5">
-        <div className="text-[12px] font-semibold text-zinc-200">Push to</div>
+      <div className="pt-4 border-t border-white/[0.075]">
+        <div className="font-medium text-white">Push to</div>
         <p className="text-[12px] text-zinc-500 mt-0.5">
           The servers that show the Shell button. Only this device keeps the choice.
         </p>
         {choices.length === 0 ? (
-          <p className="text-[12px] text-zinc-500 italic mt-2">No saved servers yet.</p>
+          <p className="text-[12px] text-zinc-500 mt-2">No saved servers yet.</p>
         ) : (
           <div className="mt-2 max-h-56 overflow-y-auto custom-scrollbar space-y-0.5 pr-1">
             {choices.map((s) => (
-              <label key={s.uuid} className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.03] cursor-pointer">
+              <label key={s.uuid} className="flex items-center gap-2.5 px-2 h-8 rounded-md hover:bg-white/[0.04] cursor-pointer">
                 <input
                   type="checkbox"
                   checked={chosen.includes(s.uuid)}
@@ -648,7 +649,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
                   className="accent-primary w-4 h-4 shrink-0"
                 />
                 <span className="text-[13px] text-zinc-200 truncate">{s.name}</span>
-                <span className="text-[11px] text-zinc-500 truncate">{s.host}</span>
+                <span className="text-[12px] text-zinc-500 font-mono truncate">{s.host}</span>
               </label>
             ))}
           </div>
@@ -659,6 +660,7 @@ function ShellConfigSyncSettings({ servers }: { servers: any[] }) {
 }
 
 const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any) => {
+  const confirm = useConfirm();
   const accentColors = [
     { name: 'Theme (teal)', value: '' },
     { name: 'Light Blue', value: '#60a5fa' },
@@ -683,33 +685,33 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
   }, []);
 
   return (
-    <div className="flex-1 p-4 sm:p-10 overflow-y-auto custom-scrollbar animate-in">
-      <header className="mb-6 sm:mb-10">
-        <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-3">
-          <Settings size={24} className="text-primary" /> Settings
-        </h2>
-        <p className="text-[13px] text-zinc-400 mt-2">
-          Tweak how Submarine looks and feels.
-          {' '}
-          <span className="text-zinc-500 italic">Per-device — preferences live in this machine's local storage and don't sync with your cloud profile.</span>
-        </p>
+    <div className="flex-1 flex flex-col overflow-hidden bg-surface">
+      <header className="h-[52px] shrink-0 flex items-center gap-2 pl-4 pr-3 border-b border-white/[0.075]">
+        <span className="flex-1 min-w-0 h-6 flex items-center font-semibold text-white truncate">Settings</span>
       </header>
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pt-5 pb-8 sm:px-8 sm:pt-7 sm:pb-10">
+      <div className="mb-6 max-w-[640px]">
+        <h1 className="text-[22px] leading-7 font-semibold tracking-[-0.01em] text-white">Settings</h1>
+        <p className="mt-0.5 text-zinc-400">
+          These stay on this device. They aren't synced with your profile.
+        </p>
+      </div>
 
       {/* Columns rather than a grid: the sections are very different heights, and
           a 2-col grid rows them up so a short card leaves a tall empty gap beside
           it. Column flow packs them, and break-inside-avoid keeps a card whole. */}
-      <div className="columns-1 md:columns-2 gap-4 sm:gap-8">
+      <div className="columns-1 lg:columns-2 gap-6">
         {/* Appearance Section */}
-        <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-          <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-            <Palette size={14} /> UI Customization
-          </div>
+        <section className="break-inside-avoid space-y-2.5 mb-6">
+          <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <Palette size={14} aria-hidden className="text-zinc-500" /> Interface
+          </h2>
 
-          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-8 shadow-xl">
+          <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-5">
             {/* Accent Color */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Primary Accent Color</label>
+                <label className="font-medium text-white">Accent colour</label>
                 <div className="flex items-center gap-2">
                   <input 
                     type="color" 
@@ -723,16 +725,17 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
                     placeholder="Theme"
                     aria-label="Accent colour, hex"
                     onChange={(e) => setSettings({ ...settings, primaryColor: e.target.value })}
-                    className="w-20 h-6 bg-black border border-white/10 rounded px-1.5 text-[10px] font-mono text-zinc-400 focus:border-primary/50 outline-none"
+                    className="field w-[84px] h-6 px-1.5 text-[11.5px] font-mono"
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-7 gap-3">
+              <div className="grid grid-cols-7 gap-3 justify-items-center">
                 {accentColors.map(c => (
                   <button
                     key={c.value}
                     onClick={() => setSettings({ ...settings, primaryColor: c.value })}
-                    className={`w-full aspect-square rounded-xl border-2 transition-all ${settings.primaryColor === c.value ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'}`}
+                    aria-pressed={settings.primaryColor === c.value}
+                    className={`w-full aspect-square max-w-9 rounded-full transition-shadow ${settings.primaryColor === c.value ? 'shadow-[0_0_0_2px_rgb(var(--panel)),0_0_0_4px_rgb(var(--ink))]' : 'hover:shadow-[0_0_0_2px_rgb(var(--panel)),0_0_0_4px_var(--border-strong)]'}`}
                     style={{ backgroundColor: c.value || '#3ecfc4' }}
                     title={c.name}
                     aria-label={c.name}
@@ -741,8 +744,8 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
               </div>
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-white/5">
-              <span id="appearance-label" className="block text-[11px] font-semibold text-zinc-500">Appearance</span>
+            <div className="space-y-3 pt-5 border-t border-white/[0.075]">
+              <span id="appearance-label" className="block font-medium text-white">Appearance</span>
               <div role="radiogroup" aria-labelledby="appearance-label" className="grid grid-cols-3 gap-0.5 p-0.5 rounded-lg bg-white/[0.06]">
                 {appearances.map(({ value, label, icon: Icon }) => (
                   <button
@@ -764,10 +767,10 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
         </section>
 
         {/* Terminal Section */}
-        <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-          <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-            <Settings size={14} /> Terminal Configuration
-          </div>
+        <section className="break-inside-avoid space-y-2.5 mb-6">
+          <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <TerminalSquare size={14} aria-hidden className="text-zinc-500" /> Terminal
+          </h2>
 
           <TerminalFontSettings settings={settings} setSettings={setSettings} />
 
@@ -782,10 +785,10 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
 
         {/* Not on Android, which has no ssh-agent or ~/.ssh/config to use. */}
         {!IS_ANDROID && (
-          <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-            <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-              <KeyRound size={14} /> Authentication
-            </div>
+          <section className="break-inside-avoid space-y-2.5 mb-6">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <KeyRound size={14} aria-hidden className="text-zinc-500" /> Authentication
+          </h2>
 
             <SshAgentSetting settings={settings} setSettings={setSettings} />
             <SshConfigSetting settings={settings} setSettings={setSettings} />
@@ -793,10 +796,10 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
         )}
 
         {IS_ANDROID && (
-          <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-            <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-              <EyeOff size={14} /> Privacy
-            </div>
+          <section className="break-inside-avoid space-y-2.5 mb-6">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <EyeOff size={14} aria-hidden className="text-zinc-500" /> Privacy
+          </h2>
 
             <SecureScreenSetting />
           </section>
@@ -807,36 +810,36 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
             only; keeping them one click deep here cleans up the sidebar on
             mobile (six icons → five) without burying the data. */}
         {onOpenLogs && (
-          <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-            <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-              <List size={14} /> Activity Log
-            </div>
+          <section className="break-inside-avoid space-y-2.5 mb-6">
+            <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <List size={14} aria-hidden className="text-zinc-500" /> Activity
+          </h2>
 
-            <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Diagnostic timeline of what the app has been doing this session. Useful for confirming a connection actually failed or watching a transfer's progress in retrospect.
+            <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-4">
+              <p className="text-zinc-400 leading-[18px]">
+                What the app has done this session: connections, transfers, syncs and their errors.
               </p>
               <button
                 onClick={onOpenLogs}
-                className="px-4 h-9 bg-primary/10 border border-primary/30 text-primary rounded-xl text-xs font-bold uppercase hover:bg-primary hover:text-zinc-950 transition-all w-full flex items-center justify-center gap-2"
+                className="btn"
               >
-                <List size={14} /> View Activity Log
+                <List size={14} aria-hidden /> Open activity
               </button>
             </div>
           </section>
         )}
 
         {/* Cloud Section */}
-        <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-          <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-            <Cloud size={14} /> Cloud Sync
-          </div>
+        <section className="break-inside-avoid space-y-2.5 mb-6">
+          <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <Cloud size={14} aria-hidden className="text-zinc-500" /> Cloud sync
+          </h2>
 
-          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
-                <div className="text-sm font-semibold text-zinc-100">Auto-sync</div>
-                <p className="text-[12px] text-zinc-400 leading-relaxed mt-1">
+                <div className="font-medium text-white">Auto-sync</div>
+                <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
                   Keep open profiles synced in the background — shortly after you make a change, when
                   you return to the window, and every few minutes to pull in others' edits on shared
                   profiles. Turn off to sync only with the manual button.
@@ -847,14 +850,14 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
                 aria-label="Auto-sync"
                 aria-checked={settings.autoSync !== false}
                 onClick={() => setSettings((s: any) => ({ ...s, autoSync: !(s.autoSync !== false) }))}
-                className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${settings.autoSync !== false ? 'bg-primary' : 'bg-zinc-700'}`}
+                className={`relative shrink-0 w-9 h-[22px] rounded-full transition-colors shadow-[inset_0_0_0_0.5px_var(--border-strong)] ${settings.autoSync !== false ? 'bg-primary' : 'bg-white/[0.08]'}`}
               >
-                <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-snow transition-all ${settings.autoSync !== false ? 'left-[22px]' : 'left-0.5'}`} />
+                <span className={`absolute top-0.5 left-0.5 w-[18px] h-[18px] rounded-full bg-snow shadow-[0_1px_2px_rgba(0,0,0,.3)] transition-transform ${settings.autoSync !== false ? 'translate-x-[14px]' : ''}`} />
               </button>
             </div>
 
             {settings.autoSync !== false && (
-              <div className="border-t border-white/5 pt-4 text-[12px] text-zinc-400">
+              <div className="border-t border-white/[0.075] pt-4 text-[12px] text-zinc-400">
                 Currently checking every{' '}
                 <span className="text-zinc-100 font-semibold">{settings.syncIntervalMin ?? 5} min</span>. Change it
                 on the Profile tab, next to Sync now.
@@ -864,18 +867,18 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
         </section>
 
         {/* Maintenance Section */}
-        <section className="break-inside-avoid space-y-3 mb-4 sm:mb-8">
-          <div className="flex items-center gap-2 text-zinc-400 font-bold uppercase tracking-widest text-xs">
-            <RefreshCw size={14} /> Maintenance
-          </div>
+        <section className="break-inside-avoid space-y-2.5 mb-6">
+          <h2 className="flex items-center gap-2 text-[13px] font-semibold text-white">
+            <RefreshCw size={14} aria-hidden className="text-zinc-500" /> Maintenance
+          </h2>
 
-          <div className="bg-panel border border-white/5 rounded-2xl p-6 space-y-4 shadow-xl">
+          <div className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-4 space-y-4">
             {storage && (
-              <div className="space-y-1.5 pb-4 border-b border-white/5">
+              <div className="space-y-1.5 pb-4 border-b border-white/[0.075]">
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-black text-zinc-500 uppercase tracking-wider">Data folder</span>
+                  <span className="font-medium text-white">Data folder</span>
                   {storage.portable && (
-                    <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 border border-primary/30">
+                    <span className="pill bg-primary/[0.12] text-primary">
                       Portable
                     </span>
                   )}
@@ -888,21 +891,21 @@ const SettingsPanel = ({ settings, setSettings, onOpenLogs, servers = [] }: any)
                 )}
               </div>
             )}
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              These preferences are persisted in your local environment. Resetting will revert all UI aesthetics to factory defaults.
+            <p className="text-zinc-400 leading-[18px]">
+              Puts the accent colour, appearance and terminal font back to how they came. Nothing else changes.
             </p>
             <button
-              onClick={() => {
-                if(window.confirm('Reset all UI customizations?')) {
-                  setSettings((s: any) => ({ ...s, primaryColor: '', appearance: 'system', terminalFontSize: 14, terminalFontFamily: '' }));
-                }
+              onClick={async () => {
+                const ok = await confirm({ title: "Reset appearance?", message: "The accent colour, appearance and terminal font go back to their defaults.", okLabel: "Reset" });
+                if (ok) setSettings((s: any) => ({ ...s, primaryColor: '', appearance: 'system', terminalFontSize: 14, terminalFontFamily: '' }));
               }}
-              className="px-4 h-9 bg-zinc-900 border border-white/5 text-zinc-300 rounded-xl text-xs font-bold uppercase hover:bg-white/5 transition-all w-full"
+              className="btn"
             >
-              Reset to Defaults
+              Reset appearance
             </button>
           </div>
         </section>
+      </div>
       </div>
     </div>
   );
