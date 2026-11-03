@@ -50,57 +50,57 @@ export function HeldDeletions({ items, onResolve, onClose }: {
     .filter(([, list]) => list.length > 0);
 
   return createPortal(
-    <div className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9998] bg-scrim flex items-center justify-center p-4" onClick={onClose}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="held-deletions-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[520px] max-h-[80vh] flex flex-col bg-panel border border-white/10 rounded-xl shadow-2xl font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150"
+        className="w-full max-w-[520px] max-h-[80vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] animate-in zoom-in-95 fade-in duration-150"
       >
-        <div className="flex items-start justify-between gap-3 p-4 pb-2">
-          <div className="flex items-center gap-2">
-            <Trash2 size={14} className="text-amber-400" />
-            <span id="held-deletions-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
+        <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-1">
+          <div className="flex items-center gap-2.5">
+            <Trash2 size={16} aria-hidden className="text-warning shrink-0" />
+            <h2 id="held-deletions-title" className="text-[15px] font-semibold text-white">
               Deleted by someone else
-            </span>
+            </h2>
           </div>
-          <button aria-label="Close" onClick={onClose} className="text-zinc-500 hover:text-white shrink-0">
-            <X size={12} />
+          <button aria-label="Close" onClick={onClose} className="icon-btn -mr-1 -mt-0.5">
+            <X size={14} />
           </button>
         </div>
-        <p className="px-4 pb-3 text-[12px] text-zinc-400 leading-relaxed">
+        <p className="px-4 pb-3 text-zinc-400 leading-[18px]">
           Someone you share this profile with deleted these in one go. They're still here: delete them here too,
           or keep them. Kept items come back for everyone, or, if you can only view this profile, stay on this
           device.
         </p>
         <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-2 space-y-3">
           {groups.map(([label, list]) => (
-            <section key={label} aria-label={label} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-              <div className="text-[10.5px] font-bold uppercase tracking-wider text-zinc-500 mb-1.5">{label}</div>
+            <section key={label} aria-label={label} className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-3">
+              <h3 className="text-[11.5px] font-semibold text-zinc-500 mb-1.5">{label}</h3>
               <ul className="space-y-1">
                 {list.map((i) => (
-                  <li key={i.uuid} className="text-[12px] text-zinc-200 break-words">{i.name || "(no name)"}</li>
+                  <li key={i.uuid} className="text-white break-words">{i.name || "(no name)"}</li>
                 ))}
               </ul>
             </section>
           ))}
         </div>
-        <div className="flex justify-end gap-2 p-4 pt-2">
-          <button
-            disabled={busy}
-            onClick={() => decide(false)}
-            className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/15 border border-primary/40 text-primary hover:bg-primary/25 disabled:opacity-50"
-          >
-            Keep them
-          </button>
+        <div className="flex justify-end gap-2 px-4 py-3 border-t border-white/[0.075]">
           <button
             disabled={busy}
             onClick={() => decide(true)}
-            className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-rose-500/10 border border-rose-500/40 text-rose-300 hover:bg-rose-500/20 disabled:opacity-50"
+            className="btn text-danger"
           >
             Delete here too
+          </button>
+          <button
+            disabled={busy}
+            onClick={() => decide(false)}
+            className="btn btn-primary"
+          >
+            Keep them
           </button>
         </div>
       </div>

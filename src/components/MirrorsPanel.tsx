@@ -87,8 +87,8 @@ function MirrorLiveStatus({ live }: { live: MirrorStatus }) {
     : 0;
   return (
     <div className="mt-1 space-y-1">
-      <div className="flex items-center gap-3 text-[10px] text-zinc-500 flex-wrap">
-        <span className={`px-1.5 rounded ${stateBadge}`}>{live.state}</span>
+      <div className="flex items-center gap-3 text-[11.5px] text-zinc-500 flex-wrap">
+        <span className={`pill h-[18px] ${stateBadge}`}>{live.state === "initial-sync" ? "First sync" : live.state === "watching" ? "Watching" : live.state === "scanning" ? "Scanning" : live.state === "error" ? "Error" : live.state}</span>
         {live.state === "scanning" && (
           <span className="text-sky-300">scanned {live.scanned}</span>
         )}
@@ -301,31 +301,31 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
   return (
     <div className="flex-1 flex flex-col h-full bg-surface overflow-hidden relative">
       {disabled && (
-        <div className="absolute inset-0 z-30 bg-black/55 backdrop-blur-[1px] flex items-center justify-center text-zinc-300 text-xs font-mono uppercase">
-          <span className="px-3 py-1.5 bg-red-500/15 border border-red-500/30 rounded text-red-300">
+        <div className="absolute inset-0 z-30 bg-scrim flex items-center justify-center">
+          <span className="pill h-7 px-3 bg-elevated shadow-pop text-[12.5px] text-white">
             Session disconnected
           </span>
         </div>
       )}
 
       {/* Header */}
-      <div className="shrink-0 px-3 py-2 flex items-center justify-between border-b border-white/5 bg-panel">
-        <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-400">
+      <div className="shrink-0 h-10 px-3 flex items-center justify-between gap-2 border-b border-white/[0.075]">
+        <div className="flex items-center gap-2 text-[12.5px] text-zinc-400">
           <FolderUp size={12} />
           <span>{Object.keys(statuses).length} running · {allSavedMirrors.length} saved</span>
         </div>
         <button
           onClick={() => { setAdding((a) => !a); setError(null); }}
-          className="h-6 px-2.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 flex items-center gap-1.5"
+          className="btn btn-primary btn-sm"
         >
-          {adding ? <X size={11} /> : <Plus size={11} />}
+          {adding ? <X size={13} aria-hidden /> : <Plus size={13} aria-hidden />}
           <span>{adding ? "Cancel" : "New mirror"}</span>
         </button>
       </div>
 
       {/* Ad-hoc new mirror form */}
       {adding && !pending && (
-        <div className="shrink-0 p-3 border-b border-white/5 bg-panel space-y-2">
+        <div className="shrink-0 p-3 border-b border-white/[0.075] bg-panel space-y-2">
           <div className="flex items-center gap-2">
             {/* Native folder picker is desktop-only (rfd). On Android the
                 backend command errors, so we hide the button and lean on
@@ -335,10 +335,10 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             {!IS_ANDROID && (
               <button
                 onClick={pickLocal}
-                className="h-7 px-2 rounded bg-white/[0.04] border border-white/10 hover:bg-white/10 text-zinc-300 text-[11px] flex items-center gap-1.5 shrink-0"
+                className="btn shrink-0"
                 title="Pick a local directory"
               >
-                <FolderOpen size={12} /> Browse
+                <FolderOpen size={13} aria-hidden /> Browse
               </button>
             )}
             <input
@@ -347,7 +347,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               placeholder={IS_ANDROID
                 ? "/storage/emulated/0/… (type path)"
                 : "/local/path (or browse)"}
-              className="flex-1 min-w-0 h-7 px-2 bg-white/[0.04] border border-white/10 rounded text-[11px] font-mono text-zinc-200"
+              className="flex-1 min-w-0 field font-mono text-[12px]"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -356,7 +356,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               value={draft.remote}
               onChange={(e) => setDraft({ ...draft, remote: e.target.value })}
               placeholder="/remote/path on server"
-              className="flex-1 min-w-0 h-7 px-2 bg-white/[0.04] border border-white/10 rounded text-[11px] font-mono text-zinc-200"
+              className="flex-1 min-w-0 field font-mono text-[12px]"
             />
           </div>
           <textarea
@@ -364,14 +364,14 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             onChange={(e) => setExcludesText(e.target.value)}
             placeholder="Excludes (one per line) — substring or *.ext"
             rows={2}
-            className="w-full p-2 bg-white/[0.04] border border-white/10 rounded text-[10.5px] font-mono text-zinc-300 placeholder-zinc-600 resize-none focus:outline-none focus:border-primary/40"
+            className="field h-auto py-1.5 font-mono text-[12px] resize-none"
           />
-          <div className="flex items-center gap-2 text-[10.5px] text-zinc-400">
-            <span className="shrink-0 uppercase tracking-wider font-bold text-zinc-500 text-[9.5px]">On conflict</span>
+          <div className="flex items-center gap-2 text-[12px]">
+            <span className="shrink-0 text-zinc-400">On conflict</span>
             <select
               value={draft.conflict_resolution}
               onChange={(e) => setDraft({ ...draft, conflict_resolution: e.target.value as ConflictMode })}
-              className="h-7 px-2 bg-white/[0.04] border border-white/10 rounded text-[11px] text-zinc-200 outline-none focus:border-primary/40"
+              className="field w-auto min-w-0 flex-1"
               title="Decides which side wins when a file exists on both sides with different content. Missing-on-one-side files always copy across regardless."
             >
               <option value="local">Local wins (overwrite remote)</option>
@@ -380,7 +380,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             </select>
           </div>
           <div className="flex items-center justify-between gap-2">
-            <label className="flex items-center gap-2 text-[10.5px] text-zinc-400 select-none">
+            <label className="flex items-center gap-2 text-[12px] text-zinc-400 select-none">
               <input
                 type="checkbox"
                 checked={draft.soft_delete}
@@ -392,14 +392,14 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             <button
               onClick={submitDraft}
               disabled={working}
-              className="h-7 px-3 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/30 hover:bg-primary/25 disabled:opacity-50"
+              className="btn btn-primary"
             >
               {working ? "…" : "Continue"}
             </button>
           </div>
           {error && (
-            <div className="text-[10.5px] text-rose-400 font-mono flex items-start gap-1.5">
-              <AlertTriangle size={11} className="mt-0.5 shrink-0" />
+            <div role="alert" className="text-[12px] text-danger flex items-start gap-1.5">
+              <AlertTriangle size={13} aria-hidden className="mt-px shrink-0" />
               <span className="break-words">{error}</span>
             </div>
           )}
@@ -418,12 +418,12 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
         ).length;
         const conflictMode = pending.spec.conflict_resolution || "local";
         return (
-        <div className="shrink-0 p-3 border-b border-white/5 bg-panel space-y-2">
-          <div className="flex items-start gap-2 text-[11px] text-zinc-300">
+        <div className="shrink-0 p-3 border-b border-white/[0.075] bg-panel space-y-2">
+          <div className="flex items-start gap-2 text-zinc-300">
             <FolderUp size={13} className="text-primary mt-0.5 shrink-0" />
             <div className="min-w-0 flex-1">
-              <div className="font-bold">Initial sync preview</div>
-              <div className="text-zinc-500 text-[10.5px] font-mono truncate">
+              <div className="text-[13px] font-semibold text-white">Before the first sync</div>
+              <div className="text-zinc-500 text-[11.5px] font-mono truncate">
                 {pending.spec.local} → {pending.spec.remote}
               </div>
             </div>
@@ -437,14 +437,11 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               over re-engineering the reconciliation flow, so this is the
               single point of consent for the data-loss window. */}
           {pending.report.entries.length > 0 && (
-            <div className={`flex items-start gap-2 text-[10.5px] px-2.5 py-1.5 rounded border ${
-              downloadModified > 0
-                ? "bg-amber-500/10 border-amber-500/30 text-amber-200"
-                : "bg-sky-500/5 border-sky-500/20 text-sky-200"
+            <div className={`flex items-start gap-2 text-[12px] text-white px-2.5 py-2 rounded-lg ${
+              downloadModified > 0 ? "bg-warning/[0.12]" : "bg-info/[0.1]"
             }`}>
-              <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-              <div className="min-w-0 leading-relaxed">
-                <span className="font-bold uppercase tracking-wider mr-1">Heads up</span>
+              <AlertTriangle size={13} aria-hidden className={`mt-px shrink-0 ${downloadModified > 0 ? "text-warning" : "text-info"}`} />
+              <div className="min-w-0 leading-[17px]">
                 {downloadModified > 0 ? (
                   <>
                     {downloadModified} file{downloadModified === 1 ? "" : "s"} marked <span className="font-mono">↓ mod</span> will be <b>overwritten locally</b> with the remote copy.
@@ -459,9 +456,9 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
             </div>
           )}
 
-          <div className="text-[11px] text-zinc-300 bg-black/40 border border-white/5 rounded p-2 max-h-40 overflow-auto custom-scrollbar font-mono">
+          <div className="text-[12px] text-zinc-300 bg-terminal rounded-lg p-2 max-h-40 overflow-auto custom-scrollbar font-mono">
             {pending.report.entries.length === 0 ? (
-              <div className="text-zinc-500 italic">Already in sync — nothing to move in either direction.</div>
+              <div className="text-zinc-500 font-sans">Already in sync — nothing to move in either direction.</div>
             ) : (
               pending.report.entries.slice(0, 200).map((e, i) => {
                 const isDown = e.action.startsWith("download-");
@@ -471,8 +468,8 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
                   : (isNew ? "bg-emerald-500/15 text-emerald-300" : "bg-amber-500/15 text-amber-300");
                 const label = `${isDown ? "↓" : "↑"} ${isNew ? "new" : "mod"}`;
                 return (
-                  <div key={i} className="flex items-center gap-2 text-[10.5px]">
-                    <span className={`px-1 rounded text-[9px] font-bold uppercase shrink-0 ${tone}`}>{label}</span>
+                  <div key={i} className="flex items-center gap-2">
+                    <span className={`px-1 rounded font-sans text-[10.5px] font-medium shrink-0 ${tone}`}>{label}</span>
                     <span className="truncate flex-1 text-zinc-300">{e.path}</span>
                     <span className="text-zinc-500 shrink-0">{fmtBytes(e.size)}</span>
                   </div>
@@ -480,26 +477,26 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               })
             )}
             {pending.report.entries.length > 200 && (
-              <div className="text-zinc-500 text-[10px] italic mt-1">… {pending.report.entries.length - 200} more</div>
+              <div className="text-zinc-500 font-sans mt-1">… {pending.report.entries.length - 200} more</div>
             )}
           </div>
-          <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center justify-between text-[12px]">
             <span className="text-zinc-400">
               {pending.report.entries.length} files · {fmtBytes(pending.report.total_bytes)}
             </span>
             <div className="flex gap-2">
               <button
                 onClick={() => setPending(null)}
-                className="h-7 px-3 rounded text-[10px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/10"
+                className="btn"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmStart}
                 disabled={working}
-                className="h-7 px-3 rounded text-[10px] font-bold uppercase tracking-wider bg-primary text-black border border-primary disabled:opacity-50 flex items-center gap-1.5"
+                className="btn btn-primary"
               >
-                <Check size={11} /> Start mirror
+                <Check size={13} aria-hidden /> Start mirror
               </button>
             </div>
           </div>
@@ -512,34 +509,36 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
         {/* Configured mirrors stored on the node — Start button picks up
             saved config and confirms via the dry-run preview. */}
         {allSavedMirrors.length > 0 && (
-          <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-1 pt-1">Saved on this node</div>
+          <div className="text-[11.5px] font-semibold text-zinc-500 px-1 pt-1">Saved with this server</div>
         )}
         {allSavedMirrors.map((m, i) => {
           const key = `${m.local}|${m.remote}`;
           const liveId = runningByPair[key];
           const live = liveId ? statuses[liveId] : null;
           return (
-            <div key={`saved-${i}`} className="rounded border border-white/5 bg-white/[0.02] p-2 font-mono text-[11px]">
+            <div key={`saved-${i}`} className="rounded-lg bg-panel shadow-[0_0_0_0.5px_var(--border)] p-2.5 font-mono text-[12px]">
               <div className="flex items-center gap-2">
-                <FolderUp size={12} className="text-primary shrink-0" />
+                <FolderUp size={14} aria-hidden className="text-primary shrink-0" />
                 <span className="text-zinc-300 truncate flex-1">{m.local}</span>
-                <ArrowRight size={11} className="text-zinc-500 shrink-0" />
+                <ArrowRight size={12} aria-hidden className="text-zinc-500 shrink-0" />
                 <span className="text-zinc-400 truncate flex-1">{m.remote}</span>
                 {live ? (
                   <button
                     onClick={() => stopMirror(live.id)}
                     title="Stop mirror"
-                    className="p-0.5 rounded hover:bg-white/10 text-zinc-400 hover:text-rose-400 shrink-0"
+                    aria-label="Stop mirror"
+                    className="icon-btn w-6 h-6 hover:text-danger"
                   >
-                    <Square size={11} />
+                    <Square size={13} aria-hidden />
                   </button>
                 ) : (
                   <button
                     onClick={() => askPreviewThenStart(m)}
                     title="Start mirror"
-                    className="p-0.5 rounded hover:bg-white/10 text-zinc-400 hover:text-emerald-400 shrink-0"
+                    aria-label="Start mirror"
+                    className="icon-btn w-6 h-6 hover:text-success"
                   >
-                    <Play size={11} fill="currentColor" />
+                    <Play size={13} aria-hidden fill="currentColor" />
                   </button>
                 )}
               </div>
@@ -550,22 +549,22 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
 
         {/* Ad-hoc / live mirrors that aren't in the saved list. */}
         {Object.values(statuses).filter((s) => !allSavedMirrors.some((m) => m.local === s.local && m.remote === s.remote)).length > 0 && (
-          <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 px-1 pt-2">Ad-hoc this session</div>
+          <div className="text-[11.5px] font-semibold text-zinc-500 px-1 pt-2">This session only</div>
         )}
         {Object.values(statuses)
           .filter((s) => !allSavedMirrors.some((m) => m.local === s.local && m.remote === s.remote))
           .map((live) => (
-            <div key={live.id} className="rounded border border-white/5 bg-white/[0.02] p-2 font-mono text-[11px]">
+            <div key={live.id} className="rounded-lg bg-panel shadow-[0_0_0_0.5px_var(--border)] p-2.5 font-mono text-[12px]">
               <div className="flex items-center gap-2">
-                <FolderUp size={12} className="text-primary shrink-0" />
+                <FolderUp size={14} aria-hidden className="text-primary shrink-0" />
                 <span className="text-zinc-300 truncate flex-1">{live.local}</span>
-                <ArrowRight size={11} className="text-zinc-500 shrink-0" />
+                <ArrowRight size={12} aria-hidden className="text-zinc-500 shrink-0" />
                 <span className="text-zinc-400 truncate flex-1">{live.remote}</span>
                 <button aria-label="Stop mirror"
                   onClick={() => stopMirror(live.id)}
-                  className="p-0.5 rounded hover:bg-white/10 text-zinc-400 hover:text-rose-400 shrink-0"
+                  className="icon-btn w-6 h-6 hover:text-danger"
                 >
-                  <Square size={11} />
+                  <Square size={13} aria-hidden />
                 </button>
               </div>
               <MirrorLiveStatus live={live} />
@@ -573,31 +572,32 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
           ))}
 
         {allSavedMirrors.length === 0 && Object.keys(statuses).length === 0 && (
-          <div className="text-center py-12 text-zinc-500 text-[11px] font-mono">
+          <div className="text-center py-12 px-4 text-zinc-400">
             No mirrors yet.<br />
-            <span className="text-zinc-600 text-[10px]">Add one with “New mirror”, or define them on the node form.</span>
+            <span className="text-zinc-500 text-[12px]">Add one with New mirror, or save it with the server under Mirrors.</span>
           </div>
         )}
       </div>
 
       {/* Log feed */}
-      <div className="shrink-0 border-t border-white/5 bg-surface">
-        <div className="px-3 py-1.5 flex items-center justify-between border-b border-white/5">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-1.5">
-            <FileText size={11} /> Log <span className="text-zinc-600 font-normal">({logs.length})</span>
+      <div className="shrink-0 border-t border-white/[0.075] bg-surface">
+        <div className="px-3 h-8 flex items-center justify-between border-b border-white/[0.075]">
+          <span className="text-[12px] font-medium text-zinc-400 flex items-center gap-1.5">
+            <FileText size={13} aria-hidden /> Log <span className="text-zinc-600 font-normal">({logs.length})</span>
           </span>
           <button
             onClick={() => setLogs([])}
             title="Clear log"
-            className="p-1 text-zinc-500 hover:text-rose-400 rounded hover:bg-white/5"
+            aria-label="Clear log"
+              className="icon-btn w-6 h-6 hover:text-danger"
           >
-            <Trash2 size={11} />
+            <Trash2 size={13} aria-hidden />
           </button>
         </div>
         <div
           ref={logScrollRef}
           onScroll={onLogScroll}
-          className="h-36 overflow-auto px-2 py-1 font-mono text-[10.5px] leading-relaxed space-y-0.5 select-text cursor-text"
+          className="h-36 overflow-auto px-2 py-1 font-mono text-[11.5px] leading-[17px] space-y-0.5 select-text cursor-text"
         >
           {logs.length === 0 ? (
             <div className="text-zinc-600 text-center py-4">No log entries yet.</div>
@@ -621,7 +621,7 @@ const MirrorsPanel = ({ sessionId, serverId = 0, configuredMirrors, disabled = f
               return (
                 <div key={i} className="flex items-start gap-1.5">
                   <span className="text-zinc-600 shrink-0">{hh}:{mm}:{ss}</span>
-                  <span className={`px-1 rounded text-[9px] uppercase font-bold shrink-0 ${eventTone}`}>{l.event}</span>
+                  <span className={`px-1 rounded font-sans text-[10.5px] font-medium shrink-0 ${eventTone}`}>{l.event}</span>
                   <span className={`flex-1 break-all ${tone}`}>
                     {l.path && <span className="text-zinc-200">{l.path}</span>}
                     {l.message && (

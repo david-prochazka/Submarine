@@ -19,10 +19,11 @@ interface Props {
   autoFocus?: boolean;
   onKeyDown?: (e: any) => void;
   disabled?: boolean;
+  "aria-label"?: string;
 }
 
 const PasswordField = ({
-  id, value, onChange, placeholder, className, autoFocus, onKeyDown, disabled,
+  id, value, onChange, placeholder, className, autoFocus, onKeyDown, disabled, "aria-label": ariaLabel,
 }: Props) => {
   const [show, setShow] = useState(false);
   return (
@@ -36,6 +37,7 @@ const PasswordField = ({
         autoFocus={autoFocus}
         onKeyDown={onKeyDown}
         disabled={disabled}
+        aria-label={ariaLabel}
         className={`pr-10 ${className || ""}`}
       />
       <button
@@ -43,6 +45,7 @@ const PasswordField = ({
         onClick={() => setShow((s) => !s)}
         tabIndex={-1}
         title={show ? "Hide password" : "Show password"}
+        aria-label={show ? "Hide password" : "Show password"}
         className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-md text-zinc-400 hover:text-zinc-100 hover:bg-white/5 flex items-center justify-center"
       >
         {show ? <EyeOff size={14} /> : <Eye size={14} />}

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { invoke } from "@tauri-apps/api/core";
-import { Search, X, History } from "lucide-react";
+import { X, History } from "lucide-react";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Command History Search — Ctrl+Shift+R (Cmd+Shift+R on macOS) overlay
@@ -139,7 +139,7 @@ const HistorySearchOverlay = ({ isOpen, onClose, filterServerId, onInsert }: Pro
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-start justify-center pt-[10vh] p-4"
+      className="fixed inset-0 z-[9998] bg-scrim flex items-start justify-center px-4 pt-[12vh]"
       onClick={onClose}
     >
       <div
@@ -148,16 +148,22 @@ const HistorySearchOverlay = ({ isOpen, onClose, filterServerId, onInsert }: Pro
         aria-labelledby="cmd-history-title"
         onClick={(e) => e.stopPropagation()}
         onKeyDown={onKeyDown}
-        className="w-full max-w-[720px] bg-panel border border-white/10 rounded-xl shadow-2xl font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150 overflow-hidden flex flex-col max-h-[70vh]"
+        className="w-full max-w-[680px] flex flex-col max-h-[70vh] bg-elevated rounded-[14px] shadow-sheet overflow-hidden text-[13px] animate-in zoom-in-95 fade-in duration-150"
       >
-        <div className="flex items-center gap-2 px-3 py-2 border-b border-white/10">
-          <History size={14} className="text-primary" />
-          <span id="cmd-history-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
-            Command History
-          </span>
-          <div className="flex-1" />
+        <h2 id="cmd-history-title" className="sr-only">Command history</h2>
+        <div className="shrink-0 flex items-center gap-2.5 px-4 h-[54px] border-b border-white/[0.075]">
+          <History size={18} className="shrink-0 text-zinc-500" aria-hidden />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search command history"
+            aria-label="Search command history"
+            className="flex-1 min-w-0 h-[52px] bg-transparent outline-none text-[16px] text-white placeholder:text-zinc-500"
+          />
+          <span className="text-[12px] text-zinc-500 tabular-nums">{visibleEntries.length}</span>
           {filterServerId != null && (
-            <label className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-400 cursor-pointer select-none">
+            <label className="flex items-center gap-1.5 text-[12px] text-zinc-400 cursor-pointer select-none whitespace-nowrap">
               <input
                 type="checkbox"
                 className="accent-primary"
@@ -167,30 +173,13 @@ const HistorySearchOverlay = ({ isOpen, onClose, filterServerId, onInsert }: Pro
               This server only
             </label>
           )}
-          <button
-            onClick={onClose}
-            className="text-zinc-500 hover:text-white shrink-0 p-0.5"
-            aria-label="Close"
-          >
+          <button onClick={onClose} className="icon-btn -mr-1.5" aria-label="Close">
             <X size={14} />
           </button>
         </div>
-        <div className="px-3 py-2 border-b border-white/10 flex items-center gap-2">
-          <Search size={13} className="text-zinc-500 shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search command history…"
-            className="flex-1 bg-transparent outline-none text-[13px] text-zinc-100 placeholder:text-zinc-600"
-          />
-          <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-            {visibleEntries.length}
-          </span>
-        </div>
-        <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar">
+        <div ref={listRef} className="flex-1 min-h-0 overflow-y-auto custom-scrollbar px-2 py-1.5">
           {visibleEntries.length === 0 ? (
-            <div className="p-6 text-center text-zinc-500 text-[12px] italic">
+            <div className="px-7 py-7 text-center text-zinc-400">
               {emptyMsg}
             </div>
           ) : (
@@ -208,27 +197,23 @@ const HistorySearchOverlay = ({ isOpen, onClose, filterServerId, onInsert }: Pro
                   onInsert(row.command, true);
                   onClose();
                 }}
-                className={`px-3 py-2 border-b border-white/[0.03] cursor-pointer ${
-                  i === selectedIdx ? "bg-primary/10" : "hover:bg-white/[0.04]"
-                }`}
+                className={`px-3 py-2 rounded-lg cursor-default ${i === selectedIdx ? "bg-primary/[0.14]" : ""}`}
               >
-                <div className={`text-[13px] whitespace-pre-wrap break-all leading-snug ${
-                  i === selectedIdx ? "text-primary" : "text-zinc-200"
-                }`}>
+                <div className="font-mono text-[12.5px] text-white whitespace-pre-wrap break-all leading-[18px]">
                   {row.command}
                 </div>
-                <div className="mt-1 flex items-center gap-2 text-[10px] text-zinc-500 font-mono">
-                  <span title={new Date(row.ts).toISOString()}>{relTime(row.ts)} ago</span>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-zinc-500 min-w-0">
+                  <span title={new Date(row.ts).toISOString()} className="shrink-0">{relTime(row.ts)} ago</span>
                   {row.server_name && (
                     <>
-                      <span className="text-zinc-700">·</span>
+                      <span aria-hidden>·</span>
                       <span className="truncate">{row.server_name}</span>
                     </>
                   )}
                   {row.exit_code != null && (
                     <>
-                      <span className="text-zinc-700">·</span>
-                      <span className={row.exit_code === 0 ? "text-emerald-400" : "text-rose-400"}>
+                      <span aria-hidden>·</span>
+                      <span className={`shrink-0 ${row.exit_code === 0 ? "text-success" : "text-danger"}`}>
                         exit {row.exit_code}
                       </span>
                     </>
@@ -238,10 +223,11 @@ const HistorySearchOverlay = ({ isOpen, onClose, filterServerId, onInsert }: Pro
             ))
           )}
         </div>
-        <div className="px-3 py-1.5 border-t border-white/10 flex items-center gap-3 text-[10px] text-zinc-500 uppercase tracking-wider">
-          <span><kbd className="text-zinc-400">Enter</kbd> insert</span>
-          <span><kbd className="text-zinc-400">Shift+Enter</kbd> insert + run</span>
-          <span><kbd className="text-zinc-400">Esc</kbd> close</span>
+        <div className="shrink-0 hidden sm:flex items-center gap-4 px-4 h-9 border-t border-white/[0.075] bg-panel text-[11.5px] text-zinc-500">
+          <span><kbd className="font-sans font-medium text-zinc-400">↩</kbd> Insert</span>
+          <span><kbd className="font-sans font-medium text-zinc-400">⇧↩</kbd> Insert and run</span>
+          <span className="flex-1" />
+          <span><kbd className="font-sans font-medium text-zinc-400">esc</kbd> Close</span>
         </div>
       </div>
     </div>,

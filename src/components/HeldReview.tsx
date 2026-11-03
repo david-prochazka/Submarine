@@ -70,44 +70,44 @@ export function HeldReview({ servers, onAllow, onClose }: {
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9998] bg-scrim backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[9998] bg-scrim flex items-center justify-center p-4" onClick={onClose}>
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="held-review-title"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[560px] max-h-[80vh] flex flex-col bg-panel border border-white/10 rounded-xl shadow-2xl font-mono text-[12px] animate-in zoom-in-95 fade-in duration-150"
+        className="w-full max-w-[560px] max-h-[80vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] animate-in zoom-in-95 fade-in duration-150"
       >
-        <div className="flex items-start justify-between gap-3 p-4 pb-2">
-          <div className="flex items-center gap-2">
-            <ShieldAlert size={14} className="text-amber-400" />
-            <span id="held-review-title" className="text-[11px] font-black uppercase tracking-widest text-zinc-200">
+        <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-1">
+          <div className="flex items-center gap-2.5">
+            <ShieldAlert size={16} aria-hidden className="text-warning shrink-0" />
+            <h2 id="held-review-title" className="text-[15px] font-semibold text-white">
               Waiting for your OK
-            </span>
+            </h2>
           </div>
-          <button aria-label="Close" onClick={onClose} className="text-zinc-500 hover:text-white shrink-0">
-            <X size={12} />
+          <button aria-label="Close" onClick={onClose} className="icon-btn -mr-1 -mt-0.5">
+            <X size={14} />
           </button>
         </div>
-        <p className="px-4 pb-3 text-[12px] text-zinc-400 leading-relaxed">
+        <p className="px-4 pb-3 text-zinc-400 leading-[18px]">
           Someone you share this profile with made these changes. Until you allow one, it doesn't run on this
           device: commands aren't typed, forwards stay stopped, autostart doesn't connect and monitor commands
           don't run. Allowing counts for this device only.
         </p>
         <div className="flex-1 overflow-y-auto custom-scrollbar px-4 pb-2 space-y-3">
           {held.map((s) => (
-            <section key={s.id} aria-label={s.name} className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+            <section key={s.id} aria-label={s.name} className="rounded-[10px] bg-panel shadow-[0_0_0_0.5px_var(--border)] p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="min-w-0">
-                  <div className="text-[12.5px] font-bold text-zinc-100 truncate">{s.name}</div>
-                  {s.edited_by && <div className="text-[10.5px] text-zinc-500 truncate">last changed by {s.edited_by}</div>}
+                  <div className="font-semibold text-white truncate">{s.name}</div>
+                  {s.edited_by && <div className="text-[12px] text-zinc-500 truncate">Last changed by {s.edited_by}</div>}
                 </div>
                 {(s.held || []).length > 1 && (
                   <button
                     disabled={busy}
                     onClick={() => allow(s.id, [])}
-                    className="shrink-0 px-2.5 h-7 rounded text-[10.5px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/[0.08] hover:text-white disabled:opacity-50"
+                    className="btn btn-sm shrink-0"
                   >
                     Allow all
                   </button>
@@ -119,12 +119,12 @@ export function HeldReview({ servers, onAllow, onClose }: {
                   return (
                     <li key={item} className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
-                        <div className="text-[12px] text-zinc-200 break-words">{d.what}</div>
+                        <div className="text-white break-words">{d.what}</div>
                         {d.detail && (
                           item === "run_on_connect" || item.startsWith("metric:") ? (
-                            <pre className="mt-1 max-h-32 overflow-auto custom-scrollbar rounded bg-black/40 border border-white/5 px-2 py-1 text-[11px] text-amber-200/90 whitespace-pre-wrap break-all">{d.detail}</pre>
+                            <pre className="mt-1 max-h-32 overflow-auto custom-scrollbar rounded-md bg-terminal px-2 py-1 font-mono text-[12px] text-zinc-200 whitespace-pre-wrap break-all">{d.detail}</pre>
                           ) : (
-                            <div className="mt-0.5 text-[11px] text-zinc-500">{d.detail}</div>
+                            <div className="mt-0.5 text-[12px] text-zinc-500">{d.detail}</div>
                           )
                         )}
                       </div>
@@ -132,7 +132,7 @@ export function HeldReview({ servers, onAllow, onClose }: {
                         disabled={busy}
                         onClick={() => allow(s.id, [item])}
                         aria-label={`Allow: ${d.what}`}
-                        className="shrink-0 px-2.5 h-7 rounded text-[10.5px] font-bold uppercase tracking-wider bg-primary/15 border border-primary/40 text-primary hover:bg-primary/25 disabled:opacity-50"
+                        className="btn btn-sm shrink-0"
                       >
                         Allow
                       </button>
@@ -143,11 +143,11 @@ export function HeldReview({ servers, onAllow, onClose }: {
             </section>
           ))}
         </div>
-        <div className="flex justify-end p-4 pt-2">
+        <div className="flex justify-end gap-2 px-4 py-3 border-t border-white/[0.075]">
           <button
             onClick={onClose}
             data-default-focus
-            className="px-3 h-8 rounded text-[11px] font-bold uppercase tracking-wider bg-white/[0.04] border border-white/10 text-zinc-300 hover:bg-white/[0.08] hover:text-white"
+            className="btn"
           >
             Close
           </button>

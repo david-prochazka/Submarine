@@ -315,7 +315,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
   };
 
   const card = "bg-zinc-900/40 border border-white/5 rounded-xl p-4 space-y-3";
-  const label = "text-[11px] font-bold uppercase tracking-wider text-zinc-500";
+  const label = "text-[11px] font-semibold text-zinc-500";
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-8 space-y-5 animate-in overflow-y-auto custom-scrollbar">
@@ -624,7 +624,7 @@ export default function ProfilePanel({ onSync, syncing, lastSyncLabel, autoSync,
                       {m.email === st?.email && <span className="text-zinc-500 not-italic"> (you)</span>}
                     </span>
                     {m.status === "pending" && (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-amber-300/80">invited</span>
+                      <span className="text-[11px] font-semibold text-amber-300/80">invited</span>
                     )}
                     <RoleBadge role={m.role} />
                     {isOwner && m.role !== "owner" && (
