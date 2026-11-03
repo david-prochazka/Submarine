@@ -11,7 +11,7 @@
     "download": "Download",
     "github": "GitHub",
     "language": "Language",
-    "home": "Submarine home page",
+    "home": "Supermarine home page",
     "menu": "Menu"
   },
   "common": {
@@ -38,12 +38,12 @@
     "noTracking": "This website uses no cookies, no analytics and no third-party scripts."
   },
   "home": {
-    "title": "Submarine – free SSH, SFTP, RDP, VNC and Telnet client for Windows, macOS, Linux and Android",
-    "description": "Submarine is a free, open-source remote access app: SSH terminal, two-pane SFTP, port forwarding, remote desktops (RDP, VNC) and Telnet in one window. Your servers, passwords and keys stay encrypted on your devices.",
+    "title": "Supermarine – free SSH, SFTP, RDP, VNC and Telnet client for Windows, macOS, Linux and Android",
+    "description": "Supermarine is a free, open-source remote access app: SSH terminal, two-pane SFTP, port forwarding, remote desktops (RDP, VNC) and Telnet in one window. Your servers, passwords and keys stay encrypted on your devices.",
     "hero": {
       "eyebrow": "Free and open source",
       "title": "All your servers in one encrypted app",
-      "lede": "Submarine is an SSH, SFTP, RDP, VNC and Telnet client for Windows, macOS, Linux and Android. Your servers, passwords and keys are encrypted on your device, and they sync between your devices only if you want them to.",
+      "lede": "Supermarine is an SSH, SFTP, RDP, VNC and Telnet client for Windows, macOS, Linux and Android. Your servers, passwords and keys are encrypted on your device, and they sync between your devices only if you want them to.",
       "download": "Download",
       "security": "How your data is protected",
       "points": [
@@ -52,7 +52,7 @@
         "No paid plan",
         "No account needed"
       ],
-      "imageAlt": "Submarine on a computer: an SSH terminal on the left and the two-pane file browser on the right"
+      "imageAlt": "Supermarine on a computer: an SSH terminal on the left and the two-pane file browser on the right"
     },
     "features": {
       "title": "Everything for your servers, in one window",
@@ -74,7 +74,7 @@
           "id": "desktops",
           "title": "Remote desktops too",
           "text": "RDP and VNC open in a tab, directly or through one of your SSH servers. Telnet is there for old switches and routers. Connections that are not encrypted are clearly marked.",
-          "alt": "A remote desktop open in a Submarine tab over RDP",
+          "alt": "A remote desktop open in a Supermarine tab over RDP",
           "new": true
         },
         {
@@ -105,7 +105,7 @@
           "id": "phone",
           "title": "On your phone as well",
           "text": "The same profile on Android: a terminal with a key bar, file transfer, remote desktops and tunnels.",
-          "alt": "Submarine on an Android phone: an SSH terminal with a key bar"
+          "alt": "Supermarine on an Android phone: an SSH terminal with a key bar"
         }
       ]
     },
@@ -131,14 +131,14 @@
     "free": {
       "title": "Free. Really.",
       "items": [
-        "Submarine is free and open source under the MIT license. There is no paid plan, no trial and no ads.",
+        "Supermarine is free and open source under the MIT license. There is no paid plan, no trial and no ads.",
         "You don't need an account. An account is only for the optional sync between your devices.",
         "The sync service is free as well, within fair limits: {limitMb} MB of encrypted data, {limitItems} items and {limitProfiles} profiles per account.",
         "The source code is public. You can read it, build the app yourself, or use a sync server of your own."
       ]
     },
     "download": {
-      "title": "Download Submarine",
+      "title": "Download Supermarine",
       "lede": "All downloads come from the project's releases on GitHub.",
       "button": "Download",
       "platforms": [
@@ -175,7 +175,7 @@
       "title": "Questions",
       "items": [
         {
-          "q": "Is Submarine really free?",
+          "q": "Is Supermarine really free?",
           "a": "Yes. The app is free and open source under the MIT license, with no paid plan and no ads. The sync service is free too, within the limits above."
         },
         {
@@ -206,13 +206,13 @@
     }
   },
   "security": {
-    "title": "How Submarine protects your data, and how to check it",
-    "description": "What Submarine encrypts and how, what the sync server can and cannot see, what a hostile server could still do, and step-by-step ways to check every claim in the open-source code.",
+    "title": "How Supermarine protects your data, and how to check it",
+    "description": "What Supermarine encrypts and how, what the sync server can and cannot see, what a hostile server could still do, and step-by-step ways to check every claim in the open-source code.",
     "heading": "How your data is protected",
     "lede": "We don't ask you to trust us. This page explains exactly what is encrypted, what our server can and cannot see, and how you can check every claim yourself.",
     "summaryTitle": "In one minute",
     "summary": [
-      "Everything you save in Submarine is kept in one file on your device, encrypted with AES-256-GCM.",
+      "Everything you save in Supermarine is kept in one file on your device, encrypted with AES-256-GCM.",
       "Its key is made from your profile password with Argon2id, a method that is slow on purpose so that guessing is expensive. The password is never stored or sent anywhere.",
       "If you turn on sync, each item is encrypted on your device before it is uploaded. The server stores data it cannot decrypt.",
       "The server does see the outside of your data: your email address, when you sync and from which IP address, how many items of each kind you have and how big they are, your profile names, and for shared profiles the share names and the members' email addresses.",
@@ -404,7 +404,7 @@
     "limits": {
       "title": "What this page does not promise",
       "items": [
-        "Submarine has not had an independent security audit. Its reviews so far were done by the author.",
+        "Supermarine has not had an independent security audit. Its reviews so far were done by the author.",
         "A weak or reused password is the weakest point. Use a long, unique profile password, and a different account password.",
         "Telnet and plain VNC are not encrypted by design. The app labels them, and can run them through an SSH server.",
         "This page describes the app at {commit}. If the code changes, this page changes with it."
@@ -425,10 +425,10 @@
     }
   },
   "privacy": {
-    "title": "Privacy policy – Submarine",
-    "description": "What the Submarine app and its optional sync service keep, what they can and cannot read, how long it is kept, and how to delete it.",
+    "title": "Privacy policy – Supermarine",
+    "description": "What the Supermarine app and its optional sync service keep, what they can and cannot read, how long it is kept, and how to delete it.",
     "heading": "Privacy policy",
-    "intro": "This policy covers the Submarine app (Windows, macOS, Linux, Android and iOS), the optional Submarine sync service that the app can use, and this website.",
+    "intro": "This policy covers the Supermarine app (Windows, macOS, Linux, Android and iOS), the optional Supermarine sync service that the app can use, and this website.",
     "shortTitle": "In short",
     "short": [
       "Your servers, passwords, SSH keys and notes stay on your device, encrypted with a key made from your profile password. The app has no analytics, no advertising, no tracking and no crash reporting.",
@@ -439,7 +439,7 @@
       {
         "title": "Who is responsible",
         "paragraphs": [
-          "Submarine is made by Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>), who also runs the sync service at <code>submarine.sinaxhpm.com</code> (older versions of the app use <code>api.sinaxhpm.com</code>). The source code of the app is public at <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> (MIT license), so what this policy says about the app can be checked in the code."
+          "Supermarine is made by Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>), who also runs the sync service at <code>submarine.sinaxhpm.com</code> (older versions of the app use <code>api.sinaxhpm.com</code>). The source code of the app is public at <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> (MIT license), so what this policy says about the app can be checked in the code."
         ]
       },
       {
@@ -545,7 +545,7 @@
     "children": {
       "title": "Children",
       "paragraphs": [
-        "Submarine is a tool for system administrators and developers. It is not directed at children, and we do not knowingly collect data from them."
+        "Supermarine is a tool for system administrators and developers. It is not directed at children, and we do not knowingly collect data from them."
       ]
     },
     "changes": {
@@ -562,8 +562,8 @@
     }
   },
   "delete": {
-    "title": "Delete your Submarine account",
-    "description": "How to delete your Submarine sync account and everything the server keeps for it, in the app or on this page.",
+    "title": "Delete your Supermarine account",
+    "description": "How to delete your Supermarine sync account and everything the server keeps for it, in the app or on this page.",
     "heading": "Delete your account",
     "lede": "Deleting your sync account removes everything the server keeps for it, at once. It cannot be undone.",
     "whatTitle": "What is deleted",
@@ -603,7 +603,7 @@
     "help": "If you always sign in with an emailed code, set a password first in the app (Cloud sync → Forgot password?). If you can't use the app or this form, open an issue at <a href=\"{issuesUrl}\">github.com/SinaXhpm/Submarine/issues</a> without any private details, and we will delete the account when you can show that it is yours."
   },
   "notFound": {
-    "title": "Page not found – Submarine",
+    "title": "Page not found – Supermarine",
     "heading": "This page does not exist",
     "text": "The address may be wrong, or the page has moved.",
     "home": "Go to the home page"

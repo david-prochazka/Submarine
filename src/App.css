@@ -25,6 +25,10 @@ select optgroup {
     --subtle: 145 152 161;
     --primary: 62 207 196;
     --primary-hex: #3ecfc4;
+    --brand-prompt-from: #8af3ea;
+    --brand-prompt-to: #3ecfc4;
+    --brand-wave-from: #3ecfc4;
+    --brand-wave-to: #6e8bff;
     --success: 61 214 140;
     --warning: 242 180 76;
     --danger: 255 112 112;
@@ -56,6 +60,10 @@ select optgroup {
     --subtle: 98 105 115;
     --primary: 8 102 99;
     --primary-hex: #086663;
+    --brand-prompt-from: #14a89f;
+    --brand-prompt-to: #0a7672;
+    --brand-wave-from: #0a7672;
+    --brand-wave-to: #3d5fd9;
     --success: 18 110 68;
     --warning: 140 82 0;
     --danger: 180 40 40;

@@ -337,7 +337,7 @@ impl Evaluator<'_> {
                 }
                 other => {
                     self.note(format!(
-                        "{at}: Match {other} isn't evaluated by Submarine (it never runs commands from the config), so that block is skipped."
+                        "{at}: Match {other} isn't evaluated by Supermarine (it never runs commands from the config), so that block is skipped."
                     ));
                     return (false, false);
                 }
@@ -587,7 +587,7 @@ pub(crate) fn expand_path(value: &str, t: &PathTokens) -> Result<String, String>
             Some('l') => out.push_str(
                 &std::env::var("COMPUTERNAME").or_else(|_| std::env::var("HOSTNAME")).map_err(|_| "uses %l, and this computer's name isn't known")?,
             ),
-            Some(x) => return Err(format!("uses %{x}, which Submarine doesn't fill in here")),
+            Some(x) => return Err(format!("uses %{x}, which Supermarine doesn't fill in here")),
             None => return Err("ends with a lone %".into()),
         }
     }

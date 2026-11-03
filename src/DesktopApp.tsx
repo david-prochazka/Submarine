@@ -14,7 +14,7 @@ import {
 import { useBroadcast } from "./ui/broadcast";
 
 import ProfileSelectPage from "./components/ProfileSelectPage";
-import logoUrl from "./assets/logo.png";
+import BrandMark from "./components/BrandMark";
 import PasswordField from "./components/PasswordField";
 import QuickConnectModal, { QuickAuth } from "./components/QuickConnectModal";
 import { useConfirm } from "./ui/confirm";
@@ -922,7 +922,7 @@ function DesktopApp() {
       if (n === 0) return; // nothing to lose — let the close proceed
       event.preventDefault();
       const ok = await confirm({
-        title: "Close Submarine?",
+        title: "Close Supermarine?",
         message: `${n} session${n === 1 ? "" : "s"} ${n === 1 ? "is" : "are"} still connected. Closing now disconnects ${n === 1 ? "it" : "them all"} and aborts any in-flight transfers.`,
         okLabel: "Close anyway",
         cancelLabel: "Stay",
@@ -941,7 +941,7 @@ function DesktopApp() {
   const handleLogout = async () => {
     if (sessions.length > 0) {
       const ok = await confirm({
-        title: "Lock Submarine?",
+        title: "Lock Supermarine?",
         message: `You have ${sessions.length} open session${sessions.length === 1 ? "" : "s"}. Locking disconnects ${sessions.length === 1 ? "it" : "them all"}.`,
         okLabel: "Lock",
         cancelLabel: "Stay",
@@ -1330,8 +1330,8 @@ function DesktopApp() {
           whole row. Desktop keeps the original 75 px left padding for
           macOS traffic lights, plus the icon and brand. */}
       <div className={`${isUnlocked && !isMobile ? 'hidden' : 'hidden sm:flex'} items-center gap-2 pr-4 pl-2`} data-tauri-drag-region>
-        <img src={logoUrl} alt="" draggable={false} className="h-6 w-auto max-w-[24px] object-contain select-none" />
-        <span className="text-[12px] font-bold text-white tracking-tight">Submarine</span>
+        <BrandMark className="h-6 w-6 shrink-0" />
+        <span className="text-[12px] font-bold text-white tracking-tight">Supermarine</span>
         {appVersion && (
           <span data-tauri-drag-region className="text-[11px] text-zinc-500 tracking-tight tabular-nums">v{appVersion}</span>
         )}
@@ -2097,7 +2097,6 @@ function DesktopApp() {
             onLogout={handleLogout}
             profileName={activeProfile}
             syncing={cloudSyncing}
-            logoUrl={logoUrl}
             servers={servers}
             folders={folders}
             activeFolderId={activeFolderId}

@@ -2,7 +2,7 @@
 
 *Last updated: 21 October 2026.*
 
-This policy covers the Submarine app (Windows, macOS, Linux, Android and iOS), the optional Submarine sync service that the app can use, and the website [submarine.sinaxhpm.com](https://submarine.sinaxhpm.com). It is also published, with translations, at [submarine.sinaxhpm.com/privacy/](https://submarine.sinaxhpm.com/privacy/).
+This policy covers the Supermarine app (Windows, macOS, Linux, Android and iOS), the optional Supermarine sync service that the app can use, and the website [submarine.sinaxhpm.com](https://submarine.sinaxhpm.com). It is also published, with translations, at [submarine.sinaxhpm.com/privacy/](https://submarine.sinaxhpm.com/privacy/).
 
 **In short**
 
@@ -12,7 +12,7 @@ This policy covers the Submarine app (Windows, macOS, Linux, Android and iOS), t
 
 ## Who is responsible
 
-Submarine is made by Sina Xhpm ([sinaxhpm.com](https://sinaxhpm.com)), who also runs the sync service at `submarine.sinaxhpm.com` (older versions of the app use `api.sinaxhpm.com`). The source code of the app is public at [github.com/SinaXhpm/Submarine](https://github.com/SinaXhpm/Submarine) (MIT license), so what this policy says about the app can be checked in the code.
+Supermarine is made by Sina Xhpm ([sinaxhpm.com](https://sinaxhpm.com)), who also runs the sync service at `submarine.sinaxhpm.com` (older versions of the app use `api.sinaxhpm.com`). The source code of the app is public at [github.com/SinaXhpm/Submarine](https://github.com/SinaXhpm/Submarine) (MIT license), so what this policy says about the app can be checked in the code.
 
 ## What stays on your device
 
@@ -72,7 +72,7 @@ All traffic to the sync service uses HTTPS. Your profile password and your shari
 
 ## Children
 
-Submarine is a tool for system administrators and developers. It is not directed at children, and we do not knowingly collect data from them.
+Supermarine is a tool for system administrators and developers. It is not directed at children, and we do not knowingly collect data from them.
 
 ## Changes to this policy
 

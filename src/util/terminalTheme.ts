@@ -57,7 +57,7 @@ const appIsLight = () => typeof document !== "undefined" && document.documentEle
 export const SCHEMES: TerminalScheme[] = [
   {
     id: DEFAULT_THEME_ID,
-    name: "Submarine",
+    name: "Supermarine",
     // Follows the app: light with the light theme, dark otherwise.
     get theme() { return appIsLight() ? SUBMARINE_LIGHT : SUBMARINE_DARK; },
   },

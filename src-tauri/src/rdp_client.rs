@@ -619,7 +619,7 @@ fn connector_config(login: &Login) -> connector::Config {
         monitor_layout: None,
         bitmap: login.graphics.bitmap(),
         client_build: 0,
-        client_name: "Submarine".to_owned(),
+        client_name: "Supermarine".to_owned(),
         client_dir: "C:\\Windows\\System32\\mstscax.dll".to_owned(),
         #[cfg(windows)]
         platform: MajorPlatformType::WINDOWS,

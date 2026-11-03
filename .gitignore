@@ -31,7 +31,8 @@ mock-api/
 # Project-specific to each developer's machine, not meant to be shared.
 .claude/
 
-# Generated icon artefacts. The canonical source is `app-icon.png`. Anything
+# Generated icon artefacts. The canonical source is `brand/app-icon.svg`,
+# rendered to `app-icon.png`. Anything
 # derived from it (`tools/fix-icon.ps1` output + `npm run tauri icon` source)
 # is reproducible from that one file, so we don't commit duplicates.
 app-icon-circular.png

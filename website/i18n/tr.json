@@ -11,7 +11,7 @@
     "download": "İndir",
     "github": "GitHub",
     "language": "Dil",
-    "home": "Submarine ana sayfası",
+    "home": "Supermarine ana sayfası",
     "menu": "Menü"
   },
   "common": {
@@ -38,12 +38,12 @@
     "noTracking": "Bu web sitesi çerez, analitik ya da üçüncü taraf betik kullanmaz."
   },
   "home": {
-    "title": "Submarine – Windows, macOS, Linux ve Android için ücretsiz SSH, SFTP, RDP, VNC ve Telnet istemcisi",
-    "description": "Submarine, ücretsiz ve açık kaynaklı bir uzaktan erişim uygulamasıdır: SSH terminali, iki panelli SFTP, port yönlendirme, uzak masaüstü (RDP, VNC) ve Telnet tek pencerede. Sunucularınız, parolalarınız ve anahtarlarınız cihazlarınızda şifreli olarak kalır.",
+    "title": "Supermarine – Windows, macOS, Linux ve Android için ücretsiz SSH, SFTP, RDP, VNC ve Telnet istemcisi",
+    "description": "Supermarine, ücretsiz ve açık kaynaklı bir uzaktan erişim uygulamasıdır: SSH terminali, iki panelli SFTP, port yönlendirme, uzak masaüstü (RDP, VNC) ve Telnet tek pencerede. Sunucularınız, parolalarınız ve anahtarlarınız cihazlarınızda şifreli olarak kalır.",
     "hero": {
       "eyebrow": "Ücretsiz ve açık kaynak",
       "title": "Tüm sunucularınız tek bir şifreli uygulamada",
-      "lede": "Submarine; Windows, macOS, Linux ve Android için bir SSH, SFTP, RDP, VNC ve Telnet istemcisidir. Sunucularınız, parolalarınız ve anahtarlarınız cihazınızda şifrelenir ve yalnızca siz isterseniz cihazlarınız arasında eşitlenir.",
+      "lede": "Supermarine; Windows, macOS, Linux ve Android için bir SSH, SFTP, RDP, VNC ve Telnet istemcisidir. Sunucularınız, parolalarınız ve anahtarlarınız cihazınızda şifrelenir ve yalnızca siz isterseniz cihazlarınız arasında eşitlenir.",
       "download": "İndir",
       "security": "Verileriniz nasıl korunuyor",
       "points": [
@@ -52,7 +52,7 @@
         "Ücretli plan yok",
         "Hesap gerekmez"
       ],
-      "imageAlt": "Bilgisayarda Submarine: solda bir SSH terminali, sağda iki panelli dosya tarayıcısı"
+      "imageAlt": "Bilgisayarda Supermarine: solda bir SSH terminali, sağda iki panelli dosya tarayıcısı"
     },
     "features": {
       "title": "Sunucularınız için her şey tek pencerede",
@@ -74,7 +74,7 @@
           "id": "desktops",
           "title": "Uzak masaüstü de var",
           "text": "RDP ve VNC, doğrudan ya da SSH sunucularınızdan biri üzerinden bir sekmede açılır. Eski switch ve yönlendiriciler için Telnet de var. Şifrelenmemiş bağlantılar açıkça işaretlenir.",
-          "alt": "Bir Submarine sekmesinde RDP ile açılmış bir uzak masaüstü",
+          "alt": "Bir Supermarine sekmesinde RDP ile açılmış bir uzak masaüstü",
           "new": true
         },
         {
@@ -105,7 +105,7 @@
           "id": "phone",
           "title": "Telefonunuzda da",
           "text": "Android'de aynı profil: tuş çubuklu bir terminal, dosya aktarımı, uzak masaüstü ve tüneller.",
-          "alt": "Android telefonda Submarine: tuş çubuklu bir SSH terminali"
+          "alt": "Android telefonda Supermarine: tuş çubuklu bir SSH terminali"
         }
       ]
     },
@@ -131,14 +131,14 @@
     "free": {
       "title": "Ücretsiz. Gerçekten.",
       "items": [
-        "Submarine, MIT lisansıyla ücretsiz ve açık kaynaklıdır. Ücretli plan, deneme süresi ya da reklam yoktur.",
+        "Supermarine, MIT lisansıyla ücretsiz ve açık kaynaklıdır. Ücretli plan, deneme süresi ya da reklam yoktur.",
         "Hesap açmanıza gerek yok. Hesap yalnızca cihazlarınız arasındaki isteğe bağlı eşitleme içindir.",
         "Eşitleme hizmeti de makul sınırlar içinde ücretsizdir: hesap başına {limitMb} MB şifreli veri, {limitItems} öğe ve {limitProfiles} profil.",
         "Kaynak kodu herkese açıktır. Kodu okuyabilir, uygulamayı kendiniz derleyebilir ya da kendi eşitleme sunucunuzu kullanabilirsiniz."
       ]
     },
     "download": {
-      "title": "Submarine'i indirin",
+      "title": "Supermarine'i indirin",
       "lede": "Tüm indirmeler, projenin GitHub'daki sürümlerinden (releases) gelir.",
       "button": "İndir",
       "platforms": [
@@ -175,7 +175,7 @@
       "title": "Sorular",
       "items": [
         {
-          "q": "Submarine gerçekten ücretsiz mi?",
+          "q": "Supermarine gerçekten ücretsiz mi?",
           "a": "Evet. Uygulama MIT lisansıyla ücretsiz ve açık kaynaklıdır; ücretli plan ya da reklam yoktur. Eşitleme hizmeti de yukarıdaki sınırlar içinde ücretsizdir."
         },
         {
@@ -206,13 +206,13 @@
     }
   },
   "security": {
-    "title": "Submarine verilerinizi nasıl korur ve bunu nasıl doğrulayabilirsiniz",
-    "description": "Submarine'in neyi nasıl şifrelediği, eşitleme sunucusunun neyi görüp neyi göremediği, kötü niyetli bir sunucunun yine de neler yapabileceği ve her iddiayı açık kaynak kodda adım adım doğrulamanın yolları.",
+    "title": "Supermarine verilerinizi nasıl korur ve bunu nasıl doğrulayabilirsiniz",
+    "description": "Supermarine'in neyi nasıl şifrelediği, eşitleme sunucusunun neyi görüp neyi göremediği, kötü niyetli bir sunucunun yine de neler yapabileceği ve her iddiayı açık kaynak kodda adım adım doğrulamanın yolları.",
     "heading": "Verileriniz nasıl korunuyor",
     "lede": "Sizden bize güvenmenizi istemiyoruz. Bu sayfa tam olarak neyin şifrelendiğini, sunucumuzun neyi görüp neyi göremediğini ve her iddiayı kendiniz nasıl doğrulayabileceğinizi açıklıyor.",
     "summaryTitle": "Bir dakikada özet",
     "summary": [
-      "Submarine'de kaydettiğiniz her şey, cihazınızda AES-256-GCM ile şifrelenmiş tek bir dosyada tutulur.",
+      "Supermarine'de kaydettiğiniz her şey, cihazınızda AES-256-GCM ile şifrelenmiş tek bir dosyada tutulur.",
       "Bu dosyanın anahtarı, profil parolanızdan Argon2id ile türetilir. Argon2id, tahmin denemelerini maliyetli kılmak için bilerek yavaş çalışan bir yöntemdir. Parola hiçbir zaman saklanmaz ve hiçbir yere gönderilmez.",
       "Eşitlemeyi açarsanız her öğe, yüklenmeden önce cihazınızda şifrelenir. Sunucu, şifresini çözemediği verileri saklar.",
       "Ancak sunucu, verilerinizin dışarıdan görünen kısmını görür: e-posta adresinizi, ne zaman ve hangi IP adresinden eşitleme yaptığınızı, her türden kaç öğeniz olduğunu ve bunların ne kadar büyük olduğunu, profil adlarınızı; paylaşılan profillerde de paylaşım adlarını ve üyelerin e-posta adreslerini.",
@@ -404,7 +404,7 @@
     "limits": {
       "title": "Bu sayfanın vaat etmedikleri",
       "items": [
-        "Submarine için bağımsız bir güvenlik denetimi yapılmadı. Şimdiye kadarki incelemeleri geliştiricisi yaptı.",
+        "Supermarine için bağımsız bir güvenlik denetimi yapılmadı. Şimdiye kadarki incelemeleri geliştiricisi yaptı.",
         "Zayıf ya da başka yerlerde de kullanılan bir parola en zayıf noktadır. Uzun ve benzersiz bir profil parolası, hesabınız için de farklı bir parola kullanın.",
         "Telnet ve düz VNC, tasarımları gereği şifreli değildir. Uygulama bunları işaretler ve bir SSH sunucusu üzerinden çalıştırabilir.",
         "Bu sayfa, uygulamanın {commit} sürümünü anlatır. Kod değişirse bu sayfa da onunla birlikte değişir."
@@ -425,10 +425,10 @@
     }
   },
   "privacy": {
-    "title": "Gizlilik politikası – Submarine",
-    "description": "Submarine uygulamasının ve isteğe bağlı eşitleme hizmetinin neleri sakladığı, neleri okuyup neleri okuyamadığı, bunları ne kadar süre tuttuğu ve nasıl silebileceğiniz.",
+    "title": "Gizlilik politikası – Supermarine",
+    "description": "Supermarine uygulamasının ve isteğe bağlı eşitleme hizmetinin neleri sakladığı, neleri okuyup neleri okuyamadığı, bunları ne kadar süre tuttuğu ve nasıl silebileceğiniz.",
     "heading": "Gizlilik politikası",
-    "intro": "Bu politika; Submarine uygulamasını (Windows, macOS, Linux, Android ve iOS), uygulamanın kullanabildiği isteğe bağlı Submarine eşitleme hizmetini ve bu web sitesini kapsar.",
+    "intro": "Bu politika; Supermarine uygulamasını (Windows, macOS, Linux, Android ve iOS), uygulamanın kullanabildiği isteğe bağlı Supermarine eşitleme hizmetini ve bu web sitesini kapsar.",
     "shortTitle": "Kısaca",
     "short": [
       "Sunucularınız, parolalarınız, SSH anahtarlarınız ve notlarınız, profil parolanızdan türetilen bir anahtarla şifrelenmiş olarak cihazınızda kalır. Uygulamada analitik, reklam, takip ve çökme raporlama yoktur.",
@@ -439,7 +439,7 @@
       {
         "title": "Sorumlu kişi",
         "paragraphs": [
-          "Submarine, Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>) tarafından geliştirilir. <code>submarine.sinaxhpm.com</code> adresindeki eşitleme hizmetini de Sina Xhpm işletir (uygulamanın eski sürümleri <code>api.sinaxhpm.com</code> adresini kullanır). Uygulamanın kaynak kodu <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> adresinde herkese açıktır (MIT lisansı); bu yüzden bu politikanın uygulama hakkında söyledikleri kodda doğrulanabilir."
+          "Supermarine, Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>) tarafından geliştirilir. <code>submarine.sinaxhpm.com</code> adresindeki eşitleme hizmetini de Sina Xhpm işletir (uygulamanın eski sürümleri <code>api.sinaxhpm.com</code> adresini kullanır). Uygulamanın kaynak kodu <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> adresinde herkese açıktır (MIT lisansı); bu yüzden bu politikanın uygulama hakkında söyledikleri kodda doğrulanabilir."
         ]
       },
       {
@@ -545,7 +545,7 @@
     "children": {
       "title": "Çocuklar",
       "paragraphs": [
-        "Submarine, sistem yöneticileri ve geliştiriciler için bir araçtır. Çocuklara yönelik değildir ve çocuklardan bilerek veri toplamayız."
+        "Supermarine, sistem yöneticileri ve geliştiriciler için bir araçtır. Çocuklara yönelik değildir ve çocuklardan bilerek veri toplamayız."
       ]
     },
     "changes": {
@@ -562,8 +562,8 @@
     }
   },
   "delete": {
-    "title": "Submarine hesabınızı silin",
-    "description": "Submarine eşitleme hesabınızı ve sunucunun bu hesap için tuttuğu her şeyi uygulamada ya da bu sayfada nasıl silebileceğiniz.",
+    "title": "Supermarine hesabınızı silin",
+    "description": "Supermarine eşitleme hesabınızı ve sunucunun bu hesap için tuttuğu her şeyi uygulamada ya da bu sayfada nasıl silebileceğiniz.",
     "heading": "Hesabınızı silin",
     "lede": "Eşitleme hesabınızı silmek, sunucunun bu hesap için tuttuğu her şeyi anında kaldırır. Bu işlem geri alınamaz.",
     "whatTitle": "Silinenler",
@@ -603,7 +603,7 @@
     "help": "Giriş için her zaman e-postayla gelen bir kod kullanıyorsanız önce uygulamada bir parola belirleyin (Cloud sync → Forgot password?). Uygulamayı ya da bu formu kullanamıyorsanız, hiçbir özel bilgi eklemeden <a href=\"{issuesUrl}\">github.com/SinaXhpm/Submarine/issues</a> adresinde bir issue açın; hesabın size ait olduğunu gösterebildiğinizde hesabı sileriz."
   },
   "notFound": {
-    "title": "Sayfa bulunamadı – Submarine",
+    "title": "Sayfa bulunamadı – Supermarine",
     "heading": "Böyle bir sayfa yok",
     "text": "Adres yanlış olabilir ya da sayfa taşınmış olabilir.",
     "home": "Ana sayfaya gidin"

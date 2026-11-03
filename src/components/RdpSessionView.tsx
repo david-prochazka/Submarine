@@ -435,7 +435,7 @@ export default function RdpSessionView({ session, displayName, onClose, onStatus
           <div role="note" className="flex gap-2.5 p-3 rounded-xl border border-amber-500/25 bg-amber-500/5 text-[12.5px] leading-relaxed text-amber-200/90">
             <FlaskConical size={15} className="shrink-0 mt-0.5 text-amber-300" aria-hidden="true" />
             <span>
-              On a phone, RDP servers open with Submarine's built-in RDP client. {RDP_BUILTIN_EXPERIMENTAL} Your choice is kept for this server on this phone.
+              On a phone, RDP servers open with Supermarine's built-in RDP client. {RDP_BUILTIN_EXPERIMENTAL} Your choice is kept for this server on this phone.
             </span>
           </div>
           <button

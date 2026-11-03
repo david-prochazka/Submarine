@@ -11,7 +11,7 @@
     "download": "Herunterladen",
     "github": "GitHub",
     "language": "Sprache",
-    "home": "Startseite von Submarine",
+    "home": "Startseite von Supermarine",
     "menu": "Menü"
   },
   "common": {
@@ -38,12 +38,12 @@
     "noTracking": "Diese Website setzt keine Cookies, keine Nutzungsanalyse und keine Skripte von Drittanbietern ein."
   },
   "home": {
-    "title": "Submarine – kostenloser SSH-, SFTP-, RDP-, VNC- und Telnet-Client für Windows, macOS, Linux und Android",
-    "description": "Submarine ist eine kostenlose Open-Source-App für den Fernzugriff: SSH-Terminal, zweispaltiges SFTP, Port-Weiterleitung, Remote-Desktops (RDP, VNC) und Telnet in einem Fenster. Ihre Server, Passwörter und Schlüssel bleiben verschlüsselt auf Ihren Geräten.",
+    "title": "Supermarine – kostenloser SSH-, SFTP-, RDP-, VNC- und Telnet-Client für Windows, macOS, Linux und Android",
+    "description": "Supermarine ist eine kostenlose Open-Source-App für den Fernzugriff: SSH-Terminal, zweispaltiges SFTP, Port-Weiterleitung, Remote-Desktops (RDP, VNC) und Telnet in einem Fenster. Ihre Server, Passwörter und Schlüssel bleiben verschlüsselt auf Ihren Geräten.",
     "hero": {
       "eyebrow": "Kostenlos und Open Source",
       "title": "Alle Ihre Server in einer verschlüsselten App",
-      "lede": "Submarine ist ein SSH-, SFTP-, RDP-, VNC- und Telnet-Client für Windows, macOS, Linux und Android. Ihre Server, Passwörter und Schlüssel werden auf Ihrem Gerät verschlüsselt und nur dann zwischen Ihren Geräten synchronisiert, wenn Sie das möchten.",
+      "lede": "Supermarine ist ein SSH-, SFTP-, RDP-, VNC- und Telnet-Client für Windows, macOS, Linux und Android. Ihre Server, Passwörter und Schlüssel werden auf Ihrem Gerät verschlüsselt und nur dann zwischen Ihren Geräten synchronisiert, wenn Sie das möchten.",
       "download": "Herunterladen",
       "security": "So werden Ihre Daten geschützt",
       "points": [
@@ -52,7 +52,7 @@
         "Keine Bezahlversion",
         "Kein Konto nötig"
       ],
-      "imageAlt": "Submarine auf einem Computer: links ein SSH-Terminal, rechts der zweispaltige Dateibrowser"
+      "imageAlt": "Supermarine auf einem Computer: links ein SSH-Terminal, rechts der zweispaltige Dateibrowser"
     },
     "features": {
       "title": "Alles für Ihre Server in einem Fenster",
@@ -74,7 +74,7 @@
           "id": "desktops",
           "title": "Auch Remote-Desktops",
           "text": "RDP und VNC öffnen sich in einem Tab, direkt oder über einen Ihrer SSH-Server. Für alte Switches und Router gibt es Telnet. Unverschlüsselte Verbindungen sind deutlich gekennzeichnet.",
-          "alt": "Ein Remote-Desktop über RDP, geöffnet in einem Submarine-Tab",
+          "alt": "Ein Remote-Desktop über RDP, geöffnet in einem Supermarine-Tab",
           "new": true
         },
         {
@@ -105,7 +105,7 @@
           "id": "phone",
           "title": "Auch auf dem Smartphone",
           "text": "Dasselbe Profil unter Android: ein Terminal mit Tastenleiste, Dateiübertragung, Remote-Desktops und Tunnel.",
-          "alt": "Submarine auf einem Android-Smartphone: ein SSH-Terminal mit Tastenleiste"
+          "alt": "Supermarine auf einem Android-Smartphone: ein SSH-Terminal mit Tastenleiste"
         }
       ]
     },
@@ -131,14 +131,14 @@
     "free": {
       "title": "Kostenlos. Wirklich.",
       "items": [
-        "Submarine ist kostenlos und Open Source unter der MIT-Lizenz. Es gibt keine Bezahlversion, keine Testversion und keine Werbung.",
+        "Supermarine ist kostenlos und Open Source unter der MIT-Lizenz. Es gibt keine Bezahlversion, keine Testversion und keine Werbung.",
         "Sie brauchen kein Konto. Ein Konto ist nur für die optionale Synchronisierung zwischen Ihren Geräten gedacht.",
         "Auch der Sync-Dienst ist kostenlos, in fairen Grenzen: {limitMb} MB verschlüsselte Daten, {limitItems} Einträge und {limitProfiles} Profile pro Konto.",
         "Der Quellcode ist öffentlich. Sie können ihn lesen, die App selbst bauen oder einen eigenen Sync-Server verwenden."
       ]
     },
     "download": {
-      "title": "Submarine herunterladen",
+      "title": "Supermarine herunterladen",
       "lede": "Alle Downloads stammen aus den Releases des Projekts auf GitHub.",
       "button": "Herunterladen",
       "platforms": [
@@ -175,7 +175,7 @@
       "title": "Fragen",
       "items": [
         {
-          "q": "Ist Submarine wirklich kostenlos?",
+          "q": "Ist Supermarine wirklich kostenlos?",
           "a": "Ja. Die App ist kostenlos und Open Source unter der MIT-Lizenz, ohne Bezahlversion und ohne Werbung. Auch der Sync-Dienst ist kostenlos, in den oben genannten Grenzen."
         },
         {
@@ -191,7 +191,7 @@
           "a": "Dann kann niemand dieses Profil öffnen, auch wir nicht. Eine Wiederherstellung gibt es nicht, weil das Passwort nirgends gespeichert wird. Bewahren Sie es an einem sicheren Ort auf."
         },
         {
-          "q": "Auf welchen Systemen läuft Submarine?",
+          "q": "Auf welchen Systemen läuft Supermarine?",
           "a": "Windows 10 und 11, macOS auf Apple Silicon (ab M1), Linux (.deb, .rpm, Arch, AppImage) und Android 7.0 oder neuer."
         },
         {
@@ -206,13 +206,13 @@
     }
   },
   "security": {
-    "title": "Wie Submarine Ihre Daten schützt – und wie Sie das prüfen können",
-    "description": "Was Submarine verschlüsselt und wie, was der Sync-Server sehen kann und was nicht, was ein böswilliger Server trotzdem tun könnte – und wie Sie jede Aussage Schritt für Schritt im Open-Source-Code prüfen können.",
+    "title": "Wie Supermarine Ihre Daten schützt – und wie Sie das prüfen können",
+    "description": "Was Supermarine verschlüsselt und wie, was der Sync-Server sehen kann und was nicht, was ein böswilliger Server trotzdem tun könnte – und wie Sie jede Aussage Schritt für Schritt im Open-Source-Code prüfen können.",
     "heading": "So werden Ihre Daten geschützt",
     "lede": "Wir bitten Sie nicht, uns zu vertrauen. Diese Seite erklärt genau, was verschlüsselt wird, was unser Server sehen kann und was nicht, und wie Sie jede Aussage selbst prüfen können.",
     "summaryTitle": "Das Wichtigste in einer Minute",
     "summary": [
-      "Alles, was Sie in Submarine speichern, liegt in einer Datei auf Ihrem Gerät, verschlüsselt mit AES-256-GCM.",
+      "Alles, was Sie in Supermarine speichern, liegt in einer Datei auf Ihrem Gerät, verschlüsselt mit AES-256-GCM.",
       "Der Schlüssel dazu wird mit Argon2id aus Ihrem Profilpasswort abgeleitet. Dieses Verfahren ist absichtlich langsam, damit Rateversuche teuer sind. Das Passwort wird nie gespeichert und nirgendwohin gesendet.",
       "Wenn Sie die Synchronisierung einschalten, wird jeder Eintrag auf Ihrem Gerät verschlüsselt, bevor er hochgeladen wird. Der Server speichert Daten, die er nicht entschlüsseln kann.",
       "Der Server sieht aber, was von außen an Ihren Daten erkennbar ist: Ihre E-Mail-Adresse, wann und von welcher IP-Adresse aus Sie synchronisieren, wie viele Einträge jeder Art Sie haben und wie groß sie sind, Ihre Profilnamen und bei geteilten Profilen die Namen der Freigaben und die E-Mail-Adressen der Mitglieder.",
@@ -404,7 +404,7 @@
     "limits": {
       "title": "Was diese Seite nicht verspricht",
       "items": [
-        "Submarine hat noch kein unabhängiges Sicherheitsaudit durchlaufen. Die bisherigen Prüfungen hat der Autor durchgeführt.",
+        "Supermarine hat noch kein unabhängiges Sicherheitsaudit durchlaufen. Die bisherigen Prüfungen hat der Autor durchgeführt.",
         "Ein schwaches oder mehrfach verwendetes Passwort ist der schwächste Punkt. Verwenden Sie ein langes Profilpasswort, das Sie nirgendwo sonst nutzen, und für Ihr Konto ein anderes Passwort.",
         "Telnet und einfaches VNC sind von Haus aus unverschlüsselt. Die App kennzeichnet sie und kann sie über einen SSH-Server leiten.",
         "Diese Seite beschreibt die App auf dem Stand {commit}. Wenn sich der Code ändert, ändert sich diese Seite mit."
@@ -425,10 +425,10 @@
     }
   },
   "privacy": {
-    "title": "Datenschutzerklärung – Submarine",
-    "description": "Was die Submarine-App und ihr optionaler Sync-Dienst speichern, was sie lesen können und was nicht, wie lange das aufbewahrt wird und wie Sie es löschen.",
+    "title": "Datenschutzerklärung – Supermarine",
+    "description": "Was die Supermarine-App und ihr optionaler Sync-Dienst speichern, was sie lesen können und was nicht, wie lange das aufbewahrt wird und wie Sie es löschen.",
     "heading": "Datenschutzerklärung",
-    "intro": "Diese Datenschutzerklärung gilt für die Submarine-App (Windows, macOS, Linux, Android und iOS), den optionalen Submarine-Sync-Dienst, den die App nutzen kann, und diese Website.",
+    "intro": "Diese Datenschutzerklärung gilt für die Supermarine-App (Windows, macOS, Linux, Android und iOS), den optionalen Supermarine-Sync-Dienst, den die App nutzen kann, und diese Website.",
     "shortTitle": "Kurz gesagt",
     "short": [
       "Ihre Server, Passwörter, SSH-Schlüssel und Notizen bleiben auf Ihrem Gerät, verschlüsselt mit einem Schlüssel, der aus Ihrem Profilpasswort abgeleitet wird. In der App gibt es keine Nutzungsanalyse, keine Werbung, kein Tracking und keine Absturzberichte.",
@@ -439,7 +439,7 @@
       {
         "title": "Wer verantwortlich ist",
         "paragraphs": [
-          "Submarine wird von Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>) entwickelt. Sina Xhpm betreibt auch den Sync-Dienst unter <code>submarine.sinaxhpm.com</code> (ältere Versionen der App nutzen <code>api.sinaxhpm.com</code>). Der Quellcode der App ist unter <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> öffentlich (MIT-Lizenz). Was diese Datenschutzerklärung über die App sagt, lässt sich daher im Code prüfen."
+          "Supermarine wird von Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>) entwickelt. Sina Xhpm betreibt auch den Sync-Dienst unter <code>submarine.sinaxhpm.com</code> (ältere Versionen der App nutzen <code>api.sinaxhpm.com</code>). Der Quellcode der App ist unter <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> öffentlich (MIT-Lizenz). Was diese Datenschutzerklärung über die App sagt, lässt sich daher im Code prüfen."
         ]
       },
       {
@@ -545,7 +545,7 @@
     "children": {
       "title": "Kinder",
       "paragraphs": [
-        "Submarine ist ein Werkzeug für Systemadministratoren und Entwickler. Es richtet sich nicht an Kinder, und wir erheben nicht wissentlich Daten von ihnen."
+        "Supermarine ist ein Werkzeug für Systemadministratoren und Entwickler. Es richtet sich nicht an Kinder, und wir erheben nicht wissentlich Daten von ihnen."
       ]
     },
     "changes": {
@@ -562,8 +562,8 @@
     }
   },
   "delete": {
-    "title": "Ihr Submarine-Konto löschen",
-    "description": "So löschen Sie Ihr Submarine-Sync-Konto und alles, was der Server dazu speichert – in der App oder auf dieser Seite.",
+    "title": "Ihr Supermarine-Konto löschen",
+    "description": "So löschen Sie Ihr Supermarine-Sync-Konto und alles, was der Server dazu speichert – in der App oder auf dieser Seite.",
     "heading": "Ihr Konto löschen",
     "lede": "Wenn Sie Ihr Sync-Konto löschen, wird sofort alles entfernt, was der Server dazu speichert. Das lässt sich nicht rückgängig machen.",
     "whatTitle": "Was gelöscht wird",
@@ -603,7 +603,7 @@
     "help": "Wenn Sie sich immer mit einem Code per E-Mail anmelden, legen Sie zuerst in der App ein Passwort fest (Cloud sync → Forgot password?). Wenn Sie weder die App noch dieses Formular nutzen können, erstellen Sie ohne private Angaben ein Issue unter <a href=\"{issuesUrl}\">github.com/SinaXhpm/Submarine/issues</a>. Wir löschen das Konto, wenn Sie nachweisen können, dass es Ihnen gehört."
   },
   "notFound": {
-    "title": "Seite nicht gefunden – Submarine",
+    "title": "Seite nicht gefunden – Supermarine",
     "heading": "Diese Seite gibt es nicht",
     "text": "Vielleicht ist die Adresse falsch, oder die Seite wurde verschoben.",
     "home": "Zur Startseite"

@@ -48,7 +48,7 @@ class ConnectionKeeperService : Service() {
         } else null
 
         val notification: Notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Submarine")
+            .setContentTitle("Supermarine")
             .setContentText("Keeping your SSH sessions alive")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)

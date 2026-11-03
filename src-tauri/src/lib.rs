@@ -151,7 +151,7 @@ pub(crate) fn profile_path(app: &tauri::AppHandle, name: &str) -> Result<PathBuf
 }
 
 /// What the user is told when a profile is open in another window.
-const PROFILE_IN_USE: &str = "[PROFILE] This profile is open in another Submarine window. Lock it there, or close that window, then try again.";
+const PROFILE_IN_USE: &str = "[PROFILE] This profile is open in another Supermarine window. Lock it there, or close that window, then try again.";
 
 /// What `lock_profile` found.
 enum ProfileLock {
@@ -1672,7 +1672,7 @@ mod profile_lock_tests {
     #[test]
     fn the_message_says_what_to_do_and_has_no_word_the_unlock_screen_reads_as_a_wrong_password() {
         assert!(!PROFILE_IN_USE.to_lowercase().contains("decrypt"));
-        assert!(PROFILE_IN_USE.contains("another Submarine window"));
+        assert!(PROFILE_IN_USE.contains("another Supermarine window"));
     }
 }
 
@@ -5170,7 +5170,7 @@ async fn export_profile(
         let chosen = rfd::FileDialog::new()
             .set_title("Export profile")
             .set_file_name(&default_name)
-            .add_filter("Submarine profile", &["submarine"])
+            .add_filter("Supermarine profile", &["submarine"])
             .save_file();
 
         let dst = match chosen {
@@ -5239,7 +5239,7 @@ async fn import_profile_pick() -> Result<Option<(String, String)>, String> {
     {
         let picked = rfd::FileDialog::new()
             .set_title("Import profile")
-            .add_filter("Submarine profile", &["submarine"])
+            .add_filter("Supermarine profile", &["submarine"])
             .pick_file();
 
         let path = match picked {
@@ -5254,11 +5254,11 @@ async fn import_profile_pick() -> Result<Option<(String, String)>, String> {
         use std::io::Read;
         let n = f.read(&mut header).map_err(|e| format!("[FILE] IMPORT_READ_FAILED: {}", e))?;
         if n < 5 || &header[..4] != VAULT_MAGIC {
-            return Err("Selected file is not a Submarine profile (bad header).".into());
+            return Err("Selected file is not a Supermarine profile (bad header).".into());
         }
         if header[4] != VAULT_VERSION {
             return Err(format!(
-                "Profile uses an unsupported vault version ({}). Update Submarine first.",
+                "Profile uses an unsupported vault version ({}). Update Supermarine first.",
                 header[4]
             ));
         }
@@ -5284,11 +5284,11 @@ async fn import_profile_pick() -> Result<Option<(String, String)>, String> {
 /// needs the profile password, entered later at unlock).
 fn validate_vault_bytes(bytes: &[u8]) -> Result<(), String> {
     if bytes.len() < 5 || &bytes[..4] != VAULT_MAGIC {
-        return Err("The selected file is not a Submarine profile.".into());
+        return Err("The selected file is not a Supermarine profile.".into());
     }
     if bytes[4] != VAULT_VERSION {
         return Err(format!(
-            "Profile uses an unsupported vault version ({}). Update Submarine first.",
+            "Profile uses an unsupported vault version ({}). Update Supermarine first.",
             bytes[4]
         ));
     }
@@ -5312,7 +5312,7 @@ async fn import_profile_bytes(
     // Real vaults are a few MB at most; refuse anything absurd before
     // allocating for it.
     if (data.len() / 4 * 3) as u64 > VAULT_FILE_MAX_BYTES {
-        return Err("The file is too large to be a Submarine profile.".into());
+        return Err("The file is too large to be a Supermarine profile.".into());
     }
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(data.as_bytes())
@@ -5429,7 +5429,7 @@ async fn import_profile_save(
     // between the header read and the copy and we'd import garbage.
     let bytes = read_vault_file(&src)?;
     if bytes.len() < 5 || &bytes[..4] != VAULT_MAGIC || bytes[4] != VAULT_VERSION {
-        return Err("Source file is no longer a valid Submarine profile.".into());
+        return Err("Source file is no longer a valid Supermarine profile.".into());
     }
     if bytes.len() < HEADER_LEN + NONCE_LEN + 16 {
         return Err("Source file is truncated — header is valid but the body is too small.".into());
@@ -6129,7 +6129,7 @@ fn validate_ssh_private_key(private_key: &str) -> Result<(), String> {
             "[SSH] UNSUPPORTED_KEY_TYPE: DSA keys aren't supported. Generate a new key, e.g. with `ssh-keygen -t ed25519`.".into(),
         ),
         "-----BEGIN EC PRIVATE KEY-----" if is_legacy_encrypted_ec_pem(trimmed) => Err(
-            "[SSH] UNSUPPORTED_KEY_FORMAT: This ECDSA key uses the legacy PEM encryption, which Submarine can only read for RSA keys. Re-save it in OpenSSH format with `ssh-keygen -p -f <file>` and import it again.".into(),
+            "[SSH] UNSUPPORTED_KEY_FORMAT: This ECDSA key uses the legacy PEM encryption, which Supermarine can only read for RSA keys. Re-save it in OpenSSH format with `ssh-keygen -p -f <file>` and import it again.".into(),
         ),
         // ECDSA in SEC1 PEM (any curve russh signs with: P-256, P-384, P-521)
         // and PKCS#8 (ECDSA, Ed25519 or RSA). Unencrypted, so read it now.
@@ -8283,7 +8283,7 @@ pub(crate) fn decode_private_key(
     // passphrase, so say so instead of asking for one three times.
     if is_legacy_encrypted_ec_pem(&normalized) {
         return Err(KeyDecodeError::Malformed(
-            "this ECDSA key uses the legacy PEM encryption, which Submarine can only read for RSA keys; \
+            "this ECDSA key uses the legacy PEM encryption, which Supermarine can only read for RSA keys; \
              re-save it in OpenSSH format with `ssh-keygen -p -f <keyfile>`"
                 .into(),
         ));
@@ -8294,7 +8294,7 @@ pub(crate) fn decode_private_key(
     // say so instead of asking for one three times.
     if normalized.contains("Proc-Type: 4,ENCRYPTED") && !normalized.contains("DEK-Info: AES-128-CBC,") {
         return Err(KeyDecodeError::Malformed(
-            "this key uses a legacy PEM encryption Submarine can't read (only AES-128-CBC); \
+            "this key uses a legacy PEM encryption Supermarine can't read (only AES-128-CBC); \
              re-save it in OpenSSH format with `ssh-keygen -p -f <keyfile>`"
                 .into(),
         ));
@@ -19010,7 +19010,7 @@ fn describe_error_kind(kind: ConnectErrorKind, target: &str) -> String {
         ConnectErrorKind::Auth =>
             "Authentication rejected by server (wrong password, missing key, or account locked).".into(),
         ConnectErrorKind::Algorithm =>
-            format!("Negotiation with {} failed: no SSH algorithm in common (the server only offers key-exchange, host-key, cipher or MAC algorithms Submarine doesn't support).", target),
+            format!("Negotiation with {} failed: no SSH algorithm in common (the server only offers key-exchange, host-key, cipher or MAC algorithms Supermarine doesn't support).", target),
         ConnectErrorKind::HostKey =>
             "Host key was not approved (wrong key, declined, or the fingerprint prompt timed out).".into(),
         ConnectErrorKind::Transport =>

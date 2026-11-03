@@ -11,7 +11,7 @@
     "download": "Descargar",
     "github": "GitHub",
     "language": "Idioma",
-    "home": "Página de inicio de Submarine",
+    "home": "Página de inicio de Supermarine",
     "menu": "Menú"
   },
   "common": {
@@ -38,12 +38,12 @@
     "noTracking": "Este sitio web no usa cookies, ni analítica, ni scripts de terceros."
   },
   "home": {
-    "title": "Submarine – cliente SSH, SFTP, RDP, VNC y Telnet gratuito para Windows, macOS, Linux y Android",
-    "description": "Submarine es una aplicación de acceso remoto gratuita y de código abierto: terminal SSH, SFTP de dos paneles, reenvío de puertos, escritorios remotos (RDP, VNC) y Telnet en una sola ventana. Tus servidores, contraseñas y claves permanecen cifrados en tus dispositivos.",
+    "title": "Supermarine – cliente SSH, SFTP, RDP, VNC y Telnet gratuito para Windows, macOS, Linux y Android",
+    "description": "Supermarine es una aplicación de acceso remoto gratuita y de código abierto: terminal SSH, SFTP de dos paneles, reenvío de puertos, escritorios remotos (RDP, VNC) y Telnet en una sola ventana. Tus servidores, contraseñas y claves permanecen cifrados en tus dispositivos.",
     "hero": {
       "eyebrow": "Gratis y de código abierto",
       "title": "Todos tus servidores en una sola aplicación cifrada",
-      "lede": "Submarine es un cliente SSH, SFTP, RDP, VNC y Telnet para Windows, macOS, Linux y Android. Tus servidores, contraseñas y claves se cifran en tu dispositivo, y solo se sincronizan entre tus dispositivos si tú quieres.",
+      "lede": "Supermarine es un cliente SSH, SFTP, RDP, VNC y Telnet para Windows, macOS, Linux y Android. Tus servidores, contraseñas y claves se cifran en tu dispositivo, y solo se sincronizan entre tus dispositivos si tú quieres.",
       "download": "Descargar",
       "security": "Cómo se protegen tus datos",
       "points": [
@@ -52,7 +52,7 @@
         "Sin plan de pago",
         "Sin necesidad de cuenta"
       ],
-      "imageAlt": "Submarine en una computadora: una terminal SSH a la izquierda y el explorador de archivos de dos paneles a la derecha"
+      "imageAlt": "Supermarine en una computadora: una terminal SSH a la izquierda y el explorador de archivos de dos paneles a la derecha"
     },
     "features": {
       "title": "Todo para tus servidores, en una sola ventana",
@@ -74,7 +74,7 @@
           "id": "desktops",
           "title": "También escritorios remotos",
           "text": "RDP y VNC se abren en una pestaña, directamente o a través de uno de tus servidores SSH. Telnet está disponible para switches y routers antiguos. Las conexiones sin cifrar se marcan claramente.",
-          "alt": "Un escritorio remoto abierto por RDP en una pestaña de Submarine",
+          "alt": "Un escritorio remoto abierto por RDP en una pestaña de Supermarine",
           "new": true
         },
         {
@@ -105,7 +105,7 @@
           "id": "phone",
           "title": "También en tu teléfono",
           "text": "El mismo perfil en Android: una terminal con barra de teclas, transferencia de archivos, escritorios remotos y túneles.",
-          "alt": "Submarine en un teléfono Android: una terminal SSH con barra de teclas"
+          "alt": "Supermarine en un teléfono Android: una terminal SSH con barra de teclas"
         }
       ]
     },
@@ -131,14 +131,14 @@
     "free": {
       "title": "Gratis. De verdad.",
       "items": [
-        "Submarine es gratuito y de código abierto, con licencia MIT. No hay plan de pago, ni periodo de prueba, ni anuncios.",
+        "Supermarine es gratuito y de código abierto, con licencia MIT. No hay plan de pago, ni periodo de prueba, ni anuncios.",
         "No necesitas una cuenta. La cuenta solo sirve para la sincronización opcional entre tus dispositivos.",
         "El servicio de sincronización también es gratuito, dentro de unos límites razonables: {limitMb} MB de datos cifrados, {limitItems} elementos y {limitProfiles} perfiles por cuenta.",
         "El código fuente es público. Puedes leerlo, compilar la aplicación por tu cuenta o usar tu propio servidor de sincronización."
       ]
     },
     "download": {
-      "title": "Descargar Submarine",
+      "title": "Descargar Supermarine",
       "lede": "Todas las descargas proceden de las versiones publicadas del proyecto en GitHub.",
       "button": "Descargar",
       "platforms": [
@@ -175,7 +175,7 @@
       "title": "Preguntas frecuentes",
       "items": [
         {
-          "q": "¿Submarine es realmente gratis?",
+          "q": "¿Supermarine es realmente gratis?",
           "a": "Sí. La aplicación es gratuita y de código abierto, con licencia MIT, sin plan de pago y sin anuncios. El servicio de sincronización también es gratuito, dentro de los límites indicados arriba."
         },
         {
@@ -206,13 +206,13 @@
     }
   },
   "security": {
-    "title": "Cómo protege Submarine tus datos y cómo comprobarlo",
-    "description": "Qué cifra Submarine y cómo, qué puede ver el servidor de sincronización y qué no, qué podría hacer aun así un servidor hostil y cómo comprobar paso a paso cada afirmación en el código abierto.",
+    "title": "Cómo protege Supermarine tus datos y cómo comprobarlo",
+    "description": "Qué cifra Supermarine y cómo, qué puede ver el servidor de sincronización y qué no, qué podría hacer aun así un servidor hostil y cómo comprobar paso a paso cada afirmación en el código abierto.",
     "heading": "Cómo se protegen tus datos",
     "lede": "No te pedimos que confíes en nosotros. Esta página explica con exactitud qué se cifra, qué puede ver nuestro servidor y qué no, y cómo puedes comprobar por tu cuenta cada afirmación.",
     "summaryTitle": "En un minuto",
     "summary": [
-      "Todo lo que guardas en Submarine se conserva en un solo archivo en tu dispositivo, cifrado con AES-256-GCM.",
+      "Todo lo que guardas en Supermarine se conserva en un solo archivo en tu dispositivo, cifrado con AES-256-GCM.",
       "Su clave se genera a partir de la contraseña de tu perfil con Argon2id, un método lento a propósito para que adivinarla resulte costoso. La contraseña nunca se guarda ni se envía a ningún sitio.",
       "Si activas la sincronización, cada elemento se cifra en tu dispositivo antes de subirse. El servidor guarda datos que no puede descifrar.",
       "Lo que el servidor sí ve es lo que rodea a tus datos: tu dirección de correo electrónico, cuándo sincronizas y desde qué dirección IP, cuántos elementos de cada tipo tienes y qué tamaño tienen, los nombres de tus perfiles y, en los perfiles compartidos, sus nombres y las direcciones de correo electrónico de los miembros.",
@@ -404,7 +404,7 @@
     "limits": {
       "title": "Lo que esta página no promete",
       "items": [
-        "Submarine no se ha sometido a una auditoría de seguridad independiente. Hasta ahora, sus revisiones las ha hecho el autor.",
+        "Supermarine no se ha sometido a una auditoría de seguridad independiente. Hasta ahora, sus revisiones las ha hecho el autor.",
         "Una contraseña débil o reutilizada es el punto más débil. Usa una contraseña larga y única para el perfil, y otra distinta para la cuenta.",
         "Telnet y VNC en su forma básica no están cifrados por diseño. La aplicación los marca y puede hacer que pasen por un servidor SSH.",
         "Esta página describe la aplicación tal como está en {commit}. Si el código cambia, esta página cambia con él."
@@ -425,10 +425,10 @@
     }
   },
   "privacy": {
-    "title": "Política de privacidad – Submarine",
-    "description": "Qué guardan la aplicación Submarine y su servicio opcional de sincronización, qué pueden leer y qué no, cuánto tiempo se conserva y cómo eliminarlo.",
+    "title": "Política de privacidad – Supermarine",
+    "description": "Qué guardan la aplicación Supermarine y su servicio opcional de sincronización, qué pueden leer y qué no, cuánto tiempo se conserva y cómo eliminarlo.",
     "heading": "Política de privacidad",
-    "intro": "Esta política se aplica a la aplicación Submarine (Windows, macOS, Linux, Android e iOS), al servicio opcional de sincronización de Submarine que la aplicación puede usar y a este sitio web.",
+    "intro": "Esta política se aplica a la aplicación Supermarine (Windows, macOS, Linux, Android e iOS), al servicio opcional de sincronización de Supermarine que la aplicación puede usar y a este sitio web.",
     "shortTitle": "En resumen",
     "short": [
       "Tus servidores, contraseñas, claves SSH y notas se quedan en tu dispositivo, cifrados con una clave generada a partir de la contraseña de tu perfil. La aplicación no tiene analítica, ni publicidad, ni rastreo, ni informes de fallos.",
@@ -439,7 +439,7 @@
       {
         "title": "Quién es el responsable",
         "paragraphs": [
-          "Submarine lo desarrolla Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>), que también gestiona el servicio de sincronización en <code>submarine.sinaxhpm.com</code> (las versiones anteriores de la aplicación usan <code>api.sinaxhpm.com</code>). El código fuente de la aplicación es público en <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> (licencia MIT), así que lo que esta política dice sobre la aplicación se puede comprobar en el código."
+          "Supermarine lo desarrolla Sina Xhpm (<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>), que también gestiona el servicio de sincronización en <code>submarine.sinaxhpm.com</code> (las versiones anteriores de la aplicación usan <code>api.sinaxhpm.com</code>). El código fuente de la aplicación es público en <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a> (licencia MIT), así que lo que esta política dice sobre la aplicación se puede comprobar en el código."
         ]
       },
       {
@@ -545,7 +545,7 @@
     "children": {
       "title": "Niños",
       "paragraphs": [
-        "Submarine es una herramienta para administradores de sistemas y desarrolladores. No está dirigida a niños, y no recopilamos datos suyos a sabiendas."
+        "Supermarine es una herramienta para administradores de sistemas y desarrolladores. No está dirigida a niños, y no recopilamos datos suyos a sabiendas."
       ]
     },
     "changes": {
@@ -562,8 +562,8 @@
     }
   },
   "delete": {
-    "title": "Eliminar tu cuenta de Submarine",
-    "description": "Cómo eliminar tu cuenta de sincronización de Submarine y todo lo que el servidor guarda de ella, en la aplicación o en esta página.",
+    "title": "Eliminar tu cuenta de Supermarine",
+    "description": "Cómo eliminar tu cuenta de sincronización de Supermarine y todo lo que el servidor guarda de ella, en la aplicación o en esta página.",
     "heading": "Eliminar tu cuenta",
     "lede": "Al eliminar tu cuenta de sincronización, se borra de inmediato todo lo que el servidor guarda de ella. No se puede deshacer.",
     "whatTitle": "Qué se elimina",
@@ -603,7 +603,7 @@
     "help": "Si siempre inicias sesión con un código que recibes por correo electrónico, primero establece una contraseña en la aplicación (Cloud sync → Forgot password?). Si no puedes usar la aplicación ni este formulario, abre una incidencia en <a href=\"{issuesUrl}\">github.com/SinaXhpm/Submarine/issues</a> sin ningún dato privado, y eliminaremos la cuenta cuando puedas demostrar que es tuya."
   },
   "notFound": {
-    "title": "Página no encontrada – Submarine",
+    "title": "Página no encontrada – Supermarine",
     "heading": "Esta página no existe",
     "text": "Puede que la dirección sea incorrecta o que la página se haya movido.",
     "home": "Ir a la página de inicio"

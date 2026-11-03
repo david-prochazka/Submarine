@@ -11,7 +11,7 @@
     "download": "下载",
     "github": "GitHub",
     "language": "语言",
-    "home": "Submarine 首页",
+    "home": "Supermarine 首页",
     "menu": "菜单"
   },
   "common": {
@@ -38,12 +38,12 @@
     "noTracking": "本网站不使用 Cookie、统计分析或第三方脚本。"
   },
   "home": {
-    "title": "Submarine – 适用于 Windows、macOS、Linux 和 Android 的免费 SSH、SFTP、RDP、VNC 和 Telnet 客户端",
-    "description": "Submarine 是一款免费、开源的远程访问应用：SSH 终端、双栏 SFTP、端口转发、远程桌面（RDP、VNC）和 Telnet，都在一个窗口里。你的服务器、密码和密钥以加密形式保存在你的设备上。",
+    "title": "Supermarine – 适用于 Windows、macOS、Linux 和 Android 的免费 SSH、SFTP、RDP、VNC 和 Telnet 客户端",
+    "description": "Supermarine 是一款免费、开源的远程访问应用：SSH 终端、双栏 SFTP、端口转发、远程桌面（RDP、VNC）和 Telnet，都在一个窗口里。你的服务器、密码和密钥以加密形式保存在你的设备上。",
     "hero": {
       "eyebrow": "免费开源",
       "title": "你的所有服务器，都在一个加密应用里",
-      "lede": "Submarine 是一款适用于 Windows、macOS、Linux 和 Android 的 SSH、SFTP、RDP、VNC 和 Telnet 客户端。你的服务器、密码和密钥会在你的设备上加密保存；只有你愿意时，它们才会在你的设备之间同步。",
+      "lede": "Supermarine 是一款适用于 Windows、macOS、Linux 和 Android 的 SSH、SFTP、RDP、VNC 和 Telnet 客户端。你的服务器、密码和密钥会在你的设备上加密保存；只有你愿意时，它们才会在你的设备之间同步。",
       "download": "下载",
       "security": "你的数据如何受到保护",
       "points": [
@@ -52,7 +52,7 @@
         "无付费版",
         "无需账户"
       ],
-      "imageAlt": "电脑上的 Submarine：左边是 SSH 终端，右边是双栏文件浏览器"
+      "imageAlt": "电脑上的 Supermarine：左边是 SSH 终端，右边是双栏文件浏览器"
     },
     "features": {
       "title": "管理服务器所需的一切，都在一个窗口里",
@@ -74,7 +74,7 @@
           "id": "desktops",
           "title": "还有远程桌面",
           "text": "RDP 和 VNC 在标签页中打开，可以直接连接，也可以经由你的某台 SSH 服务器连接。还有 Telnet，用于老式交换机和路由器。未加密的连接会有明显标记。",
-          "alt": "通过 RDP 在 Submarine 标签页中打开的远程桌面",
+          "alt": "通过 RDP 在 Supermarine 标签页中打开的远程桌面",
           "new": true
         },
         {
@@ -105,7 +105,7 @@
           "id": "phone",
           "title": "手机上也能用",
           "text": "在 Android 上使用同一个配置文件：带按键栏的终端、文件传输、远程桌面和隧道。",
-          "alt": "Android 手机上的 Submarine：带按键栏的 SSH 终端"
+          "alt": "Android 手机上的 Supermarine：带按键栏的 SSH 终端"
         }
       ]
     },
@@ -131,14 +131,14 @@
     "free": {
       "title": "真的免费",
       "items": [
-        "Submarine 是免费的开源软件，采用 MIT 许可证。没有付费版，没有试用期，也没有广告。",
+        "Supermarine 是免费的开源软件，采用 MIT 许可证。没有付费版，没有试用期，也没有广告。",
         "你不需要账户。账户只用于可选的设备间同步。",
         "同步服务同样免费，但有合理的限额：每个账户最多 {limitMb} MB 加密数据、{limitItems} 个条目和 {limitProfiles} 个配置文件。",
         "源代码是公开的。你可以阅读它、自己构建应用，或者使用你自己的同步服务器。"
       ]
     },
     "download": {
-      "title": "下载 Submarine",
+      "title": "下载 Supermarine",
       "lede": "所有下载都来自本项目在 GitHub 上的发布版本。",
       "button": "下载",
       "platforms": [
@@ -175,7 +175,7 @@
       "title": "常见问题",
       "items": [
         {
-          "q": "Submarine 真的免费吗？",
+          "q": "Supermarine 真的免费吗？",
           "a": "是的。应用免费且开源，采用 MIT 许可证，没有付费版，也没有广告。同步服务同样免费，但受上述限额约束。"
         },
         {
@@ -206,13 +206,13 @@
     }
   },
   "security": {
-    "title": "Submarine 如何保护你的数据，以及如何验证",
-    "description": "Submarine 加密哪些内容、如何加密，同步服务器能看到和不能看到什么，恶意服务器仍然可能做什么，以及对照开源代码逐步验证每一项说法的方法。",
+    "title": "Supermarine 如何保护你的数据，以及如何验证",
+    "description": "Supermarine 加密哪些内容、如何加密，同步服务器能看到和不能看到什么，恶意服务器仍然可能做什么，以及对照开源代码逐步验证每一项说法的方法。",
     "heading": "你的数据如何受到保护",
     "lede": "我们不要求你信任我们。本页准确说明哪些内容被加密、我们的服务器能看到和不能看到什么，以及你如何亲自验证每一项说法。",
     "summaryTitle": "一分钟了解",
     "summary": [
-      "你在 Submarine 中保存的所有内容，都存放在你设备上的一个文件里，并使用 AES-256-GCM 加密。",
+      "你在 Supermarine 中保存的所有内容，都存放在你设备上的一个文件里，并使用 AES-256-GCM 加密。",
       "加密所用的密钥由你的配置文件密码通过 Argon2id 生成。Argon2id 是一种有意设计得很慢的方法，让猜测密码的代价很高。密码从不保存，也从不发送到任何地方。",
       "如果你开启同步，每个条目在上传前都会先在你的设备上加密。服务器保存的是它无法解密的数据。",
       "服务器确实能看到你数据的外围信息：你的邮箱地址，你在何时、从哪个 IP 地址同步，你每种条目各有多少个、各有多大，你的配置文件名称，以及共享配置文件的共享名称和成员的邮箱地址。",
@@ -404,7 +404,7 @@
     "limits": {
       "title": "本页不承诺什么",
       "items": [
-        "Submarine 尚未经过独立的安全审计。迄今为止的审查都由作者本人完成。",
+        "Supermarine 尚未经过独立的安全审计。迄今为止的审查都由作者本人完成。",
         "弱密码或重复使用的密码是最薄弱的环节。请使用一个长且独一无二的配置文件密码，并使用一个与之不同的账户密码。",
         "Telnet 和普通 VNC 在设计上就不加密。应用会对它们加以标注，并且可以让它们经由 SSH 服务器连接。",
         "本页描述的是提交 {commit} 对应的应用版本。代码如有变化，本页也会随之更新。"
@@ -425,10 +425,10 @@
     }
   },
   "privacy": {
-    "title": "隐私政策 – Submarine",
-    "description": "Submarine 应用及其可选的同步服务会保存什么、能读取和不能读取什么、保存多久，以及如何删除。",
+    "title": "隐私政策 – Supermarine",
+    "description": "Supermarine 应用及其可选的同步服务会保存什么、能读取和不能读取什么、保存多久，以及如何删除。",
     "heading": "隐私政策",
-    "intro": "本政策适用于 Submarine 应用（Windows、macOS、Linux、Android 和 iOS 版）、应用可以使用的可选 Submarine 同步服务，以及本网站。",
+    "intro": "本政策适用于 Supermarine 应用（Windows、macOS、Linux、Android 和 iOS 版）、应用可以使用的可选 Supermarine 同步服务，以及本网站。",
     "shortTitle": "概要",
     "short": [
       "你的服务器、密码、SSH 密钥和笔记都留在你的设备上，并使用由你的配置文件密码生成的密钥加密。应用没有统计分析、没有广告、没有跟踪，也没有崩溃报告。",
@@ -439,7 +439,7 @@
       {
         "title": "由谁负责",
         "paragraphs": [
-          "Submarine 由 Sina Xhpm（<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>）开发，位于 <code>submarine.sinaxhpm.com</code> 的同步服务也由其运营（旧版应用使用 <code>api.sinaxhpm.com</code>）。应用的源代码公开在 <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a>（MIT 许可证），因此本政策中关于应用的说法，都可以在代码中核实。"
+          "Supermarine 由 Sina Xhpm（<a href=\"https://sinaxhpm.com\">sinaxhpm.com</a>）开发，位于 <code>submarine.sinaxhpm.com</code> 的同步服务也由其运营（旧版应用使用 <code>api.sinaxhpm.com</code>）。应用的源代码公开在 <a href=\"{repoUrl}\">github.com/SinaXhpm/Submarine</a>（MIT 许可证），因此本政策中关于应用的说法，都可以在代码中核实。"
         ]
       },
       {
@@ -545,7 +545,7 @@
     "children": {
       "title": "儿童",
       "paragraphs": [
-        "Submarine 是面向系统管理员和开发者的工具。它不以儿童为对象，我们也不会在知情的情况下收集儿童的数据。"
+        "Supermarine 是面向系统管理员和开发者的工具。它不以儿童为对象，我们也不会在知情的情况下收集儿童的数据。"
       ]
     },
     "changes": {
@@ -562,8 +562,8 @@
     }
   },
   "delete": {
-    "title": "删除你的 Submarine 账户",
-    "description": "如何在应用中或在本页面上删除你的 Submarine 同步账户，以及服务器为它保存的所有内容。",
+    "title": "删除你的 Supermarine 账户",
+    "description": "如何在应用中或在本页面上删除你的 Supermarine 同步账户，以及服务器为它保存的所有内容。",
     "heading": "删除你的账户",
     "lede": "删除同步账户后，服务器为该账户保存的所有内容都会被立即清除。此操作无法撤销。",
     "whatTitle": "会删除什么",
@@ -603,7 +603,7 @@
     "help": "如果你一直使用邮件中的验证码登录，请先在应用中设置密码：Cloud sync → Forgot password?（忘记密码？）。如果你无法使用应用或此表单，请在 <a href=\"{issuesUrl}\">github.com/SinaXhpm/Submarine/issues</a> 提交 issue，不要包含任何私人信息；在你能证明该账户属于你之后，我们会将其删除。"
   },
   "notFound": {
-    "title": "页面未找到 – Submarine",
+    "title": "页面未找到 – Supermarine",
     "heading": "此页面不存在",
     "text": "地址可能有误，或者页面已经移到别处。",
     "home": "前往首页"

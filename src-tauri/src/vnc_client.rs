@@ -725,7 +725,7 @@ pub fn explain(e: &VncError) -> String {
         VncError::WrongPassword => "The VNC server refused the password.".into(),
         VncError::NoPassword => "The VNC server wants a password, and none was given.".into(),
         VncError::General(m) if m.contains("Security type apart from Vnc Auth") => {
-            "The VNC server only offers logins Submarine doesn't speak (it speaks none and the VNC password). On macOS, turn on \"VNC viewers may control screen with password\"; on RealVNC, set its encryption to \"Prefer off\" and its login to \"VNC password\".".into()
+            "The VNC server only offers logins Supermarine doesn't speak (it speaks none and the VNC password). On macOS, turn on \"VNC viewers may control screen with password\"; on RealVNC, set its encryption to \"Prefer off\" and its login to \"VNC password\".".into()
         }
         // An RFB 3.8 server's own words for a refused login.
         VncError::General(m) => format!("The VNC server said: {m}"),

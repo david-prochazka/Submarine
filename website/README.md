@@ -1,6 +1,6 @@
-# The Submarine website
+# The Supermarine website
 
-The pages at [submarine.sinaxhpm.com](https://submarine.sinaxhpm.com): what Submarine is, how it protects your data, the privacy policy and the account deletion page, in English and translations. Static HTML with one style sheet and one small script (the delete form); no cookies, no analytics, no third-party requests. The server sends a strict Content-Security-Policy (`script-src 'self'; style-src 'self'`), so the pages have no inline script or style.
+The pages at [submarine.sinaxhpm.com](https://submarine.sinaxhpm.com): what Supermarine is, how it protects your data, the privacy policy and the account deletion page, in English and translations. Static HTML with one style sheet and one small script (the delete form); no cookies, no analytics, no third-party requests. The server sends a strict Content-Security-Policy (`script-src 'self'; style-src 'self'`), so the pages have no inline script or style.
 
 ## Build
 

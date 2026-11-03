@@ -155,7 +155,7 @@ function SecureScreenSetting() {
         <div className="min-w-0">
           <div className="font-medium text-white">Block screenshots</div>
           <p className="text-[12px] text-zinc-500 leading-[16px] mt-0.5">
-            Keep Submarine out of screenshots, screen recordings and screen sharing, so passwords and
+            Keep Supermarine out of screenshots, screen recordings and screen sharing, so passwords and
             terminal output can't be captured, not even by an app that records the screen. You
             can't take screenshots of it yourself while this is on. The preview in the recent
             apps list is always hidden (Android 13 and later).

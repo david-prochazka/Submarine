@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import CloudPanel from "./CloudPanel";
 import { CloudConfigView, hostOf } from "./SyncServerSetting";
-import logoUrl from "../assets/logo.png";
+import BrandMark from "./BrandMark";
 import { IS_ANDROID } from "../util/platform";
 import { PRIVACY_URL } from "../util/links";
 import { useTextPrompt, useConfirm } from "../ui/confirm";
@@ -546,7 +546,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
       const bytes = new Uint8Array(await file.arrayBuffer());
       // Same quick header check the backend does, for instant feedback.
       if (bytes.length < 5 || String.fromCharCode(...bytes.subarray(0, 4)) !== VAULT_MAGIC || bytes[4] !== VAULT_VERSION) {
-        setError("That file isn't a Submarine profile.");
+        setError("That file isn't a Supermarine profile.");
         return;
       }
       const suggested = file.name.replace(/\.[^.]+$/, "").replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 32) || "imported";
@@ -763,11 +763,11 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
                 <span aria-hidden className="absolute inset-0 rounded-full border border-primary animate-sonar [animation-delay:1.6s] motion-reduce:hidden" />
               </>
             )}
-            <img src={logoUrl} alt="" draggable={false} className="relative h-[84px] w-auto max-w-full object-contain" />
+            <BrandMark className="relative h-[84px] w-[84px]" />
           </div>
           {view === "unlock" ? (
             <>
-              <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">Submarine is locked</h1>
+              <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">Supermarine is locked</h1>
               <p className="mt-1.5 text-muted [text-wrap:balance]">
                 {quick?.name === selected ? `Use ${quickName} or enter` : "Enter"} the password for the{" "}
                 <strong className="font-semibold text-white break-all">{selected}</strong> profile.
@@ -776,7 +776,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
           ) : view === "create" ? (
             <>
               <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">
-                {firstRun ? "Welcome to Submarine" : "New profile"}
+                {firstRun ? "Welcome to Supermarine" : "New profile"}
               </h1>
               <p className="mt-1.5 text-muted">
                 {firstRun ? "Create a profile to keep your servers, logins and keys in." : "A separate vault with its own password."}
@@ -784,7 +784,7 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
             </>
           ) : (
             <h1 className="mt-6 text-[22px] font-[650] leading-7 text-white">
-              {view === "loading" ? "Submarine" : "Choose a profile"}
+              {view === "loading" ? "Supermarine" : "Choose a profile"}
             </h1>
           )}
         </header>
@@ -1130,9 +1130,9 @@ const ProfileSelectPage = ({ onUnlocked, afterLock = false }: Props) => {
           (the check steps aside then: the notice says it all). */}
       <footer className="relative mt-8 flex flex-col items-center gap-2">
         <div aria-live="polite" className="flex flex-wrap items-center justify-center gap-1 text-[12px]">
-          <FooterButton onClick={openRepo} title="Open Submarine on GitHub" icon={<Github size={12} aria-hidden />} label="GitHub" />
+          <FooterButton onClick={openRepo} title="Open Supermarine on GitHub" icon={<Github size={12} aria-hidden />} label="GitHub" />
           <FooterDot />
-          <FooterButton onClick={() => openLink(PRIVACY_URL)} title="What Submarine stores and sends: the privacy policy" icon={<ShieldCheck size={12} aria-hidden />} label="Privacy" />
+          <FooterButton onClick={() => openLink(PRIVACY_URL)} title="What Supermarine stores and sends: the privacy policy" icon={<ShieldCheck size={12} aria-hidden />} label="Privacy" />
           {!update && (
             <>
               <FooterDot />

@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="src/assets/logo.png" alt="Submarine logo" width="120" />
-  <h1>Submarine — Modern SSH &amp; SFTP Client</h1>
+  <img src="src/assets/logo.png" alt="Supermarine logo" width="120" />
+  <h1>Supermarine — Modern SSH &amp; SFTP Client</h1>
   <p><strong>A fast, secure SSH and SFTP client for Windows, macOS, Linux — and now Android.</strong></p>
   <p>Manage servers, edit remote files, forward ports, and sync folders from one native window. Built with Rust and Tauri.</p>
   <p>
@@ -15,10 +15,10 @@
 ---
 
 <div align="center">
-  <img src="docs/screenshots/hero.png" alt="Submarine main window: a terminal session with the Files tool docked beside it, local folder above and the server's folder below" width="900" />
+  <img src="docs/screenshots/hero.png" alt="Supermarine main window: a terminal session with the Files tool docked beside it, local folder above and the server's folder below" width="900" />
 </div>
 
-> **TL;DR** — Submarine is a fast, free, open-source SSH and SFTP client for Windows, macOS, Linux, and Android. It replaces the typical PuTTY + WinSCP + tunnel-manager stack with one tabbed window per server: terminal, SFTP, port forwarding (SOCKS / HTTP / local / remote), folder mirror, and end-to-end encrypted profile sync. Built with Rust + Tauri. MIT licensed.
+> **TL;DR** — Supermarine is a fast, free, open-source SSH and SFTP client for Windows, macOS, Linux, and Android. It replaces the typical PuTTY + WinSCP + tunnel-manager stack with one tabbed window per server: terminal, SFTP, port forwarding (SOCKS / HTTP / local / remote), folder mirror, and end-to-end encrypted profile sync. Built with Rust + Tauri. MIT licensed.
 
 ## At a glance
 
@@ -28,7 +28,7 @@
 - **Native and cross-platform** — Windows, macOS, Linux (`.deb` / `.rpm` / Arch / AppImage), and Android — same encrypted vault everywhere
 - **Zero-knowledge cloud sync** — profiles are Argon2id + AES-256-GCM sealed on your device before upload; the server (and everyone else) only sees ciphertext. Browser dashboard at [`api.sinaxhpm.com/account`](https://api.sinaxhpm.com/account/) to manage your account and stored profiles
 - **Docker manager** — containers, logs (live tail), stats, prune, and `docker exec` shells as first-class session tabs
-- **Import from anywhere** — PuTTY `.reg`, MobaXterm `.mxtsessions`, OpenSSH config, and Submarine JSON exports all bulk-imported from the Servers page
+- **Import from anywhere** — PuTTY `.reg`, MobaXterm `.mxtsessions`, OpenSSH config, and Supermarine JSON exports all bulk-imported from the Servers page
 - **Secure by default** — TOFU host keys with per-connection nonce binding, strict CSP, minimal Tauri permission ACL, zeroized master key
 
 ## Screenshots
@@ -79,7 +79,7 @@
 
 ## Looking for an alternative to…
 
-If you're searching for one of these, Submarine is a direct fit:
+If you're searching for one of these, Supermarine is a direct fit:
 
 - a free **PuTTY alternative for macOS and Linux** (and a tabbed PuTTY replacement on Windows)
 - a **WinSCP alternative** that lives in the same window as your terminal
@@ -90,9 +90,9 @@ If you're searching for one of these, Submarine is a direct fit:
 - an **rsync GUI / Syncthing-lite** that mirrors a local folder to a remote SSH host with conflict resolution
 - an **Android SSH client** (ConnectBot / JuiceSSH style) that shares saved servers with your desktop
 
-## Why Submarine
+## Why Supermarine
 
-Most SSH clients feel like they were built a decade ago and never updated. Submarine is a clean, modern alternative for developers and sysadmins who connect to remote servers every day.
+Most SSH clients feel like they were built a decade ago and never updated. Supermarine is a clean, modern alternative for developers and sysadmins who connect to remote servers every day.
 
 - **Native and fast.** Built with Rust + Tauri — boots in under a second, uses around 80 MB of RAM with several sessions open. No Electron, no battery drain.
 - **One window, everything you need.** Terminal, SFTP file browser, port tunnels, folder sync, and saved commands — all live as tabs around each server. No more juggling PuTTY plus WinSCP plus a tunnel app.
@@ -125,7 +125,7 @@ Most SSH clients feel like they were built a decade ago and never updated. Subma
 
 ### Folder Mirror
 
-Pick a local folder, pick a remote folder, and Submarine keeps them in sync.
+Pick a local folder, pick a remote folder, and Supermarine keeps them in sync.
 
 - **Two-way initial sync.** Walks both sides, compares by size and content hash (not just timestamp), and merges them into the same state.
 - **Live watcher.** Every save, create, rename, or delete on your local folder pushes to the server in real time.
@@ -192,27 +192,27 @@ Pick a binary from the [latest release](https://github.com/sinaxhpm/submarine/re
 | Any Linux | `.AppImage` — `chmod +x` and double-click |
 | Android 8.0+ | `.apk` — sideload, no Play Store required |
 
-> Builds are currently **unsigned**. Windows SmartScreen will prompt — click "More info → Run anyway". On macOS you may need `xattr -d com.apple.quarantine /Applications/Submarine.app`. Android sideloading needs "Install unknown apps" enabled for the installer source.
+> Builds are currently **unsigned**. Windows SmartScreen will prompt — click "More info → Run anyway". On macOS you may need `xattr -d com.apple.quarantine /Applications/Supermarine.app`. Android sideloading needs "Install unknown apps" enabled for the installer source.
 
 ### Portable mode (Windows)
 
-Submarine can keep all of its data next to the executable instead of in your user profile — on a USB stick, say. Create an empty folder named `submarine-data` beside `submarine.exe` and start the app; the `-portable.zip` release asset is already laid out that way. Profiles, the cloud sign-in, the window position and the UI preferences then live in `submarine-data`, and **Settings → Maintenance** shows the folder in use.
+Supermarine can keep all of its data next to the executable instead of in your user profile — on a USB stick, say. Create an empty folder named `submarine-data` beside `submarine.exe` and start the app; the `-portable.zip` release asset is already laid out that way. Profiles, the cloud sign-in, the window position and the UI preferences then live in `submarine-data`, and **Settings → Maintenance** shows the folder in use.
 
-A first portable launch starts with no profiles. To carry existing data over, close Submarine and copy two things into `submarine-data`:
+A first portable launch starts with no profiles. To carry existing data over, close Supermarine and copy two things into `submarine-data`:
 
 - the contents of `%APPDATA%\com.submarine.app`, except `sync_device.json` — it identifies each install to cloud sync, and the portable copy creates its own;
 - the folder `%LOCALAPPDATA%\com.submarine.app\EBWebView`. It holds the app's settings, including **Auto-sync**. Without it Auto-sync starts out on, and the first profile you open is uploaded to your cloud — so if you skip this folder, turn Auto-sync off in Settings before opening a profile you keep only on this computer.
 
 `submarine-data` then holds your encrypted profiles and your cloud sign-in token, so keep it somewhere only you can read.
 
-Not portable: the Microsoft Edge WebView2 runtime (a Windows system component, preinstalled on Windows 11 and current Windows 10) and the short-lived temp files used while editing or dragging remote files. If `submarine-data` can't be written to, Submarine falls back to the usual per-user folders and says so in Settings. (A plain, non-packaged Linux build works the same way — it just doesn't ship a prebuilt zip.)
+Not portable: the Microsoft Edge WebView2 runtime (a Windows system component, preinstalled on Windows 11 and current Windows 10) and the short-lived temp files used while editing or dragging remote files. If `submarine-data` can't be written to, Supermarine falls back to the usual per-user folders and says so in Settings. (A plain, non-packaged Linux build works the same way — it just doesn't ship a prebuilt zip.)
 
 ### Android
 
-Submarine on Android is a true native build of the same Rust core — same SSH stack, same encrypted vault, same profile sync. Reach a server from your phone with the same credentials you saved on your desktop.
+Supermarine on Android is a true native build of the same Rust core — same SSH stack, same encrypted vault, same profile sync. Reach a server from your phone with the same credentials you saved on your desktop.
 
 - **Same encrypted vault.** Cloud sync drops your profiles onto the phone exactly as they were on desktop. Nothing re-typed.
-- **Tabbed terminal optimised for touch.** Mobile soft keyboards don't have Ctrl / Alt / Shift / Esc / Tab — Submarine ships an inline **soft-key bar** between xterm and the OS keyboard with Termux-style sticky modifiers (tap to arm, double-tap to lock). Ctrl+letter, Alt+letter, and Shift+Tab all work as expected.
+- **Tabbed terminal optimised for touch.** Mobile soft keyboards don't have Ctrl / Alt / Shift / Esc / Tab — Supermarine ships an inline **soft-key bar** between xterm and the OS keyboard with Termux-style sticky modifiers (tap to arm, double-tap to lock). Ctrl+letter, Alt+letter, and Shift+Tab all work as expected.
 - **Auto-scroll on focus.** Tap the terminal and the prompt scrolls into view; the same fires when the OS keyboard opens so the cursor row never sits hidden behind the keyboard.
 - **SFTP file browser** with multi-select, upload from the phone's storage, download into Downloads.
 - **Port forwarding (SOCKS / local / remote)** runs as long as the app is open — handy for tunnelling a mobile browser through your home box.
@@ -223,7 +223,7 @@ Tested on Android 8.0+ (API 26+). Phones, tablets, and Android-on-ChromeOS.
 
 ## Security
 
-Your data is encrypted on your machine before anything leaves it. Submarine and the sync server never see your passwords, private keys, or profile content.
+Your data is encrypted on your machine before anything leaves it. Supermarine and the sync server never see your passwords, private keys, or profile content.
 
 **How it works:**
 
@@ -245,7 +245,7 @@ Your data is encrypted on your machine before anything leaves it. Submarine and 
 
 ## FAQ
 
-### Is Submarine free?
+### Is Supermarine free?
 
 Yes. MIT-licensed. Use it personally, use it at work, fork it, redistribute it.
 
@@ -255,7 +255,7 @@ Yes. Cloud sync is opt-in. All profiles, mirrors, and tunnels live locally and a
 
 ### How is it different from PuTTY, WinSCP, or MobaXterm?
 
-PuTTY and WinSCP are two separate apps you alt-tab between. MobaXterm bundles them but feels dated and is Windows-only. Submarine puts terminal, SFTP, tunnels, and folder mirror in one modern tabbed window per server — and runs natively on Windows, macOS, and Linux.
+PuTTY and WinSCP are two separate apps you alt-tab between. MobaXterm bundles them but feels dated and is Windows-only. Supermarine puts terminal, SFTP, tunnels, and folder mirror in one modern tabbed window per server — and runs natively on Windows, macOS, and Linux.
 
 ### Does it support keys with passphrases?
 
@@ -273,15 +273,15 @@ Smaller installer (around 10 MB vs ~100 MB for an Electron equivalent), lower RA
 
 In a single encrypted file under your OS app-data directory — or in the `submarine-data` folder when you run in [portable mode](#portable-mode-windows). Nothing in plaintext. Nothing in a global Keychain or registry hive.
 
-### Does Submarine collect telemetry or analytics?
+### Does Supermarine collect telemetry or analytics?
 
 No. There's no analytics SDK, no crash reporter that sends data home, no "phone home" call on launch. The only outbound network call beyond your SSH targets is the optional cloud-sync endpoint at `api.sinaxhpm.com`, and that endpoint only ever receives opaque ciphertext.
 
-### Can I use Submarine on my Android phone with the same servers as my desktop?
+### Can I use Supermarine on my Android phone with the same servers as my desktop?
 
 Yes. Install the APK, unlock with the same master password you use on desktop, and the encrypted vault syncs. Every server, key, and saved tunnel appears on the phone. Folder mirror is desktop-only for now; everything else (terminal, SFTP, port forwarding) works on Android.
 
-### Is Submarine on the Play Store?
+### Is Supermarine on the Play Store?
 
 No. Distribution is via sideloadable APK from the [releases page](https://github.com/sinaxhpm/submarine/releases). This keeps the same untouched binary running on every platform with no store-mandated changes.
 

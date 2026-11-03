@@ -321,7 +321,7 @@ const ServerEditor = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
     if (keyBusy) return;
     const name = await textPrompt({
       title: "Generate SSH key",
-      message: "Name the key. The name is only for you, here in Submarine.",
+      message: "Name the key. The name is only for you, here in Supermarine.",
       initialValue: `${String(newNode.name || newNode.host || "server").trim()}-key`,
       okLabel: "Generate",
       validate: (v) => (v.length === 0 ? "Give the key a name." : null),
@@ -684,7 +684,7 @@ const ServerEditor = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
           </select>
           <Hint>
             {jumpHost
-              ? `Submarine connects to ${jumpHost.name} first, then goes on to this server from there.`
+              ? `Supermarine connects to ${jumpHost.name} first, then goes on to this server from there.`
               : "Pick the SSH server to go through."}
           </Hint>
           {isSsh && newNode.proxyType && newNode.proxyType !== "none" && (
@@ -920,7 +920,7 @@ const ServerEditor = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
                   label="Open in"
                   value={o.app === "builtin" ? "builtin" : "system"}
                   onChange={(app) => setO({ app })}
-                  options={[{ value: "system", label: "This computer's RDP app" }, { value: "builtin", label: "Submarine's tab" }]}
+                  options={[{ value: "system", label: "This computer's RDP app" }, { value: "builtin", label: "Supermarine's tab" }]}
                 />
               </Row>
             )}

@@ -22,8 +22,8 @@ use std::path::{Path, PathBuf};
 const DEVICE_ID: u32 = 1;
 
 /// The name the server is told this computer has: it shows the share as
-/// "<name> on Submarine".
-const COMPUTER_NAME: &str = "Submarine";
+/// "<name> on Supermarine".
+const COMPUTER_NAME: &str = "Supermarine";
 
 /// What to share, as the tab sends it (this device's option for the server).
 #[derive(Clone, Debug, PartialEq, Deserialize)]

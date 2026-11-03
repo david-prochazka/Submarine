@@ -259,7 +259,7 @@ class SubmarinePlugin(private val activity: Activity) : Plugin(activity) {
       })
       val info = BiometricPrompt.PromptInfo.Builder()
         .setTitle(title)
-        .setSubtitle("Submarine")
+        .setSubtitle("Supermarine")
         .setNegativeButtonText("Use password")
         .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
         .build()

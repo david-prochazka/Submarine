@@ -61,7 +61,7 @@ impl Decision {
             Decision::NotWritable { dir, reason } => Some(format!(
                 "{} exists but can't be written to ({reason}), so portable mode is off and your \
                  data is kept in the usual per-user folder. Make the folder writable and restart \
-                 Submarine to use it.",
+                 Supermarine to use it.",
                 dir.display()
             )),
             _ => None,

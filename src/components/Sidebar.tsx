@@ -4,6 +4,7 @@ import {
   ChevronRight, Plus, LayoutGrid, PanelLeftClose, PanelLeftOpen, RefreshCw, Search,
 } from "lucide-react";
 import { folderTree } from "../util/folderTree";
+import BrandMark from "./BrandMark";
 
 const COLLAPSED_KEY = "submarine-sidebar-collapsed";
 
@@ -43,7 +44,7 @@ const SectionTitle = ({ children, action }: { children: string; action?: React.R
 export const Sidebar = ({
   activeTab, setActiveTab, isMobile, onLogout, profileName, syncing,
   servers = [], folders = [], activeFolderId = null, onOpenFolder, onAddServer,
-  loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, logoUrl, onSearch, searchShortcut, lockShortcut,
+  loginCount = 0, libraryCount = 0, monitorAlerts = 0, wallCount, onSearch, searchShortcut, lockShortcut,
   toggleRequest = 0, sidebarShortcut, settingsShortcut,
 }: any) => {
   const [collapsed, setCollapsed] = useState(readCollapsed);
@@ -212,8 +213,8 @@ export const Sidebar = ({
   return (
     <aside aria-label="Sidebar" className="w-[232px] h-full shrink-0 bg-sidebar border-r border-white/[0.075] flex flex-col relative z-10">
       <div data-tauri-drag-region className="h-11 shrink-0 flex items-center gap-2 pl-4 pr-2">
-        {logoUrl && <img src={logoUrl} alt="" draggable={false} className="h-5 w-5 object-contain" />}
-        <span data-tauri-drag-region className="flex-1 text-[13px] font-semibold text-white tracking-tight">Submarine</span>
+        <BrandMark className="h-5 w-5 shrink-0" />
+        <span data-tauri-drag-region className="flex-1 text-[13px] font-semibold text-white tracking-tight">Supermarine</span>
         <button
           type="button"
           onClick={toggleCollapsed}

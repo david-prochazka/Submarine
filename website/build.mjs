@@ -1,4 +1,4 @@
-// Builds the Submarine website (submarine.sinaxhpm.com) into website/dist/:
+// Builds the Supermarine website (submarine.sinaxhpm.com) into website/dist/:
 // one static page per language and page, from the strings in i18n/<lang>.json
 // (English is the source; a missing string falls back to it, with a warning).
 // No dependencies beyond Node 20+ and git.
@@ -258,14 +258,14 @@ ${alternates}
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="stylesheet" href="${assetMap["assets/site.css"]}">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Submarine">
+<meta property="og:site_name" content="Supermarine">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${abs(p)}">
 <meta property="og:image" content="${og}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Submarine: SSH, SFTP, RDP, VNC and Telnet client">
+<meta property="og:image:alt" content="Supermarine: SSH, SFTP, RDP, VNC and Telnet client">
 <meta property="og:locale" content="${lang.og}">
 ${BUILT.filter((l) => l !== lang).map((l) => `<meta property="og:locale:alternate" content="${l.og}">`).join("\n")}
 <meta name="twitter:card" content="summary_large_image">
@@ -291,7 +291,7 @@ function header(lang, page, t) {
   const navLinks = links.map(([href, label, p]) => `<a href="${href}"${p === page ? ' aria-current="page"' : ""}>${esc(label)}</a>`).join("");
   return `<a class="skip" href="#main">${esc(t.nav.skip)}</a>
 <header class="site-head"><div class="wrap">
-<a class="brand" href="${home}" aria-label="${esc(t.nav.home)}"><img src="${assetMap["assets/logo.png"]}" width="30" height="30" alt="">Submarine</a>
+<a class="brand" href="${home}" aria-label="${esc(t.nav.home)}"><img src="${assetMap["assets/logo.png"]}" width="30" height="30" alt="">Supermarine</a>
 <nav class="nav" aria-label="${esc(t.nav.menu)}">${navLinks}
 <details class="pop"><summary aria-label="${esc(t.nav.language)}">${ICON.globe}<span>${esc(lang.name)}</span></summary><div class="pop-panel lang-list">${langLinks(lang, page)}</div></details>
 <a class="cta" href="${home}#download">${esc(t.nav.download)}</a>
@@ -303,7 +303,7 @@ function header(lang, page, t) {
 function footer(lang, page, t, v) {
   return `<footer class="site-foot"><div class="wrap">
 <div class="foot-grid">
-<div><p><strong>Submarine</strong> · ${esc(t.common.tagline)}</p>
+<div><p><strong>Supermarine</strong> · ${esc(t.common.tagline)}</p>
 <p>${rich(t.footer.madeBy, { ...v, author: '<a href="https://sinaxhpm.com">Sina Xhpm</a>' }, "footer.madeBy")} ${esc(t.footer.license)}</p>
 <p>${esc(t.footer.noTracking)}</p></div>
 <ul class="foot-links">
@@ -417,8 +417,8 @@ ${features}
       {
         "@type": "SoftwareApplication",
         "@id": `${url}#app`,
-        name: "Submarine",
-        alternateName: ["Submarine SSH Client", "Submarine SSH"],
+        name: "Supermarine",
+        alternateName: ["Supermarine SSH Client", "Supermarine SSH"],
         applicationCategory: "DeveloperApplication",
         applicationSubCategory: "SSH client",
         operatingSystem: "Windows 10, Windows 11, macOS, Linux, Android",
@@ -441,7 +441,7 @@ ${features}
         inLanguage: lang.hreflang,
         mainEntity: h.faq.items.map((q) => ({ "@type": "Question", name: q.q, acceptedAnswer: { "@type": "Answer", text: stripTags(fill(q.a, v, where)) } })),
       },
-      { "@type": "WebSite", "@id": `${SITE}/#site`, name: "Submarine", url: `${SITE}/`, inLanguage: BUILT.map((l) => l.hreflang) },
+      { "@type": "WebSite", "@id": `${SITE}/#site`, name: "Supermarine", url: `${SITE}/`, inLanguage: BUILT.map((l) => l.hreflang) },
     ],
   };
   return page(lang, "home", fill(h.title, v, where), fill(h.description, v, where), ld, main, t, v);
@@ -452,7 +452,7 @@ function crumbs(lang, pageName, name) {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Submarine", item: abs(pagePath(lang, "home")) },
+      { "@type": "ListItem", position: 1, name: "Supermarine", item: abs(pagePath(lang, "home")) },
       { "@type": "ListItem", position: 2, name, item: abs(pagePath(lang, pageName)) },
     ],
   };
@@ -652,7 +652,7 @@ Sitemap: ${SITE}/sitemap.xml
 
 const securityTxt = () => {
   const expires = new Date(Date.parse(`${DATE}T00:00:00Z`) + 365 * 864e5).toISOString();
-  return `# Found a security problem in Submarine? Please open an issue that only says
+  return `# Found a security problem in Supermarine? Please open an issue that only says
 # you found one (no details), and a private channel will be set up with you.
 Contact: ${ISSUES_URL}/new
 Expires: ${expires}
@@ -663,8 +663,8 @@ Policy: ${SITE}/security/
 };
 
 const manifest = () => JSON.stringify({
-  name: "Submarine",
-  short_name: "Submarine",
+  name: "Supermarine",
+  short_name: "Supermarine",
   description: stripTags(EN.home.description),
   start_url: "/",
   display: "browser",
@@ -679,11 +679,11 @@ const manifest = () => JSON.stringify({
 function llms(v) {
   const t = STR.en;
   const list = (xs) => xs.map((x) => `- ${stripTags(fill(x, v, "llms"))}`).join("\n");
-  return `# Submarine
+  return `# Supermarine
 
 > ${stripTags(fill(t.home.description, v, "llms"))}
 
-Submarine is a free, open-source (MIT) remote-access client by Sina Xhpm: SSH terminal, two-pane SFTP, port forwarding, folder mirror, RDP, VNC and Telnet, for Windows 10/11, macOS (Apple Silicon), Linux and Android 7.0+. Built with Rust and Tauri. No ads, no analytics, no paid plan; the optional encrypted sync service is free within limits (${FACTS.limitMb} MB of encrypted data, ${FACTS.limitItems.toLocaleString("en")} items and ${FACTS.limitProfiles} profiles per account).
+Supermarine is a free, open-source (MIT) remote-access client by Sina Xhpm: SSH terminal, two-pane SFTP, port forwarding, folder mirror, RDP, VNC and Telnet, for Windows 10/11, macOS (Apple Silicon), Linux and Android 7.0+. Built with Rust and Tauri. No ads, no analytics, no paid plan; the optional encrypted sync service is free within limits (${FACTS.limitMb} MB of encrypted data, ${FACTS.limitItems.toLocaleString("en")} items and ${FACTS.limitProfiles} profiles per account).
 
 ## Pages
 
@@ -704,7 +704,7 @@ ${list(t.security.summary)}
 - Issues: ${ISSUES_URL}
 - Author: https://sinaxhpm.com
 
-When citing Submarine, please link ${SITE}/ or the GitHub repository. The name "Submarine" and its logo are not covered by the MIT license; please don't ship a fork under the Submarine name.
+When citing Supermarine, please link ${SITE}/ or the GitHub repository. The name "Supermarine" and its logo are not covered by the MIT license; please don't ship a fork under the Supermarine name.
 `;
 }
 

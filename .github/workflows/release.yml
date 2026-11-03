@@ -54,8 +54,8 @@ jobs:
             rust_target: x86_64-pc-windows-msvc
 
           # macOS Apple Silicon. We produce both:
-          #   - Submarine.app (zipped → unzip + double-click, no DMG drag)
-          #   - Submarine_x.y.z_aarch64.dmg (classic DMG installer)
+          #   - Supermarine.app (zipped → unzip + double-click, no DMG drag)
+          #   - Supermarine_x.y.z_aarch64.dmg (classic DMG installer)
           # Intel macOS users can run this same arm64 build under Rosetta 2 —
           # we dropped the dedicated macos-13 (Intel) matrix entry because
           # GitHub's Intel macOS runner pool is so scarce that jobs would
@@ -275,11 +275,11 @@ jobs:
         run: |
           APP_DIR="src-tauri/target/${{ matrix.rust_target }}/release/bundle/macos"
           cd "$APP_DIR"
-          # The .app folder is named after productName ("Submarine").
+          # The .app folder is named after productName ("Supermarine").
           # Wrap it in a versioned zip for the release asset name.
           ARCH="${{ matrix.os_name }}"
-          ZIP_NAME="Submarine-v${{ env.VERSION }}-${ARCH}.app.zip"
-          ditto -c -k --sequesterRsrc --keepParent "Submarine.app" "$ZIP_NAME"
+          ZIP_NAME="Supermarine-v${{ env.VERSION }}-${ARCH}.app.zip"
+          ditto -c -k --sequesterRsrc --keepParent "Supermarine.app" "$ZIP_NAME"
           echo "MAC_ZIP=$APP_DIR/$ZIP_NAME" >> $GITHUB_ENV
 
       # Collect every artifact this job produced into one folder for upload.
@@ -306,7 +306,7 @@ jobs:
           Copy-Item packaging/windows/README-portable.txt (Join-Path $stage.FullName README.txt)
           New-Item -ItemType Directory -Force -Path artifacts | Out-Null
           Add-Type -AssemblyName System.IO.Compression.FileSystem
-          $zip = Join-Path (Resolve-Path artifacts).Path "Submarine-v${{ env.VERSION }}-windows-x64-portable.zip"
+          $zip = Join-Path (Resolve-Path artifacts).Path "Supermarine-v${{ env.VERSION }}-windows-x64-portable.zip"
           [System.IO.Compression.ZipFile]::CreateFromDirectory($stage.FullName, $zip)
 
       - name: Stage artifacts (macOS)
@@ -507,7 +507,7 @@ jobs:
           found=0
           for apk in $(find src-tauri/gen/android/app/build/outputs/apk -type f -name "*-release-unsigned.apk"); do
             base="$(basename "$apk" .apk)"
-            cp "$apk" "artifacts/Submarine-v${{ env.VERSION }}-${base}.apk"
+            cp "$apk" "artifacts/Supermarine-v${{ env.VERSION }}-${base}.apk"
             found=$((found + 1))
           done
           if [ "$found" -eq 0 ]; then
@@ -687,7 +687,7 @@ jobs:
         uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
-          name: Submarine ${{ steps.tag.outputs.TAG }}
+          name: Supermarine ${{ steps.tag.outputs.TAG }}
           draft: true
           generate_release_notes: true
           files: release-files/*

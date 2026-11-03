@@ -1,14 +1,14 @@
-Submarine - portable
-====================
+Supermarine - portable
+======================
 
 Run submarine.exe. Because the submarine-data folder sits next to it,
-Submarine keeps everything it saves in that folder instead of your Windows
+Supermarine keeps everything it saves in that folder instead of your Windows
 user profile: profiles, the cloud sign-in, the window position and the UI
 preferences. Keep the two together in a folder you can write to - a USB
-stick is fine. Remove submarine-data and Submarine goes back to the usual
+stick is fine. Remove submarine-data and Supermarine goes back to the usual
 per-user folders, exactly like the installed build.
 
-Bringing data over from an installed copy: close Submarine, then copy two
+Bringing data over from an installed copy: close Supermarine, then copy two
 things into submarine-data:
 
   1. The contents of %APPDATA%\com.submarine.app - all except
