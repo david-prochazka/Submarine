@@ -1,4 +1,4 @@
-import { Search, Plus, Server, Monitor, TerminalSquare, Folder, FolderPlus, ChevronRight, ArrowLeft, ArrowRight, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound, ArrowUpDown } from "lucide-react";
+import { Search, Plus, Server, Monitor, TerminalSquare, Folder, FolderPlus, ChevronRight, ArrowLeft, ArrowRight, LayoutGrid, List, MoreHorizontal, Pencil, Trash2, Zap, Check, X, Copy, GripVertical, ShieldAlert, KeyRound, ArrowUpDown, ListChecks, FolderInput } from "lucide-react";
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useConfirm } from "../ui/confirm";
@@ -48,7 +48,7 @@ const writePref = (key: string, value: string) => {
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
-export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, serverStatus = {}, lastConnected = {}, onImport, isMobile }: any) => {
+export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp, onActiveFolderChange, onOpenServer, onEditServer, onAddClick, onQuickConnect, onRemoveServer, onRemoveServers, onMoveServers, onRemoveFolder, onRenameFolder, onCreateFolder, onMoveServer, onMoveFolder, onCloneServer, onReorderServers, onAllowHeld, keyChange, onAcceptKey, heldDeletions, onResolveDeletions, serverStatus = {}, lastConnected = {}, onImport, isMobile }: any) => {
   const [search, setSearch] = useState("");
   const [view, setViewState] = useState<ViewMode>(() => readPref(VIEW_KEY, ["grid", "list"] as const, "grid"));
   const setView = (v: ViewMode) => { setViewState(v); writePref(VIEW_KEY, v); };
@@ -457,6 +457,156 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
   }, [folderDragId]);
   const draggedFolder = folderDragId != null ? folders?.find((f: any) => f.id === folderDragId) : null;
 
+  // Select mode: clicks pick servers instead of opening them, and a bar at
+  // the bottom acts on the picked ones. Dragging across the page draws a box
+  // that picks every server it touches (Shift or ⌘ adds to what's picked).
+  const canSelect = !!onRemoveServers || !!onMoveServers;
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<number>>(() => new Set());
+  const exitSelect = () => { setSelecting(false); setSelected(new Set()); };
+  useEffect(() => { exitSelect(); }, [activeFolderId]);
+  // Only what's on screen counts: a filter can hide picked servers.
+  const selectedIds: number[] = orderedServers.filter((s: any) => selected.has(s.id)).map((s: any) => s.id);
+  const lastPickedRef = useRef<number | null>(null);
+  const pick = (e: React.MouseEvent, id: number) => {
+    setSelecting(true);
+    const last = lastPickedRef.current;
+    if (e.shiftKey && last !== null && last !== id) {
+      const ids = orderedServers.map((s: any) => s.id);
+      const [a, b] = [ids.indexOf(last), ids.indexOf(id)].sort((x, y) => x - y);
+      if (a >= 0) {
+        setSelected((prev) => new Set([...prev, ...ids.slice(a, b + 1)]));
+        lastPickedRef.current = id;
+        return;
+      }
+    }
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+    lastPickedRef.current = id;
+  };
+  const onServerClick = (e: React.MouseEvent, s: any) => {
+    if (draggedRef.current) return;
+    if (canSelect && (selecting || (!isMobile && (e.metaKey || e.ctrlKey)))) pick(e, s.id);
+    else onOpenServer(s);
+  };
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [band, setBand] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const startMarquee = (e: React.PointerEvent) => {
+    const scroller = scrollRef.current;
+    if (!canSelect || isMobile || !scroller || e.button !== 0 || e.pointerType !== "mouse" || dragId !== null || folderDragId !== null) return;
+    const t = e.target as HTMLElement;
+    const onServer = !!t.closest("[data-sid]");
+    if (onServer ? !selecting : t.closest("button, a, input, select, textarea, label, [data-drop-folder], [role=menu]")) return;
+    const additive = e.shiftKey || e.metaKey || e.ctrlKey;
+    const base = additive ? new Set(selected) : new Set<number>();
+    const toContent = (x: number, y: number) => {
+      const r = scroller.getBoundingClientRect();
+      return { x: x - r.left + scroller.scrollLeft, y: y - r.top + scroller.scrollTop };
+    };
+    const start = toContent(e.clientX, e.clientY);
+    const pointer = { x: e.clientX, y: e.clientY };
+    let moved = false;
+    let raf = 0;
+    const update = () => {
+      const p = toContent(pointer.x, pointer.y);
+      if (!moved) {
+        if (Math.hypot(p.x - start.x, p.y - start.y) < 5) return;
+        moved = true;
+        draggedRef.current = true;
+        document.body.style.userSelect = "none";
+        window.getSelection()?.removeAllRanges();
+        setSelecting(true);
+      }
+      const box = { x: Math.min(start.x, p.x), y: Math.min(start.y, p.y), w: Math.abs(p.x - start.x), h: Math.abs(p.y - start.y) };
+      setBand(box);
+      const next = new Set(base);
+      gridRef.current?.querySelectorAll<HTMLElement>("[data-sid]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        const a = toContent(r.left, r.top);
+        if (a.x < box.x + box.w && a.x + r.width > box.x && a.y < box.y + box.h && a.y + r.height > box.y) next.add(Number(el.dataset.sid));
+      });
+      setSelected(next);
+    };
+    // Near the top or bottom edge the page scrolls, so the box can reach
+    // servers that are out of view.
+    const tick = () => {
+      if (moved) {
+        const r = scroller.getBoundingClientRect();
+        const edge = 40;
+        const dy = pointer.y < r.top + edge ? -Math.ceil((r.top + edge - pointer.y) / 3) : pointer.y > r.bottom - edge ? Math.ceil((pointer.y - (r.bottom - edge)) / 3) : 0;
+        if (dy) { scroller.scrollTop += dy; update(); }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    const move = (ev: PointerEvent) => { pointer.x = ev.clientX; pointer.y = ev.clientY; update(); };
+    const finish = () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", finish);
+      window.removeEventListener("pointercancel", finish);
+      scroller.removeEventListener("scroll", update);
+      document.body.style.userSelect = "";
+      setBand(null);
+      // A plain click on empty space clears the picks.
+      if (!moved && !onServer && !additive) setSelected(new Set());
+      setTimeout(() => { draggedRef.current = false; }, 0);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", finish);
+    window.addEventListener("pointercancel", finish);
+    scroller.addEventListener("scroll", update);
+  };
+
+  const folderOptions = (() => {
+    const out: { id: number; label: string }[] = [];
+    const walk = (parent: number | null, depth: number) => {
+      for (const f of tree.childrenOf(parent)) {
+        out.push({ id: f.id, label: `${"\u00a0\u00a0\u00a0".repeat(depth)}${f.name}` });
+        walk(f.id, depth + 1);
+      }
+    };
+    walk(null, 0);
+    return out;
+  })();
+  const deleteSelected = async () => {
+    const ids = selectedIds;
+    if (!ids.length || !onRemoveServers) return;
+    const one = ids.length === 1 ? orderedServers.find((s: any) => s.id === ids[0]) : null;
+    const ok = await confirm({
+      title: one ? "Delete server?" : `Delete ${ids.length} servers?`,
+      message: one ? `“${one.name}” will be removed from this profile.` : `${ids.length} servers will be removed from this profile.`,
+      okLabel: "Delete",
+      destructive: true,
+    });
+    if (!ok) return;
+    await onRemoveServers(ids);
+    exitSelect();
+  };
+  const moveSelected = async (folderId: number | null) => {
+    const ids = selectedIds;
+    if (!ids.length || !onMoveServers) return;
+    await onMoveServers(ids, folderId);
+    exitSelect();
+  };
+
+  const selectKeysRef = useRef<(e: KeyboardEvent) => void>(() => {});
+  selectKeysRef.current = (e: KeyboardEvent) => {
+    if (!selecting || (e.target as HTMLElement)?.closest?.("input, textarea, select, [contenteditable], [role=dialog]")) return;
+    if (e.key === "Escape" && menuFor === null) { e.preventDefault(); exitSelect(); }
+    else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") { e.preventDefault(); setSelected(new Set(orderedServers.map((s: any) => s.id))); }
+    else if ((e.key === "Delete" || e.key === "Backspace") && selectedIds.length && onRemoveServers) { e.preventDefault(); void deleteSelected(); }
+  };
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => selectKeysRef.current(e);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Back and forward walk the folders opened here, the way a browser walks
   // pages. Opening a folder from the sidebar counts as a step too.
   const [hist, setHist] = useState<{ stack: (number | null)[]; i: number }>(() => ({ stack: [activeFolderId], i: 0 }));
@@ -520,6 +670,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     : "[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:translate-y-[3px] [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-within:opacity-100 [@media(hover:hover)]:group-focus-within:translate-y-0";
 
   const actions = (s: any, compact = false) => {
+    if (selecting) return null;
     const open = menuFor === s.id;
     return (
       <div className={`flex items-center justify-end gap-1.5 transition duration-150 ${reveal(open)}`} onClick={(e) => e.stopPropagation()}>
@@ -559,7 +710,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     );
   };
 
-  const grip = (s: any, className: string) => canReorder ? (
+  const grip = (s: any, className: string) => canReorder && !selecting ? (
     // Pointer only, so not a Tab stop: from the keyboard it would do nothing.
     <button
       type="button"
@@ -574,6 +725,12 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
       <GripVertical size={14} />
     </button>
   ) : null;
+
+  const checkMark = (on: boolean) => (
+    <span aria-hidden className={`w-[18px] h-[18px] shrink-0 rounded-full flex items-center justify-center transition-colors ${on ? "bg-primary text-black" : "shadow-[inset_0_0_0_1.5px_rgb(var(--subtle))]"}`}>
+      {on && <Check size={12} strokeWidth={3} />}
+    </span>
+  );
 
   const iconTile = (s: any, size = 36) => {
     const P = protocolOf(s);
@@ -599,13 +756,14 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     const st = statusOf(s);
     const since = sinceLabel(lastConnected[s.id]);
     const tunnels = tunnelCount(s);
+    const isPicked = selecting && selected.has(s.id);
     return (
       <article
         key={`server-${s.id}`}
         data-sid={s.id}
         aria-label={s.name}
-        onClick={() => { if (!draggedRef.current) onOpenServer(s); }}
-        className="group tile tile-hover p-4 cursor-pointer"
+        onClick={(e) => onServerClick(e, s)}
+        className={`group tile p-4 cursor-pointer select-none ${isPicked ? "bg-primary/[0.06] shadow-[0_0_0_1.5px_rgb(var(--primary))]" : "tile-hover"}`}
       >
         {grip(s, "absolute left-0.5 top-[25px]")}
         <div className="flex items-start gap-3">
@@ -613,11 +771,11 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
           <div className="flex-1 min-w-0">
             <h2 className="text-[14px] leading-5 font-semibold text-white">
               {/* A button so the keyboard can open it too: its click bubbles to the card. */}
-              <button type="button" className="block max-w-full truncate text-left rounded-sm">{s.name}</button>
+              <button type="button" aria-pressed={selecting ? isPicked : undefined} className="block max-w-full truncate text-left rounded-sm">{s.name}</button>
             </h2>
             <div className="mt-px font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</div>
           </div>
-          {st && statusPill(st)}
+          {selecting ? checkMark(isPicked) : st && statusPill(st)}
         </div>
         <div className="flex flex-wrap gap-1.5 mt-3.5">
           <span className="chip">{protocolOf(s).label}</span>
@@ -626,7 +784,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
           {s.autostart && <span className="chip">Opens at start</span>}
         </div>
         <div className="relative flex items-center mt-3.5 h-6">
-          <span className={`text-[12px] text-zinc-500 transition-opacity hidden [@media(hover:hover)]:inline ${menuFor === s.id ? "opacity-0" : "group-hover:opacity-0 group-focus-within:opacity-0"}`}>
+          <span className={`text-[12px] text-zinc-500 transition-opacity hidden [@media(hover:hover)]:inline ${menuFor === s.id ? "opacity-0" : selecting ? "" : "group-hover:opacity-0 group-focus-within:opacity-0"}`}>
             {since ? `Last connected ${since.charAt(0).toLowerCase()}${since.slice(1)}` : "Not connected from this device yet"}
           </span>
           <div className="absolute right-0 top-0">{actions(s)}</div>
@@ -645,18 +803,19 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
     }
     const st = statusOf(s);
     const P = protocolOf(s);
+    const isPicked = selecting && selected.has(s.id);
     return (
       <tr
         key={`server-${s.id}`}
         data-sid={s.id}
-        onClick={() => { if (!draggedRef.current) onOpenServer(s); }}
-        className={`group h-11 cursor-pointer hover:bg-white/5 focus-within:bg-white/5 ${i > 0 ? "border-t border-white/[0.075]" : ""}`}
+        onClick={(e) => onServerClick(e, s)}
+        className={`group h-11 cursor-pointer select-none ${isPicked ? "bg-primary/10" : "hover:bg-white/5 focus-within:bg-white/5"} ${i > 0 ? "border-t border-white/[0.075]" : ""}`}
       >
         <td className="pl-4 pr-3 relative">
           {grip(s, "absolute left-0 top-1/2 -translate-y-1/2")}
           <span className="flex items-center gap-2.5 min-w-0 font-medium text-white">
-            <span aria-hidden className="w-2 h-2 shrink-0 rounded-full" style={{ background: s.color || "rgb(var(--subtle))" }} />
-            <button type="button" className="truncate text-left rounded">{s.name}</button>
+            {selecting ? checkMark(isPicked) : <span aria-hidden className="w-2 h-2 shrink-0 rounded-full" style={{ background: s.color || "rgb(var(--subtle))" }} />}
+            <button type="button" aria-pressed={selecting ? isPicked : undefined} className="truncate text-left rounded">{s.name}</button>
           </span>
         </td>
         <td className="hidden sm:table-cell px-3 font-mono text-[12px] text-zinc-400 truncate">{addressOf(s)}</td>
@@ -789,7 +948,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
   const path = activeFolderId !== null && !isSearching ? tree.pathOf(activeFolderId) : [];
 
   return (
-    <div className="flex-1 flex flex-col h-full min-h-0 bg-surface">
+    <div className="relative flex-1 flex flex-col h-full min-h-0 bg-surface">
       <header className="h-[52px] shrink-0 flex items-center gap-2 pl-2.5 pr-3 border-b border-white/[0.075]">
         <div className="flex gap-0.5">
           <button type="button" onClick={() => go(-1)} disabled={hist.i === 0} aria-label="Back" title="Back (⌘[)" className="icon-btn">
@@ -836,6 +995,11 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
                 <List size={14} aria-hidden />
               </button>
             </div>
+            {canSelect && (
+              <button type="button" onClick={() => (selecting ? exitSelect() : setSelecting(true))} aria-pressed={selecting} aria-label="Select servers" title="Select servers (or drag across the page)" className={`icon-btn ${selecting ? "bg-primary/15 text-primary" : ""}`}>
+                <ListChecks size={16} aria-hidden />
+              </button>
+            )}
             {onCreateFolder && (
               <button type="button" onClick={() => setNewFolder((v) => v ?? "")} aria-label="New folder" title="New folder" className="icon-btn">
                 <FolderPlus size={16} aria-hidden />
@@ -859,7 +1023,7 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
       {isEmpty ? (
         <ServersEmpty onNewServer={() => onAddClick(null)} onQuickConnect={onQuickConnect} onImport={(req: ImportRequest) => onImport?.(req)} />
       ) : (
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${isMobile ? "px-4 pt-5 pb-8" : "px-8 pt-7 pb-10"}`}>
+        <div ref={scrollRef} onPointerDown={startMarquee} className={`relative flex-1 overflow-y-auto custom-scrollbar ${isMobile ? "px-4 pt-5" : "px-8 pt-7"} ${selecting ? "pb-24" : isMobile ? "pb-8" : "pb-10"}`}>
           {(heldCount > 0 && onAllowHeld) || (deletionCount > 0 && onResolveDeletions) || (keyChange && onAcceptKey) ? (
             <div className="flex flex-col gap-2 mb-5">
               {heldCount > 0 && onAllowHeld && banner(
@@ -986,12 +1150,60 @@ export const NodeGrid = ({ servers, folders, activeFolderId: activeFolderIdProp,
             </div>
           )}
 
-          {canReorder && displayedServers.length > 1 && !isMobile && (
+          {canReorder && !selecting && displayedServers.length > 1 && !isMobile && (
             <p className="flex items-center gap-2 mt-7 text-[12px] text-zinc-500">
               <GripVertical size={13} aria-hidden />
-              Drag a server by its handle to reorder it, or onto a folder or a step of the path to move it.
+              Drag a server by its handle to reorder it, or onto a folder or a step of the path to move it.{canSelect && " Drag across empty space to select several."}
             </p>
           )}
+
+          {band && (
+            <div
+              aria-hidden
+              className="absolute z-20 pointer-events-none rounded-[3px] bg-primary/10 shadow-[inset_0_0_0_1px_rgb(var(--primary))]"
+              style={{ left: band.x, top: band.y, width: band.w, height: band.h }}
+            />
+          )}
+        </div>
+      )}
+
+      {selecting && !isEmpty && (
+        <div role="toolbar" aria-label="Selected servers" className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 max-w-[calc(100%-32px)] flex items-center gap-1.5 p-1.5 pl-3.5 rounded-xl bg-elevated shadow-pop animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <span role="status" className="text-[12.5px] font-medium text-white whitespace-nowrap tabular-nums mr-1.5">
+            {selectedIds.length === 0 ? "Select servers" : `${selectedIds.length} selected`}
+          </span>
+          <button
+            type="button"
+            onClick={() => setSelected(selectedIds.length === orderedServers.length ? new Set() : new Set(orderedServers.map((s: any) => s.id)))}
+            disabled={orderedServers.length === 0}
+            className="btn btn-ghost btn-sm whitespace-nowrap"
+          >
+            {selectedIds.length === orderedServers.length && orderedServers.length > 0 ? "Select none" : "Select all"}
+          </button>
+          {onMoveServers && (
+            <label className={`btn btn-sm relative whitespace-nowrap ${selectedIds.length ? "" : "opacity-50 pointer-events-none"}`}>
+              <FolderInput size={13} aria-hidden /><span className="hidden sm:inline">Move to…</span>
+              <select
+                value=""
+                disabled={!selectedIds.length}
+                onChange={(e) => { const v = e.target.value; if (v) void moveSelected(v === "root" ? null : Number(v)); }}
+                aria-label="Move selected servers to folder"
+                className="absolute inset-0 opacity-0 cursor-pointer"
+              >
+                <option value="" disabled>Move to…</option>
+                {activeFolderId !== null && <option value="root">Top level</option>}
+                {folderOptions.map((f) => <option key={f.id} value={f.id} disabled={f.id === activeFolderId}>{f.label}</option>)}
+              </select>
+            </label>
+          )}
+          {onRemoveServers && (
+            <button type="button" onClick={deleteSelected} disabled={!selectedIds.length} className="btn btn-sm whitespace-nowrap text-danger hover:bg-danger/10">
+              <Trash2 size={13} aria-hidden /><span className="hidden sm:inline">Delete</span>
+            </button>
+          )}
+          <button type="button" onClick={exitSelect} aria-label="Done selecting" title="Done (Esc)" className="icon-btn">
+            <X size={15} aria-hidden />
+          </button>
         </div>
       )}
 

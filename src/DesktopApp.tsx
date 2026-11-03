@@ -768,6 +768,33 @@ function DesktopApp() {
     } catch (e) { addLog(`DELETE_EXCEPTION: ${e}`, "error"); }
   };
 
+  // Bulk actions from the Servers page's select mode: one refresh and one
+  // sync at the end, and a failure on one server doesn't stop the rest.
+  const removeServers = async (ids: number[]) => {
+    let done = 0;
+    for (const id of ids) {
+      try {
+        await invoke("delete_server", { id });
+        if (activeProfile) forgetServerBookmarks(activeProfile, id);
+        done++;
+      } catch (e) { addLog(`DELETE_EXCEPTION: ${e}`, "error"); }
+    }
+    await refreshServers();
+    if (done) bumpSync();
+    addLog(`${done} ${done === 1 ? "server" : "servers"} removed.`, "info");
+  };
+  const moveServersToFolder = async (ids: number[], folderId: number | null) => {
+    let done = 0;
+    for (const id of ids) {
+      try { await invoke("move_server_to_folder", { id, folderId }); done++; }
+      catch (e) { addLog(`MOVE_ERROR: ${e}`, "error"); }
+    }
+    await refreshServers();
+    if (done) bumpSync();
+    const where = folderId === null ? "the top level" : `"${folders.find((f: any) => f.id === folderId)?.name ?? "folder"}"`;
+    addLog(`${done} ${done === 1 ? "server" : "servers"} moved to ${where}.`, "info");
+  };
+
   const removeFolder = async (id: number) => {
     // delete_folder takes its subfolders and every server in them along; note
     // which servers go, for the same per-server cleanup removeServer does.
@@ -2146,6 +2173,8 @@ function DesktopApp() {
                 lastConnected={lastConnected}
                 onImport={(req: ImportRequest) => setImportRequest((prev) => ({ ...req, n: (prev?.n ?? 0) + 1 }))}
                 onRemoveServer={removeServer}
+                onRemoveServers={removeServers}
+                onMoveServers={moveServersToFolder}
                 onRemoveFolder={removeFolder}
                 onRenameFolder={renameFolder}
                 onCreateFolder={createFolder}
