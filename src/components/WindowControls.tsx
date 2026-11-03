@@ -9,7 +9,7 @@ export const HAS_LIGHTS = !IS_ANDROID;
 const NATIVE_LIGHTS = IS_MAC && IS_TAURI;
 
 // Left padding for a bar that runs under the lights.
-export const LIGHTS_INSET = "pl-[80px]";
+export const LIGHTS_INSET = "pl-[92px]";
 
 const appWindow = IS_TAURI ? getCurrentWindow() : null;
 
