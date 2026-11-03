@@ -19892,6 +19892,42 @@ struct ImportedHost {
     /// Resolved `ProxyJump`. Informational only; live proxy config still
     /// happens in the Server details panel.
     proxy_jump: Option<String>,
+    /// The folder the export kept the host in, as `/`-separated names from
+    /// the top (`Clients/Acme`). The importer creates the ones that are missing.
+    folder: Option<String>,
+}
+
+/// Names repeat across folders, and the import list keys rows by name, so a
+/// taken name gets ` (2)`, ` (3)`, … The next number is kept per name: a list
+/// of N sessions with one name must not cost N² tries (an export of 20,000 of
+/// them froze the window for a minute).
+#[derive(Default)]
+struct UniqueNames {
+    taken: std::collections::HashSet<String>,
+    next_number: std::collections::HashMap<String, u32>,
+}
+
+impl UniqueNames {
+    fn claim(&mut self, name: &str) -> String {
+        if self.taken.insert(name.to_string()) {
+            return name.to_string();
+        }
+        let next = self.next_number.entry(name.to_string()).or_insert(2);
+        loop {
+            let alias = format!("{} ({})", name, next);
+            *next += 1;
+            if self.taken.insert(alias.clone()) {
+                return alias;
+            }
+        }
+    }
+}
+
+/// A folder path as `a/b`: segments trimmed, empty ones dropped, `None` when
+/// nothing is left (the top level).
+fn folder_path<'a>(segments: impl IntoIterator<Item = &'a str>) -> Option<String> {
+    let parts: Vec<&str> = segments.into_iter().map(str::trim).filter(|s| !s.is_empty()).collect();
+    (!parts.is_empty()).then(|| parts.join("/"))
 }
 
 /// Read the user's OpenSSH client config (default `~/.ssh/config`) and
@@ -19959,6 +19995,7 @@ async fn parse_ssh_config(path: Option<String>) -> Result<Vec<ImportedHost>, Str
                     user: b.user.clone().unwrap_or_default(),
                     identity_file: b.identity_file.clone(),
                     proxy_jump: b.proxy_jump.clone(),
+                    folder: None,
                 });
             }
         }
@@ -20100,6 +20137,7 @@ fn parse_client_import(text: String) -> Result<Vec<ImportedHost>, String> {
         let arr: Vec<serde_json::Value> = serde_json::from_str(trimmed)
             .map_err(|e| format!("JSON parse failed: {}", e))?;
         let mut out = Vec::with_capacity(arr.len());
+        let mut names = UniqueNames::default();
         for (i, v) in arr.iter().enumerate() {
             let obj = v.as_object().ok_or_else(|| {
                 format!("Entry #{} is not an object", i + 1)
@@ -20131,13 +20169,20 @@ fn parse_client_import(text: String) -> Result<Vec<ImportedHost>, String> {
             let user = get_str(&["user", "username"]).unwrap_or_default();
             let identity_file = get_str(&["identity_file", "identityFile", "key", "privateKey"]);
             let proxy_jump = get_str(&["proxy_jump", "proxyJump", "jump"]);
+            // `"Clients/Acme"`, or the same as `["Clients", "Acme"]`.
+            let folder = ["folder", "group", "path"].iter().find_map(|k| match obj.get(*k)? {
+                serde_json::Value::String(s) => folder_path(s.split('/')),
+                serde_json::Value::Array(a) => folder_path(a.iter().filter_map(|x| x.as_str())),
+                _ => None,
+            });
             out.push(ImportedHost {
-                host_alias: alias,
+                host_alias: names.claim(&alias),
                 hostname,
                 port,
                 user,
                 identity_file,
                 proxy_jump,
+                folder,
             });
         }
         if out.is_empty() {
@@ -20176,6 +20221,7 @@ fn parse_putty_reg(text: &str) -> Result<Vec<ImportedHost>, String> {
                     user,
                     identity_file: None,
                     proxy_jump: None,
+                    folder: None,
                 });
             }
         }
@@ -20298,22 +20344,26 @@ fn strip_reg_dword(val: &str) -> Option<u32> {
 fn parse_mobaxterm_sessions(text: &str) -> Result<Vec<ImportedHost>, String> {
     const SSH: &str = "0";
     let mut out: Vec<ImportedHost> = Vec::new();
-    // Session names repeat across folders; the import list keys rows by name.
-    let mut names: std::collections::HashSet<String> = std::collections::HashSet::new();
-    // The next number to try for a name that is already taken.
-    let mut next_number: std::collections::HashMap<String, u32> = std::collections::HashMap::new();
+    let mut names = UniqueNames::default();
     let mut in_bookmarks = false;
+    // The section's `SubRep`, `\`-separated in the file.
+    let mut folder: Option<String> = None;
     for raw in text.lines() {
         let line = raw.trim();
         if line.is_empty() || line.starts_with(';') { continue; }
         if line.starts_with('[') {
             in_bookmarks = line.starts_with("[Bookmarks");
+            folder = None;
             continue;
         }
         if !in_bookmarks { continue; }
         let Some((name, value)) = line.split_once('=') else { continue; };
         let name = name.trim();
-        if name == "SubRep" || name == "ImgNum" { continue; }
+        if name == "SubRep" {
+            folder = folder_path(value.split('\\'));
+            continue;
+        }
+        if name == "ImgNum" { continue; }
         let mut blocks = value.trim().split('#');
         let (Some(_reconnect), Some(_icon), Some(settings)) = (blocks.next(), blocks.next(), blocks.next()) else {
             continue;
@@ -20333,27 +20383,14 @@ fn parse_mobaxterm_sessions(text: &str) -> Result<Vec<ImportedHost>, String> {
         let identity_file = Some(field(14))
             .filter(|p| !p.is_empty())
             .map(|p| p.replace("_CurrentDrive_", "C"));
-        let mut alias = name.to_string();
-        if !names.insert(alias.clone()) {
-            // Go on from where this name left off, not from 2 each time: a
-            // list of N sessions with one name must not cost N² tries (an
-            // export of 20,000 of them froze the window for a minute).
-            let next = next_number.entry(name.to_string()).or_insert(2);
-            loop {
-                alias = format!("{} ({})", name, next);
-                *next += 1;
-                if names.insert(alias.clone()) {
-                    break;
-                }
-            }
-        }
         out.push(ImportedHost {
-            host_alias: alias,
+            host_alias: names.claim(name),
             hostname: hostname.to_string(),
             port,
             user: user.to_string(),
             identity_file,
             proxy_jump: mobaxterm_jump_hosts(field(8), field(9), field(10)),
+            folder: folder.clone(),
         });
     }
     if out.is_empty() {
@@ -20483,6 +20520,34 @@ mod client_import_tests {
         unique.sort_unstable();
         unique.dedup();
         assert_eq!(unique.len(), 40_000, "every row has its own name");
+    }
+
+    #[test]
+    fn mobaxterm_sessions_keep_their_folder() {
+        let mut text = export(&[session("top", 109, "0%a.example%22%u%%-1%-1%%%%%0%0%0%%%-1")]);
+        text.push_str("[Bookmarks_1]\r\nSubRep=Clients\\Acme\r\nImgNum=41\r\n");
+        text.push_str(&session("web", 109, "0%b.example%22%u%%-1%-1%%%%%0%0%0%%%-1"));
+        let hosts = parse_client_import(text).unwrap();
+        assert_eq!(hosts[0].folder, None);
+        assert_eq!(hosts[1].folder.as_deref(), Some("Clients/Acme"));
+    }
+
+    #[test]
+    fn json_entries_keep_their_folder_and_repeated_names_stay_apart() {
+        let text = r#"[
+            {"name": "web", "host": "a.example", "folder": "integritty"},
+            {"name": "web", "host": "b.example", "folder": " Clients / Acme /"},
+            {"name": "db", "host": "c.example", "group": ["Clients", "Acme"]},
+            {"name": "loose", "host": "d.example", "folder": ""}
+        ]"#;
+        let hosts = parse_client_import(text.to_string()).unwrap();
+        let got: Vec<(&str, Option<&str>)> = hosts.iter().map(|h| (h.host_alias.as_str(), h.folder.as_deref())).collect();
+        assert_eq!(got, vec![
+            ("web", Some("integritty")),
+            ("web (2)", Some("Clients/Acme")),
+            ("db", Some("Clients/Acme")),
+            ("loose", None),
+        ]);
     }
 
     #[test]

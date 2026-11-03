@@ -1147,6 +1147,7 @@ const ServerEditor = ({ isOpen, onClose, newNode, setNewNode, onSave, credential
         request={importRequest}
         onClose={() => setImportOpen(false)}
         refreshServers={refreshServers}
+        refreshFolders={refreshFolders}
         refreshSshKeys={refreshSshKeys}
       />
     </div>

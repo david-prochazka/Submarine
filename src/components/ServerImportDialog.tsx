@@ -14,7 +14,10 @@ type ImportedHost = {
   user: string;
   identity_file: string | null;
   proxy_jump: string | null;
+  folder: string | null;
 };
+
+type Folder = { id: number; name: string; parent_id: number | null };
 
 // What `import_ssh_key_file` hands back after putting a key file in the vault.
 type ImportedSshKey = {
@@ -31,11 +34,12 @@ const errText = (e: any) => (typeof e === "string" ? e : e?.message || String(e)
 // Hosts from ~/.ssh/config, or from a PuTTY / MobaXterm / JSON export (the
 // backend detects which), added as servers. Opened from the editor's header
 // (`open`) or by the servers home's empty state (`request`).
-export default function ServerImportDialog({ open, request, onClose, refreshServers, refreshSshKeys }: {
+export default function ServerImportDialog({ open, request, onClose, refreshServers, refreshFolders, refreshSshKeys }: {
   open: boolean;
   request?: NumberedImportRequest | null;
   onClose: () => void;
   refreshServers?: () => unknown;
+  refreshFolders?: () => unknown;
   refreshSshKeys?: () => unknown;
 }) {
   const confirm = useConfirm();
@@ -171,6 +175,38 @@ export default function ServerImportDialog({ open, request, onClose, refreshServ
         });
       }
     }
+    // A host's folder path, `a/b`, to a folder id: an existing folder of
+    // that name under the same parent is used, a missing one is made. `null`
+    // is the top level, also where a host goes when its folder can't be made.
+    let folders = await invoke<Folder[]>("get_folders").catch(() => [] as Folder[]);
+    const folderIds = new Map<string, number | null>();
+    let foldersMade = 0;
+    const folderFor = async (path: string | null): Promise<number | null> => {
+      if (!path) return null;
+      if (folderIds.has(path)) return folderIds.get(path)!;
+      let parentId: number | null = null;
+      for (const name of path.split("/")) {
+        const find = () => folders.filter((f) => f.name === name && (f.parent_id ?? null) === parentId).sort((a, b) => a.id - b.id)[0];
+        let folder: Folder | undefined = find();
+        if (!folder) {
+          try {
+            await invoke("add_folder", { name, parentId });
+            folders = await invoke<Folder[]>("get_folders");
+            folder = folders.filter((f) => f.name === name && (f.parent_id ?? null) === parentId).sort((a, b) => b.id - a.id)[0];
+            foldersMade++;
+          } catch {
+            folder = undefined;
+          }
+        }
+        if (!folder) {
+          folderIds.set(path, null);
+          return null;
+        }
+        parentId = folder.id;
+      }
+      folderIds.set(path, parentId);
+      return parentId;
+    };
     for (const host of hosts) {
       if (!selected.has(host.host_alias)) continue;
       let key: ImportedSshKey | null = null;
@@ -200,7 +236,7 @@ export default function ServerImportDialog({ open, request, onClose, refreshServ
           username: host.user ? host.user.trim() : "",
           password: null,
           credentialId: null,
-          folderId: null,
+          folderId: await folderFor(host.folder),
           proxyType: "none",
           proxyHost: "",
           proxyPort: 1080,
@@ -220,6 +256,9 @@ export default function ServerImportDialog({ open, request, onClose, refreshServ
     setBusy(false);
     if (failed > 0) setError(`${ok} imported, ${failed} failed${lastErr ? `: ${lastErr}` : ""}`);
     try { await refreshServers?.(); } catch { /* the list refreshes on its own later */ }
+    if (foldersMade > 0) {
+      try { await refreshFolders?.(); } catch { /* same */ }
+    }
     if (keysAttached > 0) {
       try { await refreshSshKeys?.(); } catch { /* same */ }
     }
@@ -278,7 +317,7 @@ export default function ServerImportDialog({ open, request, onClose, refreshServ
                 <ul className="mt-1.5 ml-4 list-disc space-y-1 text-zinc-500">
                   <li><span className="text-zinc-300">PuTTY</span>: export <code className="font-mono text-zinc-300">HKCU\Software\SimonTatham\PuTTY\Sessions</code> with regedit, then paste the .reg file.</li>
                   <li><span className="text-zinc-300">MobaXterm</span>: Export sessions, then paste the <code className="font-mono text-zinc-300">.mxtsessions</code> file.</li>
-                  <li><span className="text-zinc-300">JSON</span>: an array of <code className="font-mono text-zinc-300">{`{name, host, port, user}`}</code>, or Termius-style <code className="font-mono text-zinc-300">{`{label, address, port, username}`}</code>.</li>
+                  <li><span className="text-zinc-300">JSON</span>: an array of <code className="font-mono text-zinc-300">{`{name, host, port, user}`}</code>, or Termius-style <code className="font-mono text-zinc-300">{`{label, address, port, username}`}</code>. An optional <code className="font-mono text-zinc-300">folder</code> such as <code className="font-mono text-zinc-300">"Clients/Acme"</code> puts the server in that folder, made if missing.</li>
                 </ul>
               </div>
               <textarea
@@ -328,7 +367,10 @@ export default function ServerImportDialog({ open, request, onClose, refreshServ
                     <label key={h.host_alias} className={`flex items-start gap-3 px-2.5 py-2 rounded-lg cursor-pointer transition-colors ${on ? "bg-primary/10" : "hover:bg-white/[0.05]"}`}>
                       <input type="checkbox" checked={on} onChange={() => toggleOne(h.host_alias)} className="mt-0.5 accent-primary shrink-0" />
                       <span className="flex-1 min-w-0">
-                        <span className="block font-medium text-white truncate">{h.host_alias}</span>
+                        <span className="flex items-baseline gap-2 min-w-0">
+                          <span className="font-medium text-white truncate">{h.host_alias}</span>
+                          {h.folder && <span className="shrink-0 max-w-[45%] truncate text-[11.5px] text-zinc-500">{h.folder}</span>}
+                        </span>
                         <span className="block text-[12px] font-mono text-zinc-400 truncate">{h.user ? `${h.user}@` : ""}{h.hostname}:{h.port}</span>
                         {(h.identity_file || h.proxy_jump) && (
                           <span className="block mt-0.5 text-[11.5px] text-zinc-500 truncate">
