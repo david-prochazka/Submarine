@@ -5,6 +5,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import "./App.css";
 // Registers the bundled terminal fonts (@font-face) before any terminal mounts.
 import "./util/bundledFonts";
+import { installModalTabTrap } from "./ui/modalTabTrap";
+
+installModalTabTrap();
 
 // Last-resort global handlers so a failure that escapes React (an async reject,
 // a listener throw) is at least recorded instead of vanishing silently. The

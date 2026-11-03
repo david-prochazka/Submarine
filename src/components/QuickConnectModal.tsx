@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Zap, X, AlertTriangle, KeyRound, Lock } from "lucide-react";
 import PasswordField from "./PasswordField";
+import { useModalDialog } from "../ui/modalDialog";
 
 // Quick Connect: the auth bundle lives in component state, gets passed to
 // DesktopApp via onConnect, and the resulting session carries it through to
@@ -33,6 +34,7 @@ const QuickConnectModal = ({ isOpen, onClose, onConnect }: Props) => {
   const [privateKey, setPrivateKey] = useState("");
   const [passphrase, setPassphrase] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const panelRef = useModalDialog(isOpen, () => { reset(); onClose(); });
 
   if (!isOpen) return null;
 
@@ -66,7 +68,7 @@ const QuickConnectModal = ({ isOpen, onClose, onConnect }: Props) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-scrim flex items-center justify-center p-3" onClick={close}>
-      <div role="dialog" aria-modal="true" aria-labelledby="quick-connect-title" className="w-full max-w-md max-h-[90vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] animate-in zoom-in-95 fade-in duration-150" onClick={(e) => e.stopPropagation()}>
+      <div ref={panelRef} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby="quick-connect-title" className="w-full max-w-md max-h-[90vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] outline-none animate-in zoom-in-95 fade-in duration-150" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="shrink-0 px-4 pt-4 pb-2 flex items-start justify-between gap-3">
           <div className="min-w-0">

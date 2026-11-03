@@ -446,6 +446,7 @@ const TunnelsPanel = ({ sessionId, serverId, disabled = false }: TunnelsPanelPro
       {adding && (
         <div className="shrink-0 p-3 border-b border-white/[0.075] bg-panel space-y-2">
           <input
+            autoFocus
             value={draft.name}
             onChange={(e) => setDraft({ ...draft, name: e.target.value })}
             maxLength={NAME_MAX}

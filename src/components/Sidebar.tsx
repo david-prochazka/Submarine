@@ -87,16 +87,16 @@ export const Sidebar = ({
 
   if (isMobile) {
     const items = [{ id: "nodes", icon: Server, label: "Servers" }, ...tools];
-    const dockBtn = (active: boolean) =>
-      `flex flex-col items-center justify-center gap-0.5 min-w-[52px] h-12 px-2 rounded-lg text-[10.5px] font-medium transition-colors ${
-        active ? "text-primary" : "text-zinc-400 hover:text-white"
-      }`;
+    const dockBtn = (active: boolean, iconOnly = false) =>
+      `flex flex-col items-center justify-center gap-0.5 h-12 rounded-lg text-[10.5px] font-medium transition-colors ${
+        iconOnly ? "w-10 shrink-0" : "flex-1 min-w-0 max-w-[72px] px-1"
+      } ${active ? "text-primary" : "text-zinc-400 hover:text-white"}`;
     return (
       <aside
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         className="w-full min-h-14 shrink-0 bg-sidebar border-t border-white/[0.075] flex items-center px-2 relative z-10"
       >
-        <nav aria-label="Sections" className="flex-1 flex items-center justify-around gap-1">
+        <nav aria-label="Sections" className="flex-1 min-w-0 flex items-center justify-around gap-0.5">
           {items.map((item) => (
             <button
               key={item.id}
@@ -109,24 +109,24 @@ export const Sidebar = ({
                 <item.icon size={19} aria-hidden />
                 {"alerts" in item && item.alerts > 0 && <AlertDot n={item.alerts} />}
               </span>
-              {item.label}
+              <span className="max-w-full truncate">{item.label}</span>
               {"alerts" in item && item.alerts > 0 && <span className="sr-only">, {alertLabel("", item.alerts).slice(2)}</span>}
             </button>
           ))}
         </nav>
-        <div className="flex items-center gap-1 pl-2 ml-1 border-l border-white/[0.075]">
-          <button type="button" onClick={() => setActiveTab("profile")} aria-label={profileName ? `Profile ${profileName}` : "Profile"} className={dockBtn(activeTab === "profile")}>
+        <div className="shrink-0 flex items-center pl-1 ml-1 border-l border-white/[0.075]">
+          <button type="button" onClick={() => setActiveTab("profile")} aria-label={profileName ? `Profile ${profileName}` : "Profile"} className={dockBtn(activeTab === "profile", true)}>
             <span className="relative">
               <UserCircle size={19} aria-hidden />
               {syncing && <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />}
             </span>
           </button>
           {onLogout && (
-            <button type="button" onClick={onLogout} aria-label="Lock" className={dockBtn(false)}>
+            <button type="button" onClick={onLogout} aria-label="Lock" className={dockBtn(false, true)}>
               <Lock size={19} aria-hidden />
             </button>
           )}
-          <button type="button" onClick={() => setActiveTab("settings")} aria-label="Settings" className={dockBtn(activeTab === "settings")}>
+          <button type="button" onClick={() => setActiveTab("settings")} aria-label="Settings" className={dockBtn(activeTab === "settings", true)}>
             <Settings size={19} aria-hidden />
           </button>
         </div>

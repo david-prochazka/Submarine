@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useId, useImperativeHandle, forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
@@ -19,6 +19,7 @@ import { useConfirm, useOverwritePrompt, OverwriteChoice } from "../ui/confirm";
 import { IS_ANDROID, IS_WINDOWS } from "../util/platform";
 import { nameFilterMatcher } from "../util/nameFilter";
 import { BOOKMARKS_MAX, readBookmarks, writeBookmarks } from "../util/sftpBookmarks";
+import { useModalDialog } from "../ui/modalDialog";
 
 // Batch overwrite state shared across items in a single download/upload run.
 // Once the user picks "Overwrite all" or "Skip all" the kind is sticky and we
@@ -359,7 +360,9 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
   // only sends what the user changed.
   // "archive": v1 is the name without its extension, v2 the format, `items`
   // what was selected when the dialog opened.
+  const modalId = useId();
   const [modal, setModal] = useState<{ type: "rename" | "mkdir" | "properties" | "move" | "move-bulk" | "archive"; entry?: FileEntry; items?: FileEntry[]; v1?: string; v2?: string; orig?: { mode: number; uid?: number } } | null>(null);
+  const modalRef = useModalDialog(!!modal, () => setModal(null));
   const [notification, setNotification] = useState<{ msg: string; type: "info" | "success" | "error" } | null>(null);
   const notifyTimerRef = useRef<number | null>(null);
   const [jobs, setJobs] = useState<ArchiveJob[]>([]);
@@ -2449,11 +2452,10 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
       {/* Modal */}
       {modal && (
         <div className="fixed inset-0 z-[9998] bg-scrim flex items-center justify-center p-4" onClick={() => setModal(null)}>
-          <div onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => { if (e.key === "Escape") { e.preventDefault(); setModal(null); } }}
-            role="dialog" aria-modal="true" className="w-full max-w-[340px] bg-elevated rounded-xl shadow-sheet p-4 text-[13px] text-white">
+          <div ref={modalRef} tabIndex={-1} onClick={(e) => e.stopPropagation()}
+            role="dialog" aria-modal="true" aria-labelledby={`${modalId}-title`} className="w-full max-w-[340px] bg-elevated rounded-xl shadow-sheet p-4 text-[13px] text-white outline-none">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-[13px] font-semibold">
+              <h2 id={`${modalId}-title`} className="text-[13px] font-semibold">
                 {modal.type === "rename" ? "Rename" :
                  modal.type === "mkdir" ? "New folder" :
                  modal.type === "move" ? "Move to…" :
@@ -2533,8 +2535,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
 
                   <div className="flex gap-2 pt-1">
                     <div className="flex-1">
-                      <label className="text-[12px] font-medium text-zinc-400 block mb-1">Octal</label>
-                      <input type="text" value={modal.v1 || ""}
+                      <label htmlFor={`${modalId}-octal`} className="text-[12px] font-medium text-zinc-400 block mb-1">Octal</label>
+                      <input id={`${modalId}-octal`} type="text" value={modal.v1 || ""}
                         onChange={(e) => {
                           // Only accept up to 4 digits (setuid/setgid/sticky
                           // first), each 0–7 — anything else is ignored so
@@ -2545,8 +2547,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                         className="field font-mono text-[12px]" />
                     </div>
                     <div className="flex-1">
-                      <label className="text-[12px] font-medium text-zinc-400 block mb-1">Owner UID</label>
-                      <input type="text" value={modal.v2 || ""} onChange={(e) => setModal({ ...modal, v2: e.target.value })}
+                      <label htmlFor={`${modalId}-uid`} className="text-[12px] font-medium text-zinc-400 block mb-1">Owner UID</label>
+                      <input id={`${modalId}-uid`} type="text" value={modal.v2 || ""} onChange={(e) => setModal({ ...modal, v2: e.target.value })}
                         className="field" />
                     </div>
                   </div>
@@ -2554,8 +2556,8 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
               ) : modal.type === "archive" ? (
                 <>
                   <div>
-                    <label className="text-[12px] font-medium text-zinc-400 block mb-1">Archive name</label>
-                    <input type="text" autoFocus value={modal.v1 || ""}
+                    <label htmlFor={`${modalId}-archive`} className="text-[12px] font-medium text-zinc-400 block mb-1">Archive name</label>
+                    <input id={`${modalId}-archive`} type="text" autoFocus value={modal.v1 || ""}
                       onFocus={(e) => e.currentTarget.select()}
                       onChange={(e) => setModal({ ...modal, v1: e.target.value })}
                       onKeyDown={(e) => e.key === "Enter" && submitModal()}
@@ -2584,12 +2586,12 @@ const FilePanel = forwardRef<FilePanelHandle, FilePanelProps>(({
                 </>
               ) : (
                 <div>
-                  <label className="text-[12px] font-medium text-zinc-400 block mb-1">
+                  <label htmlFor={`${modalId}-value`} className="text-[12px] font-medium text-zinc-400 block mb-1">
                     {modal.type === "move" || modal.type === "move-bulk"
                       ? "Destination folder"
                       : "Name"}
                   </label>
-                  <input type="text" autoFocus value={modal.v1 || ""}
+                  <input id={`${modalId}-value`} type="text" autoFocus value={modal.v1 || ""}
                     onChange={(e) => setModal({ ...modal, v1: e.target.value })}
                     onKeyDown={(e) => e.key === "Enter" && submitModal()}
                     className="field font-mono text-[12px]" />

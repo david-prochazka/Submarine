@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ScrollableTabs } from "./ScrollableTabs";
 import { useConfirm } from "../ui/confirm";
+import { useModalDialog } from "../ui/modalDialog";
 
 interface DockerTabProps {
   sessionId: string;
@@ -647,7 +648,7 @@ const ComposeView = ({
           <Empty>{state.data.length === 0 ? "No containers carry compose labels — nothing here was started by docker compose." : "No matches."}</Empty>
           {state.data.length === 0 && hasRaw && (
             <Card title="Raw docker output">
-              <pre className="text-[12px] font-mono text-zinc-300 whitespace-pre overflow-x-auto select-text bg-terminal rounded-md p-2 max-h-[200px] overflow-y-auto">{rawFallback}</pre>
+              <pre tabIndex={0} aria-label="Raw docker output" className="text-[12px] font-mono text-zinc-300 whitespace-pre overflow-x-auto select-text bg-terminal rounded-md p-2 max-h-[200px] overflow-y-auto">{rawFallback}</pre>
             </Card>
           )}
         </>
@@ -1020,7 +1021,7 @@ const ContainerDetailsModal = ({
         onClick={() => onOpenContainerTerminal(name, false)}
         className="btn"
       >
-        <Terminal size={11} /> Open Terminal
+        <Terminal size={12} aria-hidden /> Open terminal
       </button>
     }>
       <div className="px-3 pt-2 pb-1 bg-panel border-b border-white/[0.075] shrink-0">
@@ -1051,6 +1052,7 @@ const ContainerDetailsModal = ({
               <select
                 value={logsTail}
                 onChange={(e) => setLogsTail(parseInt(e.target.value, 10))}
+                aria-label="Lines to load"
                 className="field h-7 text-[12px] font-mono"
               >
                 <option value={100}>Tail 100</option>
@@ -1085,6 +1087,8 @@ const ContainerDetailsModal = ({
             <pre
               ref={logsBoxRef}
               onScroll={onLogsScroll}
+              tabIndex={0}
+              aria-label="Container logs"
               className="flex-1 min-h-[280px] bg-terminal rounded-lg p-2 text-[12px] font-mono text-zinc-200 whitespace-pre overflow-auto select-text"
             >
               {logs || (logsLoading ? "Loading…" : "(no log output)")}
@@ -1144,7 +1148,7 @@ const ContainerDetailsModal = ({
               </button>
             </div>
             {inspect.error && <ErrorBanner err={inspect.error} onRetry={() => { setInspect(s => ({ ...s, error: null })); fetchInspect(); }} />}
-            <pre className="flex-1 min-h-[300px] bg-terminal rounded-lg p-2 text-[12px] font-mono text-zinc-200 whitespace-pre overflow-auto select-text">
+            <pre tabIndex={0} aria-label="Inspect output" className="flex-1 min-h-[300px] bg-terminal rounded-lg p-2 text-[12px] font-mono text-zinc-200 whitespace-pre overflow-auto select-text">
               {inspect.data ? JSON.stringify(inspect.data, null, 2) : (inspect.loading ? "Loading…" : "(no data)")}
             </pre>
           </div>
@@ -1313,7 +1317,7 @@ const ComposeViewerModal = ({
             {yaml.loading && <Spinner label="Reading compose file…" />}
             {yaml.error && <ErrorBanner err={yaml.error} />}
             {yaml.data && (
-              <pre className="bg-terminal rounded-lg p-2 text-[12px] font-mono text-zinc-200 whitespace-pre overflow-auto max-h-[60vh] select-text">
+              <pre tabIndex={0} aria-label="Compose file" className="bg-terminal rounded-lg p-2 text-[12px] font-mono text-zinc-200 whitespace-pre overflow-auto max-h-[60vh] select-text">
                 {yaml.data}
               </pre>
             )}
@@ -1447,28 +1451,34 @@ const Empty = ({ children }: { children: React.ReactNode }) => (
   <div className="text-[11px] text-zinc-500 italic">{children}</div>
 );
 
-const ModalShell = ({ title, onClose, actions, children }: { title: string; onClose: () => void; actions?: React.ReactNode; children: React.ReactNode }) => (
-  // On phones we go full-bleed: no outer padding, no rounded corners, no
-  // border — the modal IS the screen. From sm: up we revert to a centered
-  // card with the soft-edge look. Saves the ~24 px of viewport that a
-  // floating card eats on a 360 px screen.
-  <div className="fixed inset-0 z-[9999] bg-scrim flex sm:items-center sm:justify-center sm:p-3 animate-in fade-in" onClick={onClose}>
-    <div onClick={(e) => e.stopPropagation()} className="bg-surface sm:border sm:border-white/10 sm:rounded-xl w-full sm:max-w-3xl h-full sm:h-[80vh] flex flex-col overflow-hidden shadow-2xl">
-      <div className="shrink-0 h-11 sm:h-10 px-3 flex items-center justify-between border-b border-white/5 bg-white/[0.02]">
-        <span className="text-[11px] font-semibold text-zinc-300 truncate select-text">{title}</span>
-        <div className="flex items-center gap-2 shrink-0">
-          {actions}
-          {/* h-9 w-9 = 36 px touch target on phone, vs the old icon
-              which was a 14 px icon with no padding zone — easy to miss
-              with a thumb. */}
-          <button aria-label="Close" onClick={onClose} className="h-9 w-9 sm:h-7 sm:w-7 flex items-center justify-center rounded-md text-zinc-500 hover:text-white hover:bg-white/5">
-            <X size={16} />
-          </button>
+// On phones the sheet is the whole screen; from sm: up it's a centred card.
+const ModalShell = ({ title, onClose, actions, children }: { title: string; onClose: () => void; actions?: React.ReactNode; children: React.ReactNode }) => {
+  const titleId = useId();
+  const panelRef = useModalDialog(true, onClose);
+  return (
+    <div className="fixed inset-0 z-[9999] bg-scrim flex sm:items-center sm:justify-center sm:p-3 animate-in fade-in" onClick={onClose}>
+      <div
+        ref={panelRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-elevated sm:rounded-xl w-full sm:max-w-3xl h-full sm:h-[80vh] flex flex-col overflow-hidden shadow-sheet outline-none"
+      >
+        <div className="shrink-0 h-12 px-4 flex items-center justify-between gap-3 border-b border-white/[0.075]">
+          <h2 id={titleId} className="text-[13px] font-semibold text-white truncate select-text">{title}</h2>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {actions}
+            <button type="button" aria-label="Close" onClick={onClose} className="icon-btn h-9 w-9 sm:h-7 sm:w-7">
+              <X size={14} aria-hidden />
+            </button>
+          </div>
         </div>
+        {children}
       </div>
-      {children}
     </div>
-  </div>
-);
+  );
+};
 
 export default DockerTab;

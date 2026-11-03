@@ -7,6 +7,7 @@ import {
 import InvitesSection from "./InvitesSection";
 import SyncServerSetting, { CloudConfigView, hostOf } from "./SyncServerSetting";
 import { PRIVACY_URL } from "../util/links";
+import { useModalDialog } from "../ui/modalDialog";
 
 // Cloud account panel, opened from the profile picker. Owns its own auth state;
 // the parent just mounts/unmounts. Signed-out is split into intent-first flows
@@ -302,6 +303,8 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
     setStage("chooser");
   };
 
+  const panelRef = useModalDialog(isOpen, onClose);
+
   // ---- Render ----------------------------------------------------------
 
   if (!isOpen) return null;
@@ -312,10 +315,12 @@ const CloudPanel = ({ isOpen, onClose, onLocalProfilesChanged }: Props) => {
   return (
     <div className="fixed inset-0 z-50 bg-scrim flex items-center justify-center p-3" onClick={onClose}>
       <div
+        ref={panelRef}
+        tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-labelledby="cloud-title"
-        className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] animate-in zoom-in-95 fade-in duration-150"
+        className="w-full max-w-3xl max-h-[90vh] flex flex-col bg-elevated rounded-xl shadow-sheet text-[13px] outline-none animate-in zoom-in-95 fade-in duration-150"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}

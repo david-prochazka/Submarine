@@ -1626,6 +1626,16 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
             aria-label="Session tools"
             className="flex items-center gap-0.5 overflow-x-auto no-scrollbar min-w-0 flex-1"
             onWheel={(e) => { e.currentTarget.scrollLeft += e.deltaY; }}
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowLeft" && e.key !== "ArrowRight" && e.key !== "Home" && e.key !== "End") return;
+              const tabs = [...e.currentTarget.querySelectorAll<HTMLElement>('[role="tab"]')];
+              const at = tabs.indexOf(document.activeElement as HTMLElement);
+              if (at < 0) return;
+              e.preventDefault();
+              const next = e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1
+                : (at + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length;
+              tabs[next].focus();
+            }}
           >
             {VIEWS.map(({ id, label, Icon }, i) => {
               const on = view === id;
@@ -1637,6 +1647,8 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                   type="button"
                   role="tab"
                   aria-selected={on}
+                  aria-label={label}
+                  tabIndex={on ? 0 : -1}
                   onClick={(e) => {
                     if (id === "terminal") { setView("terminal"); requestTerminalFocus(); return; }
                     if (e.altKey && !isCompact) { docked ? setInspOpen(false) : dockTool(id); return; }
@@ -1652,7 +1664,7 @@ const SessionViewImpl = ({ session, profile, displayName, onClose, addLog, onSta
                         : 'text-zinc-400 hover:bg-white/5 hover:text-white'
                   }`}
                 >
-                  <Icon size={14} className="shrink-0" />
+                  <Icon size={14} aria-hidden className="shrink-0" />
                   <span className="hidden md:inline">{label}</span>
                 </button>
               );

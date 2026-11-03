@@ -277,6 +277,7 @@ export default function LoginsVault({
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex">
+          <h1 className="sr-only">Logins</h1>
           <section aria-label="Logins list" className={`${detailOpen ? "hidden md:flex" : "flex"} w-full md:w-[320px] md:shrink-0 flex-col md:border-r border-white/[0.075]`}>
             <div className="p-3 pb-2 space-y-2">
               <div role="group" aria-label="Show" className="seg w-full grid grid-cols-3">
@@ -339,7 +340,7 @@ export default function LoginsVault({
                     {cur.kind === "key" ? <KeyRound size={20} /> : <LockKeyhole size={20} />}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <h1 className="text-[20px] leading-7 font-semibold tracking-[-0.01em] text-white break-words">{cur.name}</h1>
+                    <h2 className="text-[20px] leading-7 font-semibold tracking-[-0.01em] text-white break-words">{cur.name}</h2>
                     <p className="text-zinc-400">
                       {cur.kind === "key"
                         ? [cur.info?.type ?? "SSH key", cur.info?.bits ? `${cur.info.bits}-bit` : null, cur.info?.comment || null].filter(Boolean).join(", ")
